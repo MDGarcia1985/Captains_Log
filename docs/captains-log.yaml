@@ -1,0 +1,884 @@
+app:
+  name: CaptainsLog
+  display_name: "Captain's Log"
+
+  purpose: >
+    Offline-first personal chronicle and knowledge graph for capturing
+    observations, projects, ideas, decisions, prototypes, references,
+    photographs, and other longitudinal personal context.
+
+  principles:
+    - capture_must_be_fast
+    - local_data_is_authoritative
+    - original_source_data_is_preserved
+    - derived_ai_data_is_separate_from_source
+    - knowledge_is_queryable_and_crosslinked
+    - phone_prioritizes_capture
+    - tablet_prioritizes_navigation_and_analysis
+    - visual_design_should_feel_like_functional_equipment
+    - avoid_unnecessary_manual_metadata_entry
+
+  platform:
+    framework: expo
+    ui_framework: react_native
+    language: typescript
+
+    targets:
+      - android_phone
+      - android_tablet
+      - ios_phone
+      - ios_tablet
+
+    future_targets:
+      - web
+      - desktop
+
+  development:
+    prototype_target_hours: 6
+    first_version_max_hours: 20
+
+    scope_rule: >
+      Favor the smallest implementation that satisfies the defined behavior.
+      Do not introduce infrastructure, abstractions, cloud services, or
+      dependencies that are unnecessary for the MVP.
+
+documentation:
+  required_before_implementation:
+    - DEVNOTES_STANDARDS.md
+    - ANNOTATION_STANDARDS.md
+
+  agent_instruction: >
+    Before modifying or creating implementation files, read
+    DEVNOTES_STANDARDS.md and ANNOTATION_STANDARDS.md in full and follow
+    their requirements. Do not begin implementation until both have been
+    reviewed.
+
+  project_files:
+    product_spec: captains-log.yaml
+    roadmap: ROADMAP.md
+    architecture: ARCHITECTURE.md
+    development_log: DEVNOTES.md
+
+  authority:
+    captains-log.yaml: product_behavior
+    ARCHITECTURE.md: system_architecture
+    DEVNOTES.md: implementation_decisions
+
+architecture:
+  pattern: local_first_layered
+  style: modular_adapter_architecture
+
+  principles:
+    - features_are_isolated_by_domain
+    - modules_expose_explicit_interfaces
+    - ui_depends_on_services_not_implementations
+    - services_depend_on_repositories_or_adapters
+    - external_integrations_are_replaceable_adapters
+    - features_should_be_removable_without_large_cross_cutting_changes
+    - avoid_global_state_and_hidden_coupling
+
+  layers:
+    - presentation
+    - application_services
+    - domain
+    - repositories
+    - adapters
+    - sqlite_database
+    - local_file_storage
+    - optional_external_services
+
+  module_contract:
+    required:
+      - public_interface
+      - internal_implementation_boundary
+      - minimal_cross_module_dependencies
+
+  extension_points:
+    intended:
+      - capture_sources
+      - storage_providers
+      - backup_providers
+      - extraction_providers
+      - knowledge_graph_processors
+      - themes
+      - ya_interfaces
+      - authentication_providers
+      - location_providers
+
+  dependency_direction:
+    presentation:
+      may_depend_on:
+        - application_services
+
+    application_services:
+      may_depend_on:
+        - domain
+        - repositories
+        - adapters
+
+    domain:
+      may_depend_on: []
+
+    repositories:
+      may_depend_on:
+        - sqlite
+        - local_storage
+
+    adapters:
+      may_depend_on:
+        - external_services
+        - platform_services
+
+  rule:
+    ui_direct_database_access: false
+    direct_feature_to_feature_imports: discouraged
+    external_provider_logic_inside_ui: false
+    provider_specific_logic_inside_domain: false
+    generalized_plugin_runtime_required: false
+    prefer_interfaces_and_adapters_over_dynamic_plugin_loading: true
+
+  future_integration:
+    ya:
+      access_through_service_layer: true
+      raw_database_access: false
+
+offline:
+  offline_first: true
+  internet_required_for_core_use: false
+
+  available_without_network:
+    - create_entry
+    - edit_entry
+    - browse_log
+    - search_local_content
+    - view_entities
+    - view_relationships
+    - view_photos
+    - view_graph
+
+  requires_network:
+    - authentication_initial_setup
+    - google_drive_backup
+    - future_ai_cloud_services
+    - future_external_integrations
+
+authentication:
+  account_required: true
+
+  mvp_methods:
+    - email
+    - google
+
+  future_methods:
+    - microsoft_365
+
+  google:
+    sign_in: true
+    drive_authorization_separate: true
+
+  offline_behavior:
+    allow_authenticated_user_access: true
+    do_not_require_periodic_online_validation_for_local_use: true
+
+permissions:
+  internet:
+    required: true
+    purpose:
+      - authentication
+      - google_drive_backup
+      - future_external_services
+
+  camera:
+    request_strategy: contextual
+    request_when:
+      - user_selects_camera_capture
+
+  photo_library:
+    request_strategy: contextual
+    request_when:
+      - user_selects_gallery_attachment
+
+  location:
+    request_strategy: contextual
+    default_enabled: false
+    request_when:
+      - user_enables_location_for_entry
+
+  microphone:
+    mvp_required: false
+    reason: >
+      MVP voice dictation is provided through the user's system keyboard,
+      such as Gboard voice typing.
+
+  storage:
+    local_app_storage: required
+    arbitrary_user_file_access: contextual
+
+capture:
+  primary_goal: minimum_friction
+
+  input_types:
+    mvp:
+      - text
+      - camera_photo
+      - gallery_photo
+      - location
+      - shared_content
+
+    future:
+      - audio_recording
+      - video
+      - drawing
+      - document_scanning
+
+  composer:
+    title_required: false
+    metadata_required: false
+    project_selection_required: false
+    tags_required: false
+
+    timestamp:
+      automatic: true
+      editable: false
+
+    autofocus_on_open:
+      phone: true
+      tablet: false
+
+    save:
+      local_first: true
+      immediate: true
+      dismiss_after_save_on_phone: true
+
+  voice:
+    mvp:
+      implementation: system_keyboard
+      preferred_android_keyboard: gboard
+      microphone_permission_required_by_app: false
+      transcript_destination: source_text
+
+    future:
+      google_recorder_import: true
+      direct_audio_capture: optional
+
+  shared_content:
+    android_share_target: true
+
+    preferred_sources:
+      - google_recorder
+      - photos
+      - browser
+      - files
+      - pdf
+      - text
+      - links
+
+    behavior:
+      create_draft_entry: true
+      preserve_source_information: true
+
+entries:
+  canonical_source:
+    immutable_after_initial_save: false
+    preserve_revision_history: true
+
+  source_text:
+    authoritative: true
+
+  derived_data:
+    authoritative: false
+    regeneratable: true
+
+  entry_types:
+    default: log
+
+    derived_types:
+      - observation
+      - idea
+      - decision
+      - problem
+      - question
+      - experiment
+
+photos:
+  first_class_attachment: true
+
+  sources:
+    - camera
+    - gallery
+    - share_target
+
+  preserve_original: true
+
+  local_storage:
+    strategy: managed_application_files
+
+  thumbnail:
+    create: true
+
+  metadata:
+    preserve:
+      - timestamp
+      - dimensions
+      - mime_type
+      - file_size
+
+  optional_role:
+    values:
+      - prototype
+      - reference
+      - inspiration
+      - document
+      - whiteboard
+      - component
+      - failure
+      - result
+      - other
+
+    manually_required: false
+    ai_can_suggest: true
+
+  derived_analysis:
+    never_modify_original: true
+
+    future:
+      - visual_description
+      - object_detection
+      - text_extraction
+      - project_association
+      - entity_extraction
+
+location:
+  default_attach_to_entry: false
+
+  user_control:
+    per_entry: true
+
+  data:
+    store_only_when_user_requests: true
+
+  future:
+    derive_place_names: optional
+
+storage:
+  local:
+    database: sqlite
+
+    sqlite:
+      library: expo-sqlite
+      full_text_search: true
+
+    files:
+      photos: local_managed_storage
+      attachments: local_managed_storage
+
+  canonical_authority:
+    database: local
+    files: local
+
+  cloud:
+    mvp_provider: google_drive
+    role: backup
+    primary_database: false
+
+    backup:
+      automatic: true
+
+      triggers:
+        - application_start_when_online
+        - application_background
+        - manual_backup
+
+      strategy:
+        database_backup: true
+        attachment_backup: true
+
+      conflict_policy:
+        local_device_is_authoritative: true
+
+      status_visible_to_user: true
+
+    future:
+      multi_device_sync: true
+      microsoft_onedrive: true
+
+database:
+  tables:
+    entries:
+      required: true
+
+    entities:
+      required: true
+
+    entry_entities:
+      required: true
+
+    relationships:
+      required: true
+
+    attachments:
+      required: true
+
+    entry_revisions:
+      required: true
+
+  future_tables:
+    - embeddings
+    - saved_queries
+    - extraction_jobs
+
+knowledge_graph:
+  enabled: true
+
+  entity_types:
+    initial:
+      - person
+      - project
+      - organization
+      - hardware
+      - software
+      - idea
+      - decision
+      - problem
+      - question
+      - experiment
+      - artifact
+      - place
+
+  relationships:
+    initial:
+      - mentions
+      - relates_to
+      - belongs_to
+      - depends_on
+      - supports
+      - contradicts
+      - supersedes
+      - derived_from
+      - documents
+      - depicts
+      - contains
+
+  provenance:
+    required: true
+
+    relationship_must_reference:
+      - source_entry_id
+
+  graph_view:
+    mvp:
+      default_depth: 1
+      focus_mode: selected_entity
+      global_hairball_graph: false
+
+search:
+  mvp:
+    full_text_search: true
+    search_entries: true
+    search_entities: true
+
+  future:
+    semantic_search: true
+    natural_language_query: true
+    ya_assisted_query: true
+
+navigation:
+  philosophy:
+    phone: capture_first
+    tablet: analysis_first
+
+  handedness:
+    user_selectable: true
+
+    options:
+      - left
+      - right
+
+    default: right
+
+    affects:
+      - navigation_edge
+      - capture_controls
+      - quick_actions
+      - tablet_pane_order
+      - context_inspector_edge
+
+  primary_destinations:
+    - log
+    - capture
+    - search
+    - graph
+
+  secondary_destinations:
+    - settings
+
+  contextual_destinations:
+    - entity
+    - entry_detail
+
+responsive_layout:
+  breakpoints:
+    compact:
+      max_width_dp: 599
+
+    medium:
+      min_width_dp: 600
+      max_width_dp: 899
+
+    expanded:
+      min_width_dp: 900
+
+  compact:
+    panes: 1
+
+    navigation:
+      type: vertical_edge_rail
+      edge: user_handedness
+
+    destinations:
+      - log
+      - capture
+      - search
+      - graph
+
+    settings:
+      location: rail_utility_area
+
+    capture:
+      presentation: modal
+      dominant_action: true
+      autofocus: true
+
+  medium:
+    panes: 2
+
+    right_handed:
+      order:
+        - primary
+        - navigation
+
+    left_handed:
+      order:
+        - navigation
+        - primary
+
+    context:
+      presentation: slide_over
+
+  expanded:
+    panes: 3
+
+    right_handed:
+      order:
+        - navigation
+        - primary
+        - context
+
+    left_handed:
+      order:
+        - context
+        - primary
+        - navigation
+
+    navigation_width_dp: 220
+    context_width_dp: 300
+    primary_width: flexible
+
+pane_roles:
+  navigation:
+    contains:
+      - new_log
+      - log
+      - search
+      - graph
+      - active_threads
+      - settings
+
+  primary:
+    contains:
+      - chronological_log
+      - composer
+      - search_results
+      - entity_timeline
+      - graph_canvas
+
+  context:
+    contains:
+      - selected_entity
+      - related_entities
+      - relationships
+      - decisions
+      - questions
+      - related_entries
+      - attachments
+      - graph_neighborhood
+
+screens:
+  log:
+    route: /
+    required: true
+    purpose: chronological_canonical_history
+
+  capture:
+    route: /capture
+    required: true
+    purpose: fast_capture
+
+  search:
+    route: /search
+    required: true
+    purpose: retrieval
+
+  graph:
+    route: /graph
+    required: true
+    purpose: relationship_exploration
+
+  entity:
+    route: /entity/[id]
+    required: true
+    purpose: entity_history_and_relationships
+
+  settings:
+    route: /settings
+    required: true
+    primary_navigation: false
+
+  entry_detail:
+    route: /entry/[id]
+    required: false
+    mvp_behavior: inline_expand_when_possible
+
+threads:
+  source: derived_entities
+
+  mvp:
+    manual_management_required: false
+    display_most_active: true
+
+  future:
+    pinning: true
+    custom_groups: true
+
+ui:
+  design_direction:
+    name: tactical_cyberdeck
+
+    description: >
+      A field engineer's digital Captain's Log: part cyberdeck,
+      part technical notebook, and part starship console.
+      It should feel like functional equipment rather than a game HUD.
+
+  priorities:
+    - readability
+    - fast_capture
+    - information_density
+    - visual_identity
+    - one_handed_use
+
+  avoid:
+    - excessive_glow
+    - constant_animation
+    - decorative_noise
+    - card_everything_design
+    - low_contrast_body_text
+    - red_as_primary_color
+
+  visual_language:
+    background: near_black_blue
+    framing: technical_linework
+    panel_geometry: asymmetric
+    corner_style: clipped
+    technical_rails: true
+    offset_tabs: true
+    inset_panels: true
+
+  semantic_colors:
+    system_navigation: cyan
+    user_content_active: orange
+    warning: red_orange
+    body_text: light_neutral
+    secondary_text: muted_blue_gray
+
+  typography:
+    headings: condensed_technical_sans
+    telemetry: monospace
+    body: readable_sans
+
+  motion:
+    style: restrained
+    continuous_animation: false
+
+    allowed:
+      - short_scan_indicator
+      - backup_progress
+      - extraction_progress
+      - panel_transition
+
+edge_navigation:
+  orientation: vertical
+
+  style:
+    compact:
+      show_icon: true
+      show_short_label: true
+
+    future_modes:
+      - icons_only
+      - compact_labels
+      - vertical_text
+
+  actions:
+    - log
+    - capture
+    - search
+    - graph
+
+  utility_actions:
+    - settings
+
+  capture:
+    visually_dominant: true
+
+telemetry:
+  display_contextually: true
+
+  useful_status:
+    - active_threads
+    - open_questions
+    - unresolved_decisions
+    - new_relationships
+    - last_backup
+    - backup_status
+    - local_or_online_state
+
+  rule: >
+    Telemetry must communicate useful state. Do not add fake system
+    information solely for decoration.
+
+themes:
+  system_modes:
+    - dark
+
+  future_system_modes:
+    - light
+
+  skins:
+    mvp:
+      starship:
+        enabled: true
+        primary_accent: cyan
+        secondary_accent: orange
+        geometry: tactical
+
+    future:
+      yggdrasil:
+        primary_accent: green
+        secondary_accent: amber
+        geometry: organic_network
+
+      engineering_lab:
+        primary_accent: blue
+        secondary_accent: neutral
+        geometry: instrumentation
+
+      victorian_inventor:
+        primary_accent: brass
+        secondary_accent: parchment
+        geometry: mechanical_archive
+
+  architecture:
+    behavior_independent_from_skin: true
+    use_design_tokens: true
+
+extraction:
+  mvp:
+    required_for_initial_capture: false
+    must_not_block_save: true
+
+  processing:
+    asynchronous_after_save: true
+
+  output:
+    derived_entities: true
+    derived_relationships: true
+    preserve_provenance: true
+
+  failure_behavior:
+    entry_remains_valid: true
+
+ya:
+  mvp:
+    enabled: false
+
+  future_role:
+    - query_personal_history
+    - trace_decisions
+    - retrieve_project_context
+    - identify_open_questions
+    - semantic_search
+    - summarize_longitudinal_changes
+
+  service_contract:
+    initial_methods:
+      - createEntry
+      - getEntry
+      - searchEntries
+      - getEntity
+      - getRelatedEntities
+      - getRelationships
+      - getProjectHistory
+      - getOpenQuestions
+
+  future_interfaces:
+    - mcp
+    - local_http_api
+
+security:
+  local_data:
+    user_owned: true
+
+  credentials:
+    storage: expo-secure-store
+
+  cloud:
+    least_privilege_scopes: true
+
+  future:
+    database_encryption: evaluate
+    app_lock: evaluate
+
+mvp_definition_of_done:
+  required:
+    - application_runs_on_android_phone
+    - application_runs_on_android_tablet
+    - responsive_one_two_three_pane_layout
+    - left_right_handed_navigation
+    - create_text_entry
+    - chronological_log
+    - camera_photo_attachment
+    - gallery_photo_attachment
+    - local_sqlite_persistence
+    - full_text_search
+    - basic_entities
+    - entity_detail_view
+    - first_degree_graph_view
+    - local_attachment_storage
+    - google_authentication
+    - email_authentication
+    - google_drive_backup
+    - backup_status
+    - starship_skin
+    - settings_screen
+
+  explicitly_not_required:
+    - realtime_multi_device_sync
+    - dedicated_graph_database
+    - vector_database
+    - internal_voice_transcription
+    - microsoft_365_integration
+    - advanced_ai_agent
+    - complex_ontology
+    - global_graph_visualization
+    - web_application
+    - desktop_application
