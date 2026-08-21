@@ -1,8 +1,8 @@
 /*
- * File: index.tsx
+ * File: ids.ts
  *
  * Purpose:
- *     Log route — chronological canonical history.
+ *     Allocate stable unique identifiers for domain records.
  *
  * Author:
  *     Captain's Log contributors
@@ -15,8 +15,8 @@
  *     All rights reserved until the project owner selects a license.
  */
 
-import { LogScreen } from '@/ui/screens/LogScreen';
+import * as Crypto from 'expo-crypto';
 
-export default function LogRoute() {
-  return <LogScreen />;
+export function createId(): string {
+  return Crypto.randomUUID();
 }

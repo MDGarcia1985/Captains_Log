@@ -1,8 +1,8 @@
 /*
- * File: index.tsx
+ * File: settings.tsx
  *
  * Purpose:
- *     Log route — chronological canonical history.
+ *     Minimum settings route.
  *
  * Author:
  *     Captain's Log contributors
@@ -15,8 +15,8 @@
  *     All rights reserved until the project owner selects a license.
  */
 
-import { LogScreen } from '@/ui/screens/LogScreen';
+import { SettingsScreen } from '@/ui/screens/SettingsScreen';
 
-export default function LogRoute() {
-  return <LogScreen />;
+export default function SettingsRoute() {
+  return <SettingsScreen />;
 }

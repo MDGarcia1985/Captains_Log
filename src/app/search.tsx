@@ -1,8 +1,8 @@
 /*
- * File: index.tsx
+ * File: search.tsx
  *
  * Purpose:
- *     Log route — chronological canonical history.
+ *     Local search route.
  *
  * Author:
  *     Captain's Log contributors
@@ -15,8 +15,8 @@
  *     All rights reserved until the project owner selects a license.
  */
 
-import { LogScreen } from '@/ui/screens/LogScreen';
+import { SearchScreen } from '@/ui/screens/SearchScreen';
 
-export default function LogRoute() {
-  return <LogScreen />;
+export default function SearchRoute() {
+  return <SearchScreen />;
 }

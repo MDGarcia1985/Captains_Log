@@ -1,0 +1,213 @@
+/*
+ * File: CaptureScreen.tsx
+ *
+ * Purpose:
+ *     Fast local capture: text, optional photos, optional location, immediate save.
+ *
+ * Author:
+ *     Captain's Log contributors
+ *     Project owner name pending confirmation.
+ *
+ * Contact:
+ *     Project owner contact information pending confirmation.
+ *
+ * License:
+ *     All rights reserved until the project owner selects a license.
+ */
+
+import { useEffect, useRef, useState } from 'react';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+
+import { useBreakpoint } from '@/hooks/useBreakpoint';
+import type { CapturedImage, GeoLocation } from '@/models/types';
+import { useRequiredAppServices } from '@/services/AppServicesProvider';
+import { colors, fonts } from '@/theme/tokens';
+import { CommandButton, TelemetryLabel } from '@/ui/components/primitives';
+import { useChrome } from '@/ui/state/ChromeContext';
+
+/*
+ * Purpose: Fast local capture of text, optional photos, and optional location.
+ * Design: No required metadata; autofocus only on compact; handedness flips control clustering.
+ * Workflow: /capture route; commit calls EntryService.createEntry then dismisses on phone.
+ * Data Handoff: Sends CreateEntryInput to the service layer and navigates to the log.
+ */
+export function CaptureScreen() {
+  const services = useRequiredAppServices();
+  const router = useRouter();
+  const { mode } = useBreakpoint();
+  const { handedness } = useChrome();
+  const inputRef = useRef<TextInput>(null);
+  const [text, setText] = useState('');
+  const [images, setImages] = useState<CapturedImage[]>([]);
+  const [location, setLocation] = useState<GeoLocation | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState('READY');
+
+  useEffect(() => {
+    if (mode === 'compact') {
+      const timer = setTimeout(() => inputRef.current?.focus(), 250);
+      return () => clearTimeout(timer);
+    }
+  }, [mode]);
+
+  /*
+   * Purpose: Save the draft immediately to the local archive.
+   * Design: Reject empty drafts; never wait on backup or extraction (those run inside the service).
+   * Workflow: Fired by Commit Log; expects text and/or images/location from this screen's state.
+   * Data Handoff: Calls createEntry then clears draft and, on compact, replaces the route with /.
+   */
+  async function commit() {
+    if (busy) {
+      return;
+    }
+    if (!text.trim() && images.length === 0 && !location) {
+      setStatus('EMPTY');
+      return;
+    }
+    setBusy(true);
+    try {
+      await services.entries.createEntry({
+        sourceText: text.trim(),
+        images,
+        location,
+        source: 'capture',
+      });
+      setText('');
+      setImages([]);
+      setLocation(null);
+      setStatus('COMMITTED');
+      if (mode === 'compact') {
+        router.replace('/');
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'SAVE FAILED');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const controls = (
+    <View style={[styles.controls, handedness === 'left' && styles.controlsLeft]}>
+      <CommandButton
+        label="Camera"
+        onPress={async () => {
+          const image = await services.attachments.captureFromCamera();
+          if (image) {
+            setImages((current) => [...current, image]);
+          }
+        }}
+      />
+      <CommandButton
+        label="Gallery"
+        onPress={async () => {
+          const image = await services.attachments.pickFromGallery();
+          if (image) {
+            setImages((current) => [...current, image]);
+          }
+        }}
+      />
+      <CommandButton
+        label={location ? 'Located' : 'Location'}
+        onPress={async () => {
+          const next = await services.location.requestCurrentLocation();
+          setLocation(next);
+          setStatus(next ? 'LOCATION ATTACHED' : 'LOCATION UNAVAILABLE');
+        }}
+      />
+      <CommandButton label="Commit Log" dominant onPress={() => void commit()} disabled={busy} />
+    </View>
+  );
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.screen}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <TelemetryLabel k="CAPTURE" v={status} accent="orange" />
+      <Text style={styles.hint}>
+        No title, tags, or project required. Use [[Entity]], @Person, or #Project if you want
+        links.
+      </Text>
+      <TextInput
+        ref={inputRef}
+        value={text}
+        onChangeText={setText}
+        placeholder="Record observation…"
+        placeholderTextColor={colors.textDim}
+        multiline
+        textAlignVertical="top"
+        style={styles.input}
+      />
+      {images.length > 0 ? (
+        <View style={styles.photos}>
+          {images.map((image) => (
+            <Image key={image.uri} source={{ uri: image.uri }} style={styles.photo} contentFit="cover" />
+          ))}
+        </View>
+      ) : null}
+      {location ? (
+        <Text style={styles.loc}>
+          {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
+        </Text>
+      ) : null}
+      {controls}
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    padding: 12,
+    gap: 10,
+  },
+  hint: {
+    color: colors.textMuted,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  input: {
+    flex: 1,
+    minHeight: 180,
+    borderWidth: 1,
+    borderColor: colors.orange,
+    backgroundColor: colors.panel,
+    color: colors.text,
+    fontFamily: fonts.body,
+    fontSize: 18,
+    lineHeight: 26,
+    padding: 12,
+  },
+  photos: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  photo: {
+    width: 72,
+    height: 72,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  loc: {
+    fontFamily: fonts.mono,
+    color: colors.cyan,
+    fontSize: 11,
+  },
+  controls: {
+    gap: 8,
+    alignItems: 'stretch',
+  },
+  controlsLeft: {
+    alignItems: 'stretch',
+  },
+});

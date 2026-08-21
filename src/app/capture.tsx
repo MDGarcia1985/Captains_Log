@@ -1,8 +1,8 @@
 /*
- * File: index.tsx
+ * File: capture.tsx
  *
  * Purpose:
- *     Log route — chronological canonical history.
+ *     Fast capture route.
  *
  * Author:
  *     Captain's Log contributors
@@ -15,8 +15,8 @@
  *     All rights reserved until the project owner selects a license.
  */
 
-import { LogScreen } from '@/ui/screens/LogScreen';
+import { CaptureScreen } from '@/ui/screens/CaptureScreen';
 
-export default function LogRoute() {
-  return <LogScreen />;
+export default function CaptureRoute() {
+  return <CaptureScreen />;
 }

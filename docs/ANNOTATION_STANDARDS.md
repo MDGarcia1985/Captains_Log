@@ -51,36 +51,29 @@ Use notes sparingly for code that is genuinely opaque, unusual, safety-critical,
  */
 
 
+Function-level documentation is required for every function that is longer than a single line or whose behavior is opaque. Use this header:
+
+```
+/*
+ * Purpose: Why the function exists
+ * Design: Why the function is structured the way it is and what decision lead to this form.
+ * Workflow: Where in the workflow this function belongs and what information or inputs it is expecting and from where.
+ * Data Handoff: What the functions data output is and to what system/function it is intended for next.
+ */
+```
+
 ### Function Header
-/**
- * Calculate an object's perpendicular distance from every room wall.
- *
- * Purpose:
- *     Provide the UI and tracking services with one canonical wall-distance
- *     result.
- *
- * Design:
- *     Use integer centimetres in the lower-left room coordinate frame. Reject
- *     invalid points instead of silently clamping them.
- *
- * Workflow:
- *     Validate the point, subtract its coordinates from the room dimensions,
- *     and return the four named distances.
- *
- * Data Handoff:
- *     Receives validated Room and Point structures and writes a WallDistances
- *     result consumed by crosshair labels, snapping rules, and API
- *     serialization.
- *
- * @param room      Pointer to the room dimensions.
- * @param point     Pointer to the object position.
- * @param distances Pointer to the output wall-distance structure.
- *
- * @return true if the point is valid and the distances were calculated;
- *         false if any pointer is null or the point lies outside the room.
+
+```
+/*
+ * Purpose: Provide the UI and tracking services with one canonical wall-distance result.
+ * Design: Use integer centimetres in the lower-left room coordinate frame. Reject invalid points instead of silently clamping them.
+ * Workflow: Called after room and point validation; subtracts the point from room dimensions.
+ * Data Handoff: Writes a WallDistances result consumed by crosshair labels, snapping rules, and API serialization.
  */
 bool wall_distances(
     const Room *room,
     const Point *point,
     WallDistances *distances
 );
+```
