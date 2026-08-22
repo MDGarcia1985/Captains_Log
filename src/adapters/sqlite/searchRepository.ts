@@ -1,5 +1,5 @@
 /*
- * File: searchRepository.ts
+ * File: src/adapters/sqlite/searchRepository.ts
  *
  * Purpose:
  *     Full-text search over entry text and entity names using SQLite FTS5.
@@ -13,6 +13,9 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-006
  */
 
 import type { SQLiteDatabase } from 'expo-sqlite';
@@ -20,21 +23,9 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import type { SearchRepository } from '@/models/contracts';
 import type { SearchHit } from '@/models/types';
 import { mapEntry, mapEntity, type EntryRow, type EntityRow } from '@/adapters/sqlite/mappers';
+import { toFtsQuery } from '@/utilities/fts';
 
-/*
- * Purpose: Turn typed search text into a safe FTS5 prefix query.
- * Design: Strip MATCH operators so user punctuation cannot break or inject FTS syntax.
- * Workflow: Called by searchEntries and searchEntities before MATCH.
- * Data Handoff: Returns a token* string, or empty when there is nothing to search.
- */
-export function toFtsQuery(raw: string): string {
-  const tokens = raw
-    .trim()
-    .split(/\s+/)
-    .map((token) => token.replace(/["'*(){}[\]:^~]/g, ''))
-    .filter((token) => token.length > 0);
-  return tokens.map((token) => `${token}*`).join(' ');
-}
+export { toFtsQuery };
 
 /*
  * Purpose: Bind FTS queries to one database connection.
@@ -62,7 +53,7 @@ export function createSearchRepository(db: SQLiteDatabase): SearchRepository {
           `SELECT e.id, e.source_text, e.created_at, e.updated_at, e.latitude, e.longitude, e.source
            FROM entries e
            INNER JOIN entries_fts f ON f.rowid = e.rowid
-           WHERE entries_fts MATCH ?
+           WHERE entries_fts MATCH ? AND e.archived_at IS NULL
            ORDER BY e.created_at DESC
            LIMIT 80`,
           fts
@@ -71,7 +62,7 @@ export function createSearchRepository(db: SQLiteDatabase): SearchRepository {
         rows = await db.getAllAsync<EntryRow>(
           `SELECT id, source_text, created_at, updated_at, latitude, longitude, source
            FROM entries
-           WHERE source_text LIKE ?
+           WHERE source_text LIKE ? AND archived_at IS NULL
            ORDER BY created_at DESC
            LIMIT 80`,
           `%${query.trim()}%`
@@ -85,7 +76,7 @@ export function createSearchRepository(db: SQLiteDatabase): SearchRepository {
           `SELECT ent.id, ent.name, ent.type, ent.created_at, ent.updated_at
            FROM entities ent
            INNER JOIN entry_entities x ON x.entity_id = ent.id
-           WHERE x.entry_id = ?`,
+           WHERE x.entry_id = ? AND ent.archived_at IS NULL AND x.archived_at IS NULL`,
           entry.id
         );
         hits.push({
@@ -115,7 +106,7 @@ export function createSearchRepository(db: SQLiteDatabase): SearchRepository {
           `SELECT e.id, e.name, e.type, e.created_at, e.updated_at
            FROM entities e
            INNER JOIN entities_fts f ON f.rowid = e.rowid
-           WHERE entities_fts MATCH ?
+           WHERE entities_fts MATCH ? AND e.archived_at IS NULL
            ORDER BY e.name COLLATE NOCASE
            LIMIT 40`,
           fts
@@ -124,7 +115,7 @@ export function createSearchRepository(db: SQLiteDatabase): SearchRepository {
         rows = await db.getAllAsync<EntityRow>(
           `SELECT id, name, type, created_at, updated_at
            FROM entities
-           WHERE name LIKE ?
+           WHERE name LIKE ? AND archived_at IS NULL
            ORDER BY name COLLATE NOCASE
            LIMIT 40`,
           `%${query.trim()}%`

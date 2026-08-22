@@ -13,6 +13,9 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-006
  */
 
 import type { SQLiteDatabase } from 'expo-sqlite';
@@ -88,7 +91,7 @@ export function createEntryRepository(db: SQLiteDatabase): EntryRepository {
     async getById(id) {
       const row = await db.getFirstAsync<EntryRow>(
         `SELECT id, source_text, created_at, updated_at, latitude, longitude, source
-         FROM entries WHERE id = ?`,
+         FROM entries WHERE id = ? AND archived_at IS NULL`,
         id
       );
       return row ? mapEntry(row) : null;
@@ -103,9 +106,37 @@ export function createEntryRepository(db: SQLiteDatabase): EntryRepository {
     async listNewestFirst() {
       const rows = await db.getAllAsync<EntryRow>(
         `SELECT id, source_text, created_at, updated_at, latitude, longitude, source
-         FROM entries ORDER BY created_at DESC`
+         FROM entries WHERE archived_at IS NULL ORDER BY created_at DESC`
       );
       return rows.map(mapEntry);
+    },
+
+    /*
+     * Purpose: Tombstone an entry and its attachments, links, and provenance edges.
+     * Design: Set archived_at instead of DELETE so chronicle history is recoverable later.
+     * Workflow: Called by EntryService.archiveEntry; not exposed in UI this pass.
+     * Data Handoff: Updates entries, attachments, entry_entities, and relationships for that id.
+     */
+    async archive(id) {
+      const archivedAt = nowMs();
+      await db.withTransactionAsync(async () => {
+        await db.runAsync(`UPDATE entries SET archived_at = ? WHERE id = ? AND archived_at IS NULL`, archivedAt, id);
+        await db.runAsync(
+          `UPDATE attachments SET archived_at = ? WHERE entry_id = ? AND archived_at IS NULL`,
+          archivedAt,
+          id
+        );
+        await db.runAsync(
+          `UPDATE entry_entities SET archived_at = ? WHERE entry_id = ? AND archived_at IS NULL`,
+          archivedAt,
+          id
+        );
+        await db.runAsync(
+          `UPDATE relationships SET archived_at = ? WHERE source_entry_id = ? AND archived_at IS NULL`,
+          archivedAt,
+          id
+        );
+      });
     },
   };
 }

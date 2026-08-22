@@ -13,6 +13,9 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-007
  */
 
 import { useEffect, useState } from 'react';
@@ -70,15 +73,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       <TelemetryLabel k="CAPTAIN'S LOG" v="ACCESS REQUIRED" accent="orange" />
       <Text style={styles.title}>{hasAccount ? 'Unlock archive' : 'Create local archive'}</Text>
       <Text style={styles.copy}>
-        Email authentication is stored on this device. Google sign-in is optional and separate from
-        Drive backup authorization.
+        Local archive credentials are stored on this device. The identifier may look like an email;
+        this app does not verify email ownership. Google sign-in is optional and separate from Drive
+        backup authorization.
       </Text>
       <TextInput
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         keyboardType="email-address"
-        placeholder="email"
+        placeholder="archive identifier"
         placeholderTextColor={colors.textDim}
         style={styles.input}
       />
@@ -95,7 +99,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         dominant
         onPress={async () => {
           try {
-            await services.auth.signInWithEmail(email, password);
+            await services.auth.signInWithLocalArchive(email, password);
             chrome.unlock();
             setReady(true);
           } catch (cause) {

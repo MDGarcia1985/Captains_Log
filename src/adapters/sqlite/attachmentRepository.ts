@@ -61,7 +61,7 @@ export function createAttachmentRepository(db: SQLiteDatabase): AttachmentReposi
     async listForEntry(entryId) {
       const rows = await db.getAllAsync<AttachmentRow>(
         `SELECT id, entry_id, file_uri, thumbnail_uri, mime_type, width, height, size, created_at, role
-         FROM attachments WHERE entry_id = ? ORDER BY created_at ASC`,
+         FROM attachments WHERE entry_id = ? AND archived_at IS NULL ORDER BY created_at ASC`,
         entryId
       );
       return rows.map(mapAttachment);
@@ -78,7 +78,7 @@ export function createAttachmentRepository(db: SQLiteDatabase): AttachmentReposi
         `SELECT a.id, a.entry_id, a.file_uri, a.thumbnail_uri, a.mime_type, a.width, a.height, a.size, a.created_at, a.role
          FROM attachments a
          INNER JOIN entry_entities x ON x.entry_id = a.entry_id
-         WHERE x.entity_id = ?
+         WHERE x.entity_id = ? AND a.archived_at IS NULL AND x.archived_at IS NULL
          ORDER BY a.created_at DESC`,
         entityId
       );
@@ -94,7 +94,7 @@ export function createAttachmentRepository(db: SQLiteDatabase): AttachmentReposi
     async listAll() {
       const rows = await db.getAllAsync<AttachmentRow>(
         `SELECT id, entry_id, file_uri, thumbnail_uri, mime_type, width, height, size, created_at, role
-         FROM attachments ORDER BY created_at DESC`
+         FROM attachments WHERE archived_at IS NULL ORDER BY created_at DESC`
       );
       return rows.map(mapAttachment);
     },

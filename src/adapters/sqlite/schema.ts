@@ -13,10 +13,23 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-002
  */
 
 export const DATABASE_NAME = 'captains-log.db';
-export const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 2;
+export const REQUIRED_TABLES = [
+  'entries',
+  'entities',
+  'entry_entities',
+  'relationships',
+  'attachments',
+  'entry_revisions',
+  'app_settings',
+  'processing_jobs',
+] as const;
 
 export const SCHEMA_V1 = `
 PRAGMA journal_mode = WAL;
@@ -134,4 +147,23 @@ CREATE TRIGGER IF NOT EXISTS entities_au AFTER UPDATE ON entities BEGIN
     VALUES('delete', old.rowid, old.name);
   INSERT INTO entities_fts(rowid, name) VALUES (new.rowid, new.name);
 END;
+`;
+
+export const PROCESSING_JOBS_SQL = `
+CREATE TABLE IF NOT EXISTS processing_jobs (
+  id TEXT PRIMARY KEY NOT NULL,
+  entry_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  status TEXT NOT NULL,
+  detail TEXT NOT NULL DEFAULT '',
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  FOREIGN KEY (entry_id) REFERENCES entries(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_entry ON processing_jobs(entry_id);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_status ON processing_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_relationships_source_entry ON relationships(source_entry_id);
+CREATE INDEX IF NOT EXISTS idx_entries_archived_at ON entries(archived_at);
 `;

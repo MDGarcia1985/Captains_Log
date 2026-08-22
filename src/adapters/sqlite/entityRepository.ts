@@ -54,7 +54,7 @@ export function createEntityRepository(db: SQLiteDatabase): EntityRepository {
      */
     async getById(id) {
       const row = await db.getFirstAsync<EntityRow>(
-        `SELECT id, name, type, created_at, updated_at FROM entities WHERE id = ?`,
+        `SELECT id, name, type, created_at, updated_at FROM entities WHERE id = ? AND archived_at IS NULL`,
         id
       );
       return row ? mapEntity(row) : null;
@@ -69,7 +69,7 @@ export function createEntityRepository(db: SQLiteDatabase): EntityRepository {
     async findByName(name) {
       const row = await db.getFirstAsync<EntityRow>(
         `SELECT id, name, type, created_at, updated_at
-         FROM entities WHERE name = ? COLLATE NOCASE`,
+         FROM entities WHERE name = ? COLLATE NOCASE AND archived_at IS NULL`,
         name
       );
       return row ? mapEntity(row) : null;
@@ -83,7 +83,7 @@ export function createEntityRepository(db: SQLiteDatabase): EntityRepository {
      */
     async listAll() {
       const rows = await db.getAllAsync<EntityRow>(
-        `SELECT id, name, type, created_at, updated_at FROM entities ORDER BY name COLLATE NOCASE`
+        `SELECT id, name, type, created_at, updated_at FROM entities WHERE archived_at IS NULL ORDER BY name COLLATE NOCASE`
       );
       return rows.map(mapEntity);
     },
@@ -100,7 +100,7 @@ export function createEntityRepository(db: SQLiteDatabase): EntityRepository {
       }
       const placeholders = ids.map(() => '?').join(', ');
       const rows = await db.getAllAsync<EntityRow>(
-        `SELECT id, name, type, created_at, updated_at FROM entities WHERE id IN (${placeholders})`,
+        `SELECT id, name, type, created_at, updated_at FROM entities WHERE id IN (${placeholders}) AND archived_at IS NULL`,
         ...ids
       );
       return rows.map(mapEntity);
@@ -121,6 +121,16 @@ export function createEntityRepository(db: SQLiteDatabase): EntityRepository {
     },
 
     /*
+     * Purpose: Drop derived entry-entity links before a re-extract of the same source entry.
+     * Design: Hard-delete regeneratable links rather than tombstone them (DEV-2026-08-21-001).
+     * Workflow: Called at the start of ExtractionService.processEntry.
+     * Data Handoff: Deletes entry_entities rows for the entry id.
+     */
+    async unlinkAllForEntry(entryId) {
+      await db.runAsync(`DELETE FROM entry_entities WHERE entry_id = ?`, entryId);
+    },
+
+    /*
      * Purpose: Show unobtrusive entity chips on a log entry.
      * Design: Join through entry_entities rather than parsing text again.
      * Workflow: Called by LogScreen via EntityService.listEntitiesForEntry.
@@ -131,7 +141,7 @@ export function createEntityRepository(db: SQLiteDatabase): EntityRepository {
         `SELECT e.id, e.name, e.type, e.created_at, e.updated_at
          FROM entities e
          INNER JOIN entry_entities x ON x.entity_id = e.id
-         WHERE x.entry_id = ?
+         WHERE x.entry_id = ? AND e.archived_at IS NULL AND x.archived_at IS NULL
          ORDER BY e.name COLLATE NOCASE`,
         entryId
       );
@@ -149,7 +159,7 @@ export function createEntityRepository(db: SQLiteDatabase): EntityRepository {
         `SELECT en.id, en.source_text, en.created_at, en.updated_at, en.latitude, en.longitude, en.source
          FROM entries en
          INNER JOIN entry_entities x ON x.entry_id = en.id
-         WHERE x.entity_id = ?
+         WHERE x.entity_id = ? AND en.archived_at IS NULL AND x.archived_at IS NULL
          ORDER BY en.created_at DESC`,
         entityId
       );

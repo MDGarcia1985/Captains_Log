@@ -1,8 +1,8 @@
 /*
- * File: authService.ts
+ * File: src/services/authService.ts
  *
  * Purpose:
- *     Compose local email and Google authentication behind one service.
+ *     Compose local archive credentials and Google authentication behind one service.
  *
  * Author:
  *     Captain's Log contributors
@@ -13,6 +13,9 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-007
  */
 
 import type { AuthProvider } from '@/models/contracts';
@@ -22,18 +25,18 @@ import { deleteSecret, getSecret, setSecret } from '@/utilities/secureKv';
 const SESSION_KEY = 'captains-log.session';
 
 /*
- * Purpose: Compose email and Google providers behind one session flag.
- * Design: Session key is separate from credentials so sign-out can lock the UI without deleting the local account.
+ * Purpose: Compose local-archive and Google providers behind one session flag.
+ * Design: Session key is separate from credentials so sign-out can lock the UI without deleting the local credential.
  * Workflow: Constructed by createAppServices; used by AuthGate and Settings.
  * Data Handoff: Returns AuthAccount after sign-in; getSession restores it on later launches.
  */
-export function createAuthService(deps: { email: AuthProvider; google: AuthProvider }) {
+export function createAuthService(deps: { localArchive: AuthProvider; google: AuthProvider }) {
   return {
     googleConfigured: deps.google.isConfigured(),
 
     /*
      * Purpose: Restore an unlocked session without a network round trip.
-     * Design: SESSION_KEY must exist; then prefer email account, else Google.
+     * Design: SESSION_KEY must exist; then prefer local archive credential, else Google.
      * Workflow: Called by AuthGate on boot.
      * Data Handoff: Returns AuthAccount or null to decide login vs shell.
      */
@@ -42,24 +45,24 @@ export function createAuthService(deps: { email: AuthProvider; google: AuthProvi
       if (!flag) {
         return null;
       }
-      return (await deps.email.getAccount()) ?? (await deps.google.getAccount());
+      return (await deps.localArchive.getAccount()) ?? (await deps.google.getAccount());
     },
 
     /*
-     * Purpose: Create or unlock the local email archive and mark the session active.
+     * Purpose: Create or unlock the local archive credential and mark the session active.
      * Design: Provider does credential work; this layer only sets SESSION_KEY.
      * Workflow: Called from AuthGate Unlock/Create.
      * Data Handoff: Returns AuthAccount to show the shell.
      */
-    async signInWithEmail(email: string, password: string): Promise<AuthAccount> {
-      const account = await deps.email.signIn({ email, password });
+    async signInWithLocalArchive(identifier: string, password: string): Promise<AuthAccount> {
+      const account = await deps.localArchive.signIn({ identifier, password });
       await setSecret(SESSION_KEY, 'active');
       return account;
     },
 
     /*
      * Purpose: Complete Google sign-in and mark the session active.
-     * Design: Same session flag as email so AuthGate does not care which provider succeeded.
+     * Design: Same session flag as local archive so AuthGate does not care which provider succeeded.
      * Workflow: Called from AuthGate Sign In With Google.
      * Data Handoff: Returns AuthAccount to show the shell.
      */
@@ -74,7 +77,7 @@ export function createAuthService(deps: { email: AuthProvider; google: AuthProvi
     },
 
     async hasLocalAccount(): Promise<boolean> {
-      return Boolean(await deps.email.getAccount());
+      return Boolean(await deps.localArchive.getAccount());
     },
   };
 }

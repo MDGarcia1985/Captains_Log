@@ -1,5 +1,5 @@
 /*
- * File: attachmentStorage.ts
+ * File: src/adapters/filesystem/attachmentStorage.ts
  *
  * Purpose:
  *     Copy captured images into application-managed storage and make thumbnails.
@@ -13,13 +13,17 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-005, DEV-2026-08-21-010
  */
 
 import { Directory, File, Paths } from 'expo-file-system';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 import type { AttachmentStorage } from '@/models/contracts';
-import type { CapturedImage } from '@/models/types';
+import type { CapturedImage, RestoredAttachmentFile } from '@/models/types';
+import { recordDiagnostic } from '@/utilities/diagnostics';
 
 /*
  * Purpose: Choose a file extension that preserves the original image type.
@@ -40,6 +44,14 @@ function extensionFor(mimeType: string, fileName: string | null): string {
   return 'jpg';
 }
 
+function attachmentsRoot(): Directory {
+  return new Directory(Paths.document, 'attachments');
+}
+
+function managedFile(attachmentId: string, fileName: string): File {
+  return new File(new Directory(Paths.document, 'attachments', attachmentId), fileName);
+}
+
 /*
  * Purpose: Keep originals and thumbnails under application-controlled storage.
  * Design: One directory per attachment id so backup can walk files without SQLite.
@@ -50,7 +62,7 @@ export function createFilesystemAttachmentStorage(): AttachmentStorage {
   return {
     /*
      * Purpose: Copy a captured image into managed storage and create a thumbnail.
-     * Design: Preserve the original bytes; thumbnail failure falls back to the original URI so save still succeeds.
+     * Design: Preserve the original bytes; thumbnail failure is recorded and falls back to the original URI.
      * Workflow: Called by AttachmentService.addAttachment after camera/gallery returns a CapturedImage.
      * Data Handoff: Returns file/thumbnail URIs and dimensions stored in the attachments table.
      */
@@ -73,7 +85,8 @@ export function createFilesystemAttachmentStorage(): AttachmentStorage {
         const thumbFile = new File(root, 'thumb.jpg');
         new File(thumb.uri).copy(thumbFile);
         thumbnailUri = thumbFile.uri;
-      } catch {
+      } catch (error) {
+        recordDiagnostic('attachment.thumbnail', error);
         thumbnailUri = original.uri;
       }
 
@@ -90,15 +103,15 @@ export function createFilesystemAttachmentStorage(): AttachmentStorage {
     /*
      * Purpose: Enumerate managed files for backup without going through SQLite.
      * Design: Walk attachments/{id} so originals and thumbs are both uploaded.
-     * Workflow: Called by GoogleDriveBackupProvider.backupAttachments.
-     * Data Handoff: Returns uri/mimeType pairs for multipart Drive upload.
+     * Workflow: Called by GoogleDriveBackupProvider snapshot creation.
+     * Data Handoff: Returns uri/mimeType/attachmentId/fileName for multipart Drive upload.
      */
     async listManagedFiles() {
-      const root = new Directory(Paths.document, 'attachments');
+      const root = attachmentsRoot();
       if (!root.exists) {
         return [];
       }
-      const files: { uri: string; mimeType: string }[] = [];
+      const files: { uri: string; mimeType: string; attachmentId: string; fileName: string }[] = [];
       for (const item of root.list()) {
         if (item instanceof Directory) {
           for (const child of item.list()) {
@@ -106,12 +119,51 @@ export function createFilesystemAttachmentStorage(): AttachmentStorage {
               files.push({
                 uri: child.uri,
                 mimeType: child.name.endsWith('.png') ? 'image/png' : 'image/jpeg',
+                attachmentId: item.name,
+                fileName: child.name,
               });
             }
           }
         }
       }
       return files;
+    },
+
+    async readFileBytes(uri: string) {
+      const file = new File(uri);
+      return file.bytes();
+    },
+
+    /*
+     * Purpose: Replace local managed files with bytes from a selected snapshot.
+     * Design: Delete the attachments directory then rewrite so leftover files cannot mix with the restore.
+     * Workflow: Called during Drive restore after the database file has been replaced.
+     * Data Handoff: Writes files under Paths.document/attachments/{id}/.
+     */
+    async replaceAllManagedFiles(files: RestoredAttachmentFile[]) {
+      const root = attachmentsRoot();
+      if (root.exists) {
+        root.delete();
+      }
+      root.create({ intermediates: true, idempotent: true });
+      for (const file of files) {
+        const dir = new Directory(root, file.attachmentId);
+        dir.create({ intermediates: true, idempotent: true });
+        const dest = new File(dir, file.fileName);
+        if (dest.exists) {
+          dest.delete();
+        }
+        dest.create();
+        dest.write(file.bytes);
+      }
+    },
+
+    async fileExists(uri: string) {
+      return new File(uri).exists;
+    },
+
+    managedUri(attachmentId: string, fileName: string) {
+      return managedFile(attachmentId, fileName).uri;
     },
   };
 }

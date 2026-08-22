@@ -1,70 +1,86 @@
-### Annotation Standards Guidelines
+# Annotation Standards
 
-For source files, the primary goal is to make the file’s contents and responsibility immediately clear to both human developers and LLM-based agents.
+Source annotations make a file's responsibility, contracts, and non-obvious reasoning clear to human developers and software agents without duplicating the implementation.
 
-Each file header should include:
+Annotations are the code-local layer of the project's engineering record. They explain what the code is responsible for and why a particular detail exists. Broader decisions belong in `DEVNOTES.md`; verification results belong in `TEST_LOG.md`.
 
-* File name
-* Purpose
-* Author or contributors
-* Contact information
-* Project license, or a file-specific license when it differs from the project license
+## Governing Principles
 
-Function-level documentation should be added when a function’s purpose, behavior, inputs, outputs, or side effects would not be obvious to a beginner or to someone unfamiliar with the language or subsystem.
+- Explain intent, constraints, assumptions, units, side effects, and non-obvious reasoning.
+- Do not narrate syntax or repeat names that are already clear.
+- Keep documentation close to the code it describes and update it in the same change.
+- Prefer clear names and structure over comments that compensate for unclear code.
+- Never use a comment to claim that behavior was tested. Cite a `TEST_LOG.md` test ID when verification history is relevant.
+- Never preserve obsolete guidance as if it were current. Update code annotations when behavior changes; preserve the historical decision in `DEVNOTES.md` and the evidence in `TEST_LOG.md`.
 
-Use inline comments for implementation details that require local explanation, such as:
+## File Headers
 
-* Why a particular integer type or width was selected
-* The meaning of a constant, mask, register value, or unit
-* A non-obvious algorithmic step
-* Hardware-specific behavior
-* Safety-critical assumptions or constraints
+Every project-authored source file must begin with a header appropriate to its language. Generated files, vendored dependencies, lockfiles, data files, and files whose format cannot safely contain comments are exempt.
 
-Comments should explain intent and reasoning rather than restating the code.
+Each header must identify:
 
-Avoid:
+- file name or repository-relative path;
+- purpose and primary responsibility;
+- author, owner, or contributors;
+- contact information or the project's canonical contact location;
+- project license, or a file-specific license when different;
+- important architectural constraints when they are not apparent from the file;
+- related `DEVNOTES.md` IDs when a decision materially governs the file.
 
-* Large walls of documentation that obscure the implementation
-* Comments that merely repeat the following line
-* Unnecessarily compressed single-line functions
-* Excessive notes for code that is already clear from its names and structure
+Use `Pending confirmation` for required ownership, contact, or licensing information that is genuinely unknown. Do not invent it.
 
-Use notes sparingly for code that is genuinely opaque, unusual, safety-critical, or likely to confuse a new contributor.
+Example:
 
-
-### File Header
+```c
 /*
- * File: geometry.c
+ * File: src/geometry.c
  *
  * Purpose:
  *     Validate room coordinates and calculate placement geometry.
  *
- * Author:
+ * Contributors:
  *     FollowMe Speakers contributors
- *     Project owner name pending confirmation.
  *
  * Contact:
  *     Project owner contact information pending confirmation.
  *
  * License:
  *     All rights reserved until the project owner selects a license.
- */
-
-
-Function-level documentation is required for every function that is longer than a single line or whose behavior is opaque. Use this header:
-
-```
-/*
- * Purpose: Why the function exists
- * Design: Why the function is structured the way it is and what decision lead to this form.
- * Workflow: Where in the workflow this function belongs and what information or inputs it is expecting and from where.
- * Data Handoff: What the functions data output is and to what system/function it is intended for next.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-003
  */
 ```
 
-### Function Header
+Use the native documentation convention of the language when one exists. Preserve the required information rather than copying the comment syntax literally.
 
+## Function and Type Documentation
+
+Document every project-authored function or method that:
+
+- is longer than a single line;
+- has behavior that is not immediately obvious to a beginner or subsystem newcomer;
+- crosses an architectural boundary;
+- mutates state, performs I/O, or has material side effects;
+- enforces a business, safety, security, persistence, or compatibility rule;
+- uses non-obvious units, coordinate systems, error behavior, or ownership rules.
+
+Trivial accessors, declarative callbacks, framework boilerplate, and self-explanatory one-line functions may omit a function header unless a material contract would otherwise be hidden.
+
+Function documentation must cover these four concerns:
+
+```text
+Purpose: Why the function exists.
+Design: Why it has this structure and which constraints govern it.
+Workflow: Where it is called and what inputs or state it expects.
+Data Handoff: What it returns, changes, emits, or passes onward, and who consumes it.
 ```
+
+Use the language's standard doc-comment fields for parameters, return values, thrown errors, and side effects when those details are not already clear from the signature.
+
+Example:
+
+```c
 /*
  * Purpose: Provide the UI and tracking services with one canonical wall-distance result.
  * Design: Use integer centimetres in the lower-left room coordinate frame. Reject invalid points instead of silently clamping them.
@@ -77,3 +93,79 @@ bool wall_distances(
     WallDistances *distances
 );
 ```
+
+Apply the same standard to classes, interfaces, modules, schemas, and public types when they carry a non-obvious contract.
+
+## Inline Comments
+
+Use inline comments for local facts that cannot be expressed clearly through names or structure, including:
+
+- the reason for an integer type or width;
+- the unit or coordinate system of a value;
+- the meaning of a constant, mask, register, status, or protocol value;
+- a non-obvious algorithmic step;
+- hardware- or platform-specific behavior;
+- safety, security, concurrency, timing, or compatibility constraints;
+- a deliberate workaround or surprising invariant.
+
+Workarounds and temporary constraints should cite the applicable DEVNOTES ID. If they are validated by a specific regression test, they may also cite its TEST ID.
+
+```text
+// Preserve insertion order for backup compatibility; see DEV-2026-08-21-004.
+// Regression coverage: TEST-2026-08-21-011.
+```
+
+## TODO and FIXME Notes
+
+Action notes must be specific and traceable. Use:
+
+```text
+TODO(DEV-YYYY-MM-DD-NNN): <required follow-up>
+FIXME(DEV-YYYY-MM-DD-NNN): <known incorrect or unsafe behavior>
+```
+
+Create the referenced DEVNOTES entry before or with the annotation. Do not use anonymous TODOs for material work.
+
+## Relationship to DEVNOTES and TEST_LOG
+
+Use the smallest appropriate record:
+
+| Information | Record it in |
+|---|---|
+| Current file or function responsibility | Source annotation |
+| Local invariant, unit, side effect, or implementation rationale | Source annotation |
+| Alternatives, trade-offs, accepted risks, deferred decisions | `DEVNOTES.md` |
+| Commands run, observed behavior, pass/fail status, test evidence | `TEST_LOG.md` |
+
+Cross-reference rather than copying long explanations. A typical trace is:
+
+```text
+source annotation -> DEV decision ID -> TEST evidence ID
+```
+
+Not every annotation needs a cross-reference. Add one when the code is governed by a material decision, workaround, known limitation, or regression requirement.
+
+## Prohibited Practices
+
+Avoid:
+
+- comments that merely restate the next line;
+- large documentation walls that obscure implementation;
+- stale or speculative claims presented as fact;
+- unnecessarily compressed code that requires compensating commentary;
+- test claims unsupported by `TEST_LOG.md` evidence;
+- passwords, credentials, personal data, or other secrets;
+- change-history blocks that duplicate version control or `DEVNOTES.md`;
+- silently removing documentation for an invariant that still applies.
+
+## Review Checklist
+
+Before completing a source change, confirm that:
+
+1. The file header is present or the file is legitimately exempt.
+2. Material functions, types, side effects, and constraints are documented.
+3. Comments describe current behavior and reasoning.
+4. Material decisions and workarounds cite a DEV ID.
+5. Any cited TEST ID exists in `TEST_LOG.md`.
+6. No comment claims unexecuted verification.
+7. The source change received the validation required by `TEST_LOG_STANDARDS.md`.

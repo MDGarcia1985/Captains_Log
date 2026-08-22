@@ -63,6 +63,10 @@ export type BackupState =
   | 'not_configured'
   | 'offline';
 
+export type ProcessingKind = 'extraction' | 'attachment';
+
+export type ProcessingStatus = 'pending' | 'succeeded' | 'failed';
+
 export interface GeoLocation {
   latitude: number;
   longitude: number;
@@ -140,8 +144,46 @@ export interface CapturedImage {
 }
 
 export interface AuthAccount {
-  email: string;
-  method: 'email' | 'google';
+  identifier: string;
+  method: 'local_archive' | 'google';
+}
+
+export interface ProcessingJob {
+  id: string;
+  entryId: string;
+  kind: ProcessingKind;
+  status: ProcessingStatus;
+  detail: string;
+  retryCount: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface BackupSnapshot {
+  id: string;
+  createdAt: number;
+  label: string;
+  attachmentCount: number;
+}
+
+export interface RestoreVerification {
+  databaseOk: boolean;
+  integrityCheck: string;
+  requiredTablesPresent: boolean;
+  attachmentRows: number;
+  attachmentFilesPresent: number;
+  missingAttachmentIds: string[];
+}
+
+export interface RestoredArchivePayload {
+  databaseBytes: Uint8Array;
+  files: RestoredAttachmentFile[];
+}
+
+export interface RestoredAttachmentFile {
+  attachmentId: string;
+  fileName: string;
+  bytes: Uint8Array;
 }
 
 export interface BackupStatus {

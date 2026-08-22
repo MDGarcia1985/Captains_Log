@@ -1,5 +1,5 @@
 /*
- * File: createAppServices.ts
+ * File: src/services/createAppServices.ts
  *
  * Purpose:
  *     Composition root that wires adapters to application services.
@@ -13,6 +13,9 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-011
  */
 
 import type { SQLiteDatabase } from 'expo-sqlite';
@@ -21,7 +24,7 @@ import { createFilesystemAttachmentStorage } from '@/adapters/filesystem/attachm
 import { createExpoImagePicker } from '@/adapters/imagePicker/expoImagePicker';
 import { createExpoLocationProvider } from '@/adapters/location/expoLocationProvider';
 import { createExpoNetworkStatus } from '@/adapters/network/expoNetwork';
-import { createLocalEmailAuthProvider } from '@/adapters/auth/localEmailAuthProvider';
+import { createLocalArchiveCredentialProvider } from '@/adapters/auth/localArchiveCredentialProvider';
 import { createGoogleAuthProvider } from '@/adapters/auth/googleAuthProvider';
 import { createGoogleDriveBackupProvider } from '@/adapters/googleDrive/googleDriveBackupProvider';
 import { createDeterministicExtractionProvider } from '@/adapters/extraction/deterministicExtraction';
@@ -29,6 +32,7 @@ import { createEntryRepository } from '@/adapters/sqlite/entryRepository';
 import { createEntityRepository } from '@/adapters/sqlite/entityRepository';
 import { createRelationshipRepository } from '@/adapters/sqlite/relationshipRepository';
 import { createAttachmentRepository } from '@/adapters/sqlite/attachmentRepository';
+import { createProcessingJobRepository } from '@/adapters/sqlite/processingJobRepository';
 import { createSearchRepository } from '@/adapters/sqlite/searchRepository';
 import { createSettingsStore } from '@/adapters/sqlite/settingsStore';
 import { createAttachmentService } from '@/services/attachmentService';
@@ -38,8 +42,14 @@ import { createEntityService } from '@/services/entityService';
 import { createEntryService } from '@/services/entryService';
 import { createExtractionService } from '@/services/extractionService';
 import { createLocationService } from '@/services/locationService';
+import { createProcessingService } from '@/services/processingService';
 import { createSearchService } from '@/services/searchService';
 import { createSettingsService } from '@/services/settingsService';
+import type { ArchiveRuntime } from '@/models/contracts';
+
+export interface AppCompositionRuntime extends ArchiveRuntime {
+  getDb: () => SQLiteDatabase;
+}
 
 /*
  * Purpose: Wire adapters to services so UI depends on one composed object.
@@ -47,11 +57,12 @@ import { createSettingsService } from '@/services/settingsService';
  * Workflow: Called after openArchiveDatabase in AppServicesProvider.
  * Data Handoff: Returns AppServices placed on React context for screens.
  */
-export function createAppServices(db: SQLiteDatabase) {
+export function createAppServices(db: SQLiteDatabase, runtime: AppCompositionRuntime) {
   const entries = createEntryRepository(db);
   const entities = createEntityRepository(db);
   const relationships = createRelationshipRepository(db);
   const attachments = createAttachmentRepository(db);
+  const jobs = createProcessingJobRepository(db);
   const search = createSearchRepository(db);
   const settingsStore = createSettingsStore(db);
   const storage = createFilesystemAttachmentStorage();
@@ -74,12 +85,14 @@ export function createAppServices(db: SQLiteDatabase) {
     entries,
     attachments: attachmentService,
     extraction,
+    jobs,
   });
   const backupProvider = createGoogleDriveBackupProvider({
-    db,
+    getDb: runtime.getDb,
     settings: settingsStore,
     attachments: storage,
     network,
+    runtime,
   });
 
   return {
@@ -88,8 +101,9 @@ export function createAppServices(db: SQLiteDatabase) {
     attachments: attachmentService,
     search: createSearchService(search),
     settings: createSettingsService(settingsStore),
+    processing: createProcessingService({ jobs, entries, extraction }),
     auth: createAuthService({
-      email: createLocalEmailAuthProvider(),
+      localArchive: createLocalArchiveCredentialProvider(),
       google: createGoogleAuthProvider(),
     }),
     backup: createBackupService({

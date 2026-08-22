@@ -18,13 +18,18 @@
 import type {
   Attachment,
   AuthAccount,
+  BackupSnapshot,
   BackupStatus,
   CapturedImage,
   Entity,
   ExtractedReference,
   GeoLocation,
   LogEntry,
+  ProcessingJob,
   Relationship,
+  RestoreVerification,
+  RestoredArchivePayload,
+  RestoredAttachmentFile,
   SearchHit,
 } from '@/models/types';
 
@@ -33,6 +38,7 @@ export interface EntryRepository {
   update(entry: LogEntry, previousText: string): Promise<void>;
   getById(id: string): Promise<LogEntry | null>;
   listNewestFirst(): Promise<LogEntry[]>;
+  archive(id: string): Promise<void>;
 }
 
 export interface EntityRepository {
@@ -42,6 +48,7 @@ export interface EntityRepository {
   listAll(): Promise<Entity[]>;
   getByIds(ids: string[]): Promise<Entity[]>;
   linkEntry(entryId: string, entityId: string): Promise<void>;
+  unlinkAllForEntry(entryId: string): Promise<void>;
   listForEntry(entryId: string): Promise<Entity[]>;
   listEntriesForEntity(entityId: string): Promise<LogEntry[]>;
 }
@@ -49,6 +56,15 @@ export interface EntityRepository {
 export interface RelationshipRepository {
   create(relationship: Relationship): Promise<void>;
   listForEntity(entityId: string): Promise<Relationship[]>;
+  deleteForSourceEntry(entryId: string): Promise<void>;
+}
+
+export interface ProcessingJobRepository {
+  create(job: ProcessingJob): Promise<void>;
+  markSucceeded(id: string): Promise<void>;
+  markFailed(id: string, detail: string): Promise<void>;
+  listFailed(): Promise<ProcessingJob[]>;
+  getById(id: string): Promise<ProcessingJob | null>;
 }
 
 export interface AttachmentRepository {
@@ -78,7 +94,11 @@ export interface AttachmentStorage {
     height: number | null;
     size: number | null;
   }>;
-  listManagedFiles(): Promise<{ uri: string; mimeType: string }[]>;
+  listManagedFiles(): Promise<{ uri: string; mimeType: string; attachmentId: string; fileName: string }[]>;
+  readFileBytes(uri: string): Promise<Uint8Array>;
+  replaceAllManagedFiles(files: RestoredAttachmentFile[]): Promise<void>;
+  fileExists(uri: string): Promise<boolean>;
+  managedUri(attachmentId: string, fileName: string): string;
 }
 
 export interface LocationProvider {
@@ -87,19 +107,24 @@ export interface LocationProvider {
 }
 
 export interface AuthProvider {
-  method: 'email' | 'google';
+  method: 'local_archive' | 'google';
   getAccount(): Promise<AuthAccount | null>;
-  signIn(credentials?: { email: string; password: string }): Promise<AuthAccount>;
+  signIn(credentials?: { identifier: string; password: string }): Promise<AuthAccount>;
   signOut(): Promise<void>;
   isConfigured(): boolean;
 }
 
 export interface BackupProvider {
-  backupDatabase(): Promise<void>;
-  backupAttachments(): Promise<void>;
+  backup(): Promise<void>;
   getStatus(): Promise<BackupStatus>;
   authorize(): Promise<void>;
   isAuthorized(): Promise<boolean>;
+  listBackups(): Promise<BackupSnapshot[]>;
+  restoreBackup(snapshotId: string): Promise<RestoreVerification>;
+}
+
+export interface ArchiveRuntime {
+  installRestoredArchive(payload: RestoredArchivePayload): Promise<RestoreVerification>;
 }
 
 export interface ExtractionProvider {

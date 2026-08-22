@@ -1,8 +1,8 @@
 /*
- * File: backupService.ts
+ * File: src/services/backupService.ts
  *
  * Purpose:
- *     Orchestrate backup without exposing Google Drive details to the UI.
+ *     Orchestrate backup and restore without exposing Google Drive details to the UI.
  *
  * Author:
  *     Captain's Log contributors
@@ -13,16 +13,20 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-003, DEV-2026-08-21-005
  */
 
 import type { BackupProvider, NetworkStatusProvider } from '@/models/contracts';
+import type { BackupSnapshot, RestoreVerification } from '@/models/types';
 import type { SettingsStore } from '@/adapters/sqlite/settingsStore';
 import { nowMs } from '@/utilities/time';
 
 /*
  * Purpose: Orchestrate backup without exposing Google Drive details to the UI.
  * Design: No-op when unauthorized so launch/background cannot mark backup failed before the user opts in.
- * Workflow: Constructed by createAppServices; triggered at launch, background, and Settings manual backup.
+ * Workflow: Constructed by createAppServices; triggered at launch, background, and Settings.
  * Data Handoff: Updates settings telemetry; UI reads BackupStatus via getStatus.
  */
 export function createBackupService(deps: {
@@ -41,6 +45,10 @@ export function createBackupService(deps: {
 
     isAuthorized() {
       return deps.provider.isAuthorized();
+    },
+
+    listBackups(): Promise<BackupSnapshot[]> {
+      return deps.provider.listBackups();
     },
 
     /*
@@ -63,18 +71,39 @@ export function createBackupService(deps: {
           });
           return;
         }
-        await deps.provider.backupDatabase();
-        await deps.provider.backupAttachments();
+        await deps.provider.backup();
         await deps.settings.set({
           lastBackupAt: nowMs(),
           lastBackupState: 'current',
-          lastBackupDetail: 'Local archive copied to backup provider',
+          lastBackupDetail: 'Local archive copied as a Drive snapshot',
         });
       } catch (error) {
         await deps.settings.set({
           lastBackupState: 'failed',
           lastBackupDetail: error instanceof Error ? error.message : 'Backup failed',
         });
+      }
+    },
+
+    /*
+     * Purpose: Replace the local archive with a selected snapshot.
+     * Design: Failures are recorded on backup status; the provider performs install/verify.
+     * Workflow: Called from Settings restore actions.
+     * Data Handoff: Returns RestoreVerification for the Settings message.
+     */
+    async restoreBackup(snapshotId: string): Promise<RestoreVerification> {
+      try {
+        return await deps.provider.restoreBackup(snapshotId);
+      } catch (error) {
+        try {
+          await deps.settings.set({
+            lastBackupState: 'failed',
+            lastBackupDetail: error instanceof Error ? error.message : 'Restore failed',
+          });
+        } catch {
+          // The live database may already be closed if restore failed after swap.
+        }
+        throw error;
       }
     },
   };

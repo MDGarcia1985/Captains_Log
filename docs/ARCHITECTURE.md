@@ -45,8 +45,8 @@ Rules:
 | Attachments | `AttachmentService` | SQLite `AttachmentRepository` + filesystem storage + image picker |
 | Search | `SearchService` | SQLite FTS5 |
 | Settings | `SettingsService` | SQLite key/value |
-| Auth | `AuthService` | `LocalEmailAuthProvider`, `GoogleAuthProvider` |
-| Backup | `BackupService` | `GoogleDriveBackupProvider` |
+| Auth | `AuthService` | `LocalArchiveCredentialProvider`, `GoogleAuthProvider` |
+| Backup | `BackupService` | `GoogleDriveBackupProvider` (timestamped `drive.file` snapshots) |
 | Location | `LocationService` | `ExpoLocationProvider` |
 | Extraction | `ExtractionService` | Deterministic `ExtractionProvider` |
 
@@ -78,7 +78,11 @@ Handedness mirrors rail side, capture controls, tablet pane order, and inspector
 
 ## Authentication
 
-An account is required before use. Email authentication is local (no application server). Google authentication uses `expo-auth-session` when OAuth client IDs are configured. Google Drive authorization is a separate scope and adapter concern.
+An account is required before use. Local archive credentials (`LocalArchiveCredential`) are stored on device and do not verify email ownership. Google authentication uses `expo-auth-session` with the client ID for the current platform only; that implicit token flow is prototype-only. Google Drive authorization is a separate `drive.file` scope and adapter concern.
+
+## Backup and restore
+
+Google Drive stores timestamped snapshots in a visible user-managed folder (`Captain's Log Backups`), not hidden application data. Retention keeps the newest 7 snapshots. Settings can list snapshots, restore one, and show post-restore integrity results. Local SQLite plus attachments remain canonical until the user restores.
 
 ## Out of Scope Here
 

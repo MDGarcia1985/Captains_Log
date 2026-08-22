@@ -1,5 +1,5 @@
 /*
- * File: SettingsScreen.tsx
+ * File: src/ui/screens/SettingsScreen.tsx
  *
  * Purpose:
  *     Minimum MVP settings: handedness, backup, permissions, and account.
@@ -13,13 +13,16 @@
  *
  * License:
  *     All rights reserved until the project owner selects a license.
+ *
+ * Related Decisions:
+ *     DEV-2026-08-21-003, DEV-2026-08-21-005, DEV-2026-08-21-010
  */
 
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
-import type { AuthAccount, BackupStatus, Handedness } from '@/models/types';
+import type { AuthAccount, BackupSnapshot, BackupStatus, Handedness, ProcessingJob } from '@/models/types';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';
 import { formatTelemetryTime } from '@/utilities/time';
@@ -37,6 +40,8 @@ export function SettingsScreen() {
   const chrome = useChrome();
   const [account, setAccount] = useState<AuthAccount | null>(null);
   const [backup, setBackup] = useState<BackupStatus | null>(null);
+  const [snapshots, setSnapshots] = useState<BackupSnapshot[]>([]);
+  const [jobs, setJobs] = useState<ProcessingJob[]>([]);
   const [locationStatus, setLocationStatus] = useState('unknown');
   const [cameraStatus, setCameraStatus] = useState('unknown');
   const [galleryStatus, setGalleryStatus] = useState('unknown');
@@ -44,9 +49,9 @@ export function SettingsScreen() {
 
   /*
    * Purpose: Refresh settings telemetry from services.
-   * Design: One reload path used by focus and after backup/authorize actions.
-   * Workflow: Runs on screen focus; also after Drive authorize/backup.
-   * Data Handoff: Sets account, backup, permission, and handedness state for the form.
+   * Design: One reload path used by focus and after backup/authorize/restore actions.
+   * Workflow: Runs on screen focus; also after Drive authorize/backup/restore.
+   * Data Handoff: Sets account, backup, permission, snapshot, and job state for the form.
    */
   const reload = useCallback(async () => {
     setAccount(await services.auth.getSession());
@@ -57,6 +62,13 @@ export function SettingsScreen() {
     setGalleryStatus(media.gallery);
     const settings = await services.settings.get();
     chrome.setHandedness(settings.handedness);
+    setJobs(await services.processing.listFailed());
+    try {
+      const authorized = await services.backup.isAuthorized();
+      setSnapshots(authorized ? await services.backup.listBackups() : []);
+    } catch {
+      setSnapshots([]);
+    }
   }, [services, chrome]);
 
   useFocusEffect(
@@ -90,7 +102,9 @@ export function SettingsScreen() {
 
       <ClippedPanel>
         <Text style={styles.section}>ACCOUNT</Text>
-        <Text style={styles.value}>{account ? `${account.method} / ${account.email}` : 'none'}</Text>
+        <Text style={styles.value}>
+          {account ? `${account.method} / ${account.identifier}` : 'none'}
+        </Text>
         <CommandButton
           label="Sign Out Session"
           onPress={async () => {
@@ -106,6 +120,10 @@ export function SettingsScreen() {
         <TelemetryLabel k="LAST BACKUP" v={formatTelemetryTime(backup?.lastBackupAt ?? null)} />
         <TelemetryLabel k="BACKUP STATUS" v={(backup?.state ?? 'unknown').toUpperCase()} />
         <Text style={styles.detail}>{backup?.detail}</Text>
+        <Text style={styles.detail}>
+          Snapshots are visible Drive files in the folder named {'Captain\'s Log Backups'}. Local data stays
+          authoritative until you restore a snapshot. Restore replaces the local archive.
+        </Text>
         <CommandButton
           label="Authorize Drive"
           onPress={async () => {
@@ -126,6 +144,50 @@ export function SettingsScreen() {
             await reload();
           }}
         />
+        {snapshots.map((snapshot) => (
+          <View key={snapshot.id} style={styles.snapshot}>
+            <Text style={styles.value}>
+              {snapshot.label} · {snapshot.attachmentCount} files
+            </Text>
+            <CommandButton
+              label="Restore this snapshot"
+              onPress={async () => {
+                try {
+                  const verification = await services.backup.restoreBackup(snapshot.id);
+                  setMessage(
+                    verification.databaseOk
+                      ? `Restore verified (${verification.attachmentFilesPresent}/${verification.attachmentRows} files)`
+                      : `Restore incomplete: ${verification.integrityCheck}`
+                  );
+                  await reload();
+                } catch (error) {
+                  setMessage(error instanceof Error ? error.message : 'Restore failed');
+                }
+              }}
+            />
+          </View>
+        ))}
+      </ClippedPanel>
+
+      <ClippedPanel>
+        <Text style={styles.section}>PROCESSING FAILURES</Text>
+        {jobs.length === 0 ? (
+          <Text style={styles.detail}>No failed attachment or extraction jobs.</Text>
+        ) : (
+          jobs.map((job) => (
+            <Text key={job.id} style={styles.detail}>
+              {job.kind} · {job.status} · retries {job.retryCount} · {job.detail}
+            </Text>
+          ))
+        )}
+        <CommandButton
+          label="Retry failed extraction"
+          onPress={async () => {
+            const retried = await services.processing.retryFailedExtraction();
+            setMessage(`Retried ${retried} extraction job(s)`);
+            await reload();
+          }}
+        />
       </ClippedPanel>
 
       <ClippedPanel>
@@ -139,7 +201,8 @@ export function SettingsScreen() {
         <Text style={styles.section}>EXPORT / BACKUP INFORMATION</Text>
         <Text style={styles.detail}>
           Canonical data is the local SQLite archive plus managed attachment files. Google Drive is
-          backup only. Core use does not require a network connection.
+          backup only, using timestamped snapshots the user can see in Drive. Core use does not
+          require a network connection.
         </Text>
       </ClippedPanel>
       {message ? <Text style={styles.message}>{message}</Text> : null}
@@ -177,6 +240,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     lineHeight: 20,
     marginVertical: 8,
+  },
+  snapshot: {
+    marginTop: 8,
+    gap: 8,
   },
   message: {
     color: colors.orange,

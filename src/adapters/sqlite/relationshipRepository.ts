@@ -58,12 +58,22 @@ export function createRelationshipRepository(db: SQLiteDatabase): RelationshipRe
       const rows = await db.getAllAsync<RelationshipRow>(
         `SELECT id, source_entity_id, target_entity_id, type, source_entry_id, created_at
          FROM relationships
-         WHERE source_entity_id = ? OR target_entity_id = ?
+         WHERE (source_entity_id = ? OR target_entity_id = ?) AND archived_at IS NULL
          ORDER BY created_at DESC`,
         entityId,
         entityId
       );
       return rows.map(mapRelationship);
+    },
+
+    /*
+     * Purpose: Remove derived edges that originated from one source entry before re-extraction.
+     * Design: Hard-delete regeneratable provenance edges (DEV-2026-08-21-001).
+     * Workflow: Called at the start of ExtractionService.processEntry.
+     * Data Handoff: Deletes relationships rows with that source_entry_id.
+     */
+    async deleteForSourceEntry(entryId) {
+      await db.runAsync(`DELETE FROM relationships WHERE source_entry_id = ?`, entryId);
     },
   };
 }
