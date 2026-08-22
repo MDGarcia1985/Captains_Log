@@ -5,14 +5,13 @@
  *     Timestamp helpers for storage and chronological grouping.
  *
  * Author:
- *     Captain's Log contributors
- *     Project owner name pending confirmation.
+ *     Michael Garcia
  *
  * Contact:
- *     Project owner contact information pending confirmation.
+ *     michael@mandedesign.studio
  *
  * License:
- *     All rights reserved until the project owner selects a license.
+ *     SPDX-License-Identifier: MPL-2.0
  */
 
 export function nowMs(): number {

@@ -5,14 +5,13 @@
  *     Choose a Google OAuth client ID for the current platform only.
  *
  * Author:
- *     Captain's Log contributors
- *     Project owner name pending confirmation.
+ *     Michael Garcia
  *
  * Contact:
- *     Project owner contact information pending confirmation.
+ *     michael@mandedesign.studio
  *
  * License:
- *     All rights reserved until the project owner selects a license.
+ *     SPDX-License-Identifier: MPL-2.0
  *
  * Related Decisions:
  *     DEV-2026-08-21-009

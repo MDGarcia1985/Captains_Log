@@ -5,14 +5,13 @@
  *     Optional per-entry location via expo-location, requested only on use.
  *
  * Author:
- *     Captain's Log contributors
- *     Project owner name pending confirmation.
+ *     Michael Garcia
  *
  * Contact:
- *     Project owner contact information pending confirmation.
+ *     michael@mandedesign.studio
  *
  * License:
- *     All rights reserved until the project owner selects a license.
+ *     SPDX-License-Identifier: MPL-2.0
  */
 
 import * as Location from 'expo-location';

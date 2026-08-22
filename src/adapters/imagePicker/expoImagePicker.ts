@@ -5,14 +5,13 @@
  *     Camera and gallery capture through expo-image-picker.
  *
  * Author:
- *     Captain's Log contributors
- *     Project owner name pending confirmation.
+ *     Michael Garcia
  *
  * Contact:
- *     Project owner contact information pending confirmation.
+ *     michael@mandedesign.studio
  *
  * License:
- *     All rights reserved until the project owner selects a license.
+ *     SPDX-License-Identifier: MPL-2.0
  */
 
 import * as ImagePicker from 'expo-image-picker';

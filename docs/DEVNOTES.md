@@ -48,7 +48,7 @@ Proceed with the modular Expo implementation described in `ARCHITECTURE.md`. Pro
 - Networked email verification vs local-only account.
 - Whether Google Sign-In should use a development build + native Google SDK rather than AuthSession in Expo Go.
 - Android share-target implementation after the core vertical slice is usable.
-- Application license and owner contact information for file headers (currently pending confirmation per annotation standards).
+- Application source is licensed under MPL-2.0 and file headers identify Michael Garcia at michael@mandedesign.studio.
 
 ---
 
@@ -1090,6 +1090,89 @@ None beyond inspection.
 #### Next Steps
 
 None.
+
+#### Deferred Decisions
+
+None.
+
+---
+
+---
+
+### DEV-2026-08-21-019 — Select MPL 2.0 project license
+
+**Date:** 2026-08-21  
+**Time:** 21:08 America/New_York  
+**Engineer:** Michael Garcia  
+**Status:** CLOSED
+
+#### Problem
+
+The repository is publicly visible, but the existing Author, Contact, and License placeholders are stale and the project license has not been explicitly aligned with the intended development model.
+
+The project is designed around a modular-adapter architecture. The core application should remain open, while contributors should still be able to create separate proprietary adapters, integrations, or surrounding systems if desired.
+
+#### Context and Constraints
+
+The license must:
+
+- permit public use, modification, and redistribution;
+- preserve openness of modifications to the Captain's Log core;
+- allow proprietary modules or larger works to be built around the core;
+- remain compatible with the modular-adapter architecture;
+- avoid forcing unrelated surrounding code to adopt the same license.
+
+Without an explicit license, the repository is publicly readable but the permissions granted to users and contributors are not clearly defined.
+
+#### Solutions Considered
+
+| License | What it allows | What it forces |
+| --- | --- | --- |
+| MIT | Broad use, modification, redistribution, and closed derivatives | Preserve copyright and license notice |
+| Apache 2.0 | Similar permissiveness to MIT with explicit patent provisions | Preserve notices and license terms |
+| MPL 2.0 | Proprietary larger works and separate modules are allowed | Modified MPL-covered files must remain open |
+| GPLv3 | Modification, redistribution, and commercial use | Distributed derivative works must remain GPL/open source |
+
+#### Trade-offs
+
+MIT and Apache 2.0 provide maximum reuse flexibility but allow modified versions of the Captain's Log core to become closed source.
+
+GPLv3 preserves the entire derivative work as open source but is more restrictive than necessary for the intended modular-adapter model.
+
+MPL 2.0 provides file-level copyleft. Modifications to MPL-covered core files remain open, while separate proprietary adapters, plugins, integrations, or surrounding applications may use different licenses.
+
+#### Final Outcome
+
+Selected Mozilla Public License 2.0 (`MPL-2.0`).
+
+This preserves the open Captain's Log core while allowing contributors to create and commercialize separate proprietary adapters, integrations, plugins, or larger surrounding systems.
+
+#### Implementation Impact
+
+- Replace or update the repository `LICENSE` file with the Mozilla Public License 2.0.
+- Update source-file license headers to use `SPDX-License-Identifier: MPL-2.0`.
+- Update `ANNOTATION_STANDARDS.md` so future file headers use the selected project license.
+- Update project metadata where license information is declared.
+
+#### Verification Required
+
+Verify that:
+
+- the repository contains the MPL 2.0 license text;
+- source headers use `SPDX-License-Identifier: MPL-2.0`;
+- project metadata identifies the license consistently;
+- no stale "All rights reserved" placeholders remain in active source files.
+
+#### Related Records
+
+- `LICENSE`
+- `docs/ANNOTATION_STANDARDS.md`
+- `package.json`
+- `package-lock.json`
+
+#### Next Steps
+
+Apply the MPL 2.0 license consistently across repository metadata and source-file headers.
 
 #### Deferred Decisions
 

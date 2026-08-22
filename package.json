@@ -2,6 +2,8 @@
   "name": "captains_log",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "author": "Michael Garcia <michael@mandedesign.studio> (M&E Design)",
+  "license": "MPL-2.0",
   "dependencies": {
     "@expo/ui": "~57.0.12",
     "@noble/hashes": "^2.3.0",
