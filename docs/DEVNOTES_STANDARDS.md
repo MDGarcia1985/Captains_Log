@@ -34,6 +34,40 @@ Create a DEVNOTES entry for a material engineering matter, including:
 
 Routine edits, formatting changes, obvious implementation details, and successful tests without a material decision do not require an entry.
 
+## Short-Form Observations and Physical Findings
+
+DEVNOTES may also contain short-form engineering observations when hands-on use,
+physical testing, emulator/device testing, prototype evaluation, fabrication, assembly,
+inspection, or exploratory development reveals information that may influence later
+design or implementation decisions.
+
+These entries are intended to preserve engineering context while it is fresh. They do
+not require the full decision-entry structure when no material decision has yet been made.
+
+Suitable observations include:
+
+- UI/UX findings discovered while using a working build;
+- unexpected physical or runtime behavior;
+- ergonomic, dimensional, fit, clearance, accessibility, or usability observations;
+- device-, emulator-, operating-system-, or hardware-specific behavior;
+- prototype behavior observed during fabrication, assembly, or bench testing;
+- performance characteristics noticed during exploratory use;
+- suspected defects that require later investigation;
+- ideas for refinement discovered during physical interaction with the system;
+- multiple related findings from one coherent test or evaluation session.
+
+Observations may be written in shorthand and may group related findings from the same
+session. They should preserve enough context to understand where and how the observation
+was made.
+
+A short-form observation is not automatically a design decision, requirement, defect,
+or verified test result. If an observation later results in a material decision, create
+a separate full DEVNOTES decision entry and reference the observation entry.
+
+Formal verification evidence continues to belong in `TEST_LOG.md`. DEVNOTES may record
+what was physically observed, but must not claim a formal PASS unless an executed TEST
+record supports that result.
+
 ## Decision Timing
 
 Record the entry when the decision is made or the material issue is discovered. Do not wait until the end of a milestone.
@@ -68,6 +102,7 @@ Every entry must use one status:
 
 Because entries are immutable, later status changes are recorded in a new entry that references the earlier ID.
 
+
 ## Required Entry Format
 
 ```markdown
@@ -77,6 +112,7 @@ Because entries are immutable, later status changes are recorded in a new entry 
 **Time:** HH:MM and time zone  
 **Engineer:** Human name or agent identifier  
 **Status:** PROPOSED | ACCEPTED | IMPLEMENTED | DEFERRED | BLOCKED | SUPERSEDED | CLOSED
+**Type:** DECISION | OBSERVATION
 
 #### Problem
 
@@ -119,7 +155,39 @@ List remaining implementation, validation, investigation, or documentation actio
 #### Deferred Decisions
 
 Record intentionally postponed decisions and the information or evidence needed to resolve them. Use `None` when not applicable.
+
 ```
+## Short-Form Observation Format
+
+```markdown
+### DEV-YYYY-MM-DD-NNN — <Observation or Findings Title>
+
+**Date:** YYYY-MM-DD
+**Time:** HH:MM and time zone
+**Engineer:** Human name or agent identifier
+**Type:** OBSERVATION
+**Environment:** Device, emulator, hardware, prototype, build, or relevant conditions
+
+#### Findings
+
+- <short-hand observation>
+- <short-hand observation>
+- <short-hand observation>
+
+#### Immediate Concerns
+
+- <failure, defect, uncertainty, or `None`>
+
+#### Follow-up Candidates
+
+- <possible refinement, investigation, or decision>
+- <items here are not considered accepted decisions>
+
+#### Related Records
+
+- DEVNOTES: related DEV IDs, or `None`
+- Tests: related TEST IDs, `Pending`, or `Exploratory only`
+- Source: relevant files/modules/components, or `Not applicable`
 
 Do not remove a section. Use `None`, `Not applicable`, or `Pending` when appropriate.
 

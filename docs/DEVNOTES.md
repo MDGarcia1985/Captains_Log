@@ -1177,3 +1177,157 @@ Apply the MPL 2.0 license consistently across repository metadata and source-fil
 #### Deferred Decisions
 
 None.
+
+---
+
+---
+
+### DEV-2026-08-22-020 — Initial Android emulator findings
+
+**Date:** 2026-08-22
+**Time:** 20:13 America/New_York 
+**Engineer:** Michael Garcia
+**Type:** OBSERVATION
+**Environment:** Google Pixel 9 Pro XL Android emulator
+
+#### Findings
+
+- Sidebar is not set correctly; intended interaction is a traditional tab layout oriented vertically.
+- Settings and Search should be separate tabs.
+- Log tab should display chronological entries when present and `No entries yet` when empty.
+- Current top telemetry contains useful information but may benefit from a graphical treatment; visual direction remains under review.
+- Search needs `*` wildcard behavior.
+- App and navigation tabs need an icon strategy, likely using vector/SVG source artwork.
+- User workspace needs stronger visual framing without materially increasing visual compression.
+- Capture workspace should be storyboarded before committing to the revised visual treatment.
+- Location unavailable currently produces an uncaught runtime error and needs graceful handling.
+- Entry capture, persistence, entity extraction, attachment display, and entity navigation were observed functioning during this session.
+
+#### Immediate Concerns
+
+- Unhandled location failure.
+- Navigation hierarchy and visual compression require refinement.
+
+#### Follow-up Candidates
+
+- Define vertical-tab interaction.
+- Define wildcard semantics before implementation.
+- Review telemetry treatment and workspace framing with graphic design.
+- Investigate keyboard-open layout behavior.
+
+#### Related Records
+
+- DEVNOTES: None
+- Tests: Exploratory only / related emulator TEST IDs as applicable
+- Source: UI navigation, search, capture, location, entity and log screens
+
+---
+
+---
+
+### DEV-2026-08-24-0XX — Add code-structure constraints to master YAML
+
+**Date:** 2026-08-24
+**Time:** 11:07 EDT
+**Engineer:** Michael Garcia
+**Status:** ACCEPTED
+
+#### Problem
+
+The codebase is generally well documented, but some React/TypeScript implementation patterns can become harder to maintain when control flow is deeply nested inside anonymous callbacks, JSX, animation handlers, or local transformations.
+
+An opposite failure mode is also possible: reducing local complexity by fragmenting behavior into excessive micro-components or files that do not have stable responsibilities of their own.
+
+The master product YAML did not explicitly define the intended balance between these two concerns.
+
+#### Context and Constraints
+
+Captain’s Log is expected to remain modular, readable, and suitable for continued AI-assisted development.
+
+Code structure should favor traceable control flow and explicit responsibilities without creating unnecessary abstraction or file fragmentation.
+
+These constraints are intended to guide future implementation and refactoring. They do not require unrelated existing code to be mechanically rewritten solely for conformance.
+
+#### Solutions Considered
+
+Leave code-structure expectations implicit.
+
+Require aggressive extraction of nested logic into functions, components, and files.
+
+Add explicit master-YAML constraints favoring shallow named control flow while limiting extraction to cases with meaningful structural value.
+
+#### Trade-offs
+
+Leaving the expectations implicit permits inconsistent implementation patterns across future work.
+
+Aggressive extraction can reduce local nesting but introduce excessive indirection, artificial micro-components, and unnecessary files.
+
+Explicitly defining both the preferred control-flow structure and the limits on extraction provides clearer guidance while avoiding either extreme.
+
+#### Final Outcome
+
+Added the following engineering constraints to the master YAML:
+
+engineering:
+  code_structure:
+    prefer_shallow_call_graphs: true
+    prefer_named_functions: true
+    anonymous_jsx_callbacks:
+      allowed_for:
+        - trivial_delegation
+      avoid_for:
+        - branching
+        - animation_logic
+        - geometry_calculation
+        - data_transformation
+        - state_transitions
+
+    extraction_policy:
+      extract_when:
+        - stable_responsibility
+        - reusable_contract
+        - independently_testable_behavior
+      do_not_extract_for:
+        - line_count_reduction_only
+        - artificial_micro_components
+        - unnecessary_file_fragmentation
+
+    principle: >
+      Prefer shallow, named, single-purpose functions and components.
+      Do not trade nested complexity for unnecessary file fragmentation.
+
+These constraints establish that nontrivial control flow should generally be moved out of deeply nested anonymous callbacks and into named units, while extraction itself must be justified by responsibility, reuse, or testability rather than line-count reduction.
+
+#### Implementation Impact
+
+- Modify the master product YAML to add the new engineering.code_structure constraints.
+- Future TypeScript/React implementation and refactoring should use these constraints as project-level guidance.
+- The upcoming navigation/sidebar refactor is an immediate candidate for applying the rule because it introduces animation, geometry calculations, state transitions, and reusable tab behavior.
+
+#### Verification Required
+
+Perform T0 validation of the modified YAML:
+
+- YAML parses successfully.
+- Existing master-YAML structure remains valid.
+- New keys are correctly nested under engineering.code_structure.
+- No existing configuration is unintentionally overwritten or displaced.
+
+#### Related Records
+
+- `docs/DEVNOTES.md`
+- DEV-2026-08-22-020 — Initial Android emulator findings
+- Tests: Pending
+- Source: `docs/captains-log.yaml`
+
+#### Next Steps
+
+- Add the specified block to the master YAML.
+- Validate the YAML after modification.
+- Apply the constraints during the navigation/sidebar refactor.
+
+Do not perform unrelated repository-wide refactoring solely to conform existing code.
+
+#### Deferred Decisions
+
+None.

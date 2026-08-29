@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Captain's Log",
-    "slug": "Captains_Log",
+    "slug": "captainslog",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
@@ -30,19 +30,30 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "CAMERA",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECORD_AUDIO"
       ],
       "intentFilters": [
         {
           "action": "SEND",
-          "category": ["DEFAULT"],
+          "category": [
+            "DEFAULT"
+          ],
           "data": [
-            { "mimeType": "text/plain" },
-            { "mimeType": "image/*" },
-            { "mimeType": "application/pdf" },
-            { "mimeType": "*/*" }
+            {
+              "mimeType": "text/plain"
+            },
+            {
+              "mimeType": "image/*"
+            },
+            {
+              "mimeType": "application/pdf"
+            },
+            {
+              "mimeType": "*/*"
+            }
           ]
         }
       ]
@@ -85,11 +96,16 @@
     "extra": {
       "googleWebClientId": "",
       "googleIosClientId": "",
-      "googleAndroidClientId": ""
+      "googleAndroidClientId": "",
+      "router": {},
+      "eas": {
+        "projectId": "67017de0-1f10-4441-a60e-0d1f78ee2efa"
+      }
     },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "owner": "mande-design"
   }
 }

@@ -68,6 +68,33 @@ documentation:
     ARCHITECTURE.md: system_architecture
     DEVNOTES.md: implementation_decisions
 
+engineering:
+  code_structure:
+    prefer_shallow_call_graphs: true
+    prefer_named_functions: true
+    anonymous_jsx_callbacks:
+      allowed_for:
+        - trivial_delegation
+      avoid_for:
+        - branching
+        - animation_logic
+        - geometry_calculation
+        - data_transformation
+        - state_transitions
+
+  extraction_policy:
+    extract_when:
+      - stable_responsibility
+      - reusable_contract
+      - independently_testable_behavior
+    do_not_extract_for:
+      - line_count_reduction_only
+      - artificial_micro_components
+      - unnecessary_file_fragmentation
+    principle: >
+      Prefer shallow, named, single-purpose functions and components.
+      Do not trade nested complexity for unnecessary file fragmentation.
+
 architecture:
   pattern: local_first_layered
   style: modular_adapter_architecture
