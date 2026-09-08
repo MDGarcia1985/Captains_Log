@@ -1,0 +1,21 @@
+layout:
+  id: mobile
+  viewport: { width: 390, height: 844 }
+  # Uniform width scaling; overflow scrolls rather than compressing button geometry.
+  safe_area: system
+  regions:
+    status_header: { x: 20, y: 28, width: 278, height: 82 }
+    scanner: { x: 310, y: 26, width: 60, height: 82 }
+    menu: { x: 315, y: 110, width: 60, height: 24 }
+    title_block: { x: 20, y: 122, width: 278, height: 68 }
+    viewport: { x: 20, y: 206, width: 286, height: 500 }
+    navigation_rail: { x: 315, y: 130, width: 60, height: 584 }
+    action_dock: { x: 20, y: 724, width: 350, height: 96 }
+  chrome:
+    border: { x: 8, y: 8, width: 374, height: 828, radius: 40 }
+    notch: { x: 135, y: 4, width: 120, height: 8 }
+    home_indicator: { x: 148, y: 834, width: 94, height: 6 }
+    rail_guide: { x: 308, y: 112, width: 1, height: 600 }
+  atmosphere:
+    paintedWashAsset: atmosphere-background-grid
+    referenceOnly: [atmosphere-crt-scanlines, viewport-tactical-dot-grid]

@@ -437,3 +437,236 @@ TEST-2026-08-21-001, TEST-2026-08-21-003, TEST-2026-08-21-005, TEST-2026-08-21-0
 #### Disposition
 
 Hardening implementation may remain; device T3 is not satisfied. Do not treat the milestone as runtime-verified.
+
+
+---
+
+### TEST-2026-09-07-001 — Initial HUD static validation
+
+**Date:** 2026-09-07  
+**Time:** 20:58 America/New_York  
+**Tester:** Codex  
+**Level:** T0  
+**Result:** FAIL
+
+#### Scope
+
+New YAML compiler and HUD TypeScript/React files.
+
+#### Files Under Validation
+
+scripts/generate-ui.mjs; src/ui/layout/HudArtwork.tsx; src/ui/state/HudCommands.tsx; src/ui/layout/AppShell.tsx; src/ui/screens/GraphScreen.tsx
+
+#### Objective
+
+Validate parser, TypeScript and lint contracts before integration.
+
+#### Preconditions
+
+Windows, Node 22.19.0, installed Expo 57 dependencies; approved DEV-025.
+
+#### Procedure
+
+Ran YAML parsing/generation, tsc --noEmit and targeted ESLint.
+
+#### Expected Result
+
+Valid references; no compile/lint errors.
+
+#### Actual Result
+
+Parser rejected a literal palette color as a semantic reference. Typecheck rejected an overly broad ViewStyle return type. Lint flagged render-time refs and synchronous effect resets.
+
+#### Evidence
+
+Generator: Unknown color #0C121C. TypeScript TS2322/TS2769. ESLint react-hooks/refs and set-state-in-effect.
+
+#### Failures / Observations
+
+Corrected validation traversal, narrowed coordinate styles, used state for the animation clock and layout effects for latest callbacks; derived cleared selection views.
+
+#### Related DEVNOTES
+
+DEV-2026-09-07-025
+
+#### Related Tests
+
+None
+
+#### Disposition
+
+Initial validation failed; corrected before continued integration. Retest TEST-2026-09-07-002.
+
+---
+
+### TEST-2026-09-07-002 — HUD static validation retest
+
+**Date:** 2026-09-07  
+**Time:** 20:58 America/New_York  
+**Tester:** Codex  
+**Level:** T0  
+**Result:** PASS
+
+#### Scope
+
+Ten YAML specifications, generated constants, assets, mobile shell, contextual commands, modified screens/routes.
+
+#### Files Under Validation
+
+src/ui/**/*.yaml; src/ui/generated/*; scripts/generate-ui.mjs; scripts/hud-smoke.ts; src/ui/layout/HudArtwork.tsx; src/ui/layout/HudShell.tsx; src/ui/layout/AppShell.tsx; src/ui/state/HudCommands.tsx; src/ui/screens/{Capture,Search,Graph,Log}Screen.tsx; src/app/{_layout,log}.tsx; src/services/exportService.ts
+
+#### Objective
+
+Confirm corrected specification, compile and targeted lint contracts.
+
+#### Preconditions
+
+Windows, Node 22.19.0, installed Expo 57 dependencies; approved DEV-025.
+
+#### Procedure
+
+Ran node scripts/generate-ui.mjs, TypeScript --noEmit and ESLint on all new/modified handwritten implementation files.
+
+#### Expected Result
+
+35 SVG references resolve and all checks exit zero.
+
+#### Actual Result
+
+Generation, typecheck and targeted ESLint exited zero.
+
+#### Evidence
+
+UI specification PASS: 10 YAML files, 35 SVG assets. tsc and targeted ESLint exit 0.
+
+#### Failures / Observations
+
+Static correctness is not native runtime/visual acceptance.
+
+#### Related DEVNOTES
+
+DEV-2026-09-07-025
+
+#### Related Tests
+
+TEST-2026-09-07-001
+
+#### Disposition
+
+Static gate passed. Runtime integration and milestone verification remain required.
+
+---
+
+### TEST-2026-09-07-003 — Initial regression and web bundle attempt
+
+**Date:** 2026-09-07  
+**Time:** 20:58 America/New_York  
+**Tester:** Codex  
+**Level:** T3  
+**Result:** FAIL
+
+#### Scope
+
+Existing smoke runner and Expo web bundle prerequisites.
+
+#### Files Under Validation
+
+package.json; metro.config.js (absent at first attempt)
+
+#### Objective
+
+Run established regression checks and build the actual app for visual verification.
+
+#### Preconditions
+
+Windows, Node 22.19.0, installed Expo 57 dependencies; approved DEV-025.
+
+#### Procedure
+
+Ran node --experimental-strip-types scripts/node-smoke.ts and Expo export --platform web.
+
+#### Expected Result
+
+Smoke and web bundle exit zero.
+
+#### Actual Result
+
+Smoke runner could not resolve @/models; Metro could not resolve the present wa-sqlite.wasm asset.
+
+#### Evidence
+
+ERR_MODULE_NOT_FOUND @/models; Unable to resolve ./wa-sqlite/wa-sqlite.wasm.
+
+#### Failures / Observations
+
+Both were pre-existing configuration gaps. Added tsx runner and documented Expo 57 wasm asset extension; no database/authentication behavior changed.
+
+#### Related DEVNOTES
+
+DEV-2026-09-07-025
+
+#### Related Tests
+
+TEST-2026-08-21-007
+
+#### Disposition
+
+Paused implementation progression to correct verification prerequisites. Retest TEST-2026-09-07-004.
+
+---
+
+### TEST-2026-09-07-004 — Regression and web bundle retest
+
+**Date:** 2026-09-07  
+**Time:** 20:58 America/New_York  
+**Tester:** Codex  
+**Level:** T3  
+**Result:** PARTIAL
+
+#### Scope
+
+Existing smoke suite, HUD contracts and web production bundle.
+
+#### Files Under Validation
+
+package.json; metro.config.js; scripts/node-smoke.ts; scripts/hud-smoke.ts; src/ui/generated/*
+
+#### Objective
+
+Verify corrected test/build prerequisites plus approved pure behavior contracts.
+
+#### Preconditions
+
+Windows, Node 22.19.0, installed Expo 57 dependencies; approved DEV-025.
+
+#### Procedure
+
+Ran tsx scripts/node-smoke.ts, node --experimental-strip-types scripts/hud-smoke.ts, and Expo export --platform web.
+
+#### Expected Result
+
+Smoke contracts pass; ten routes bundle.
+
+#### Actual Result
+
+16 existing assertions pass; HUD contracts pass; web export succeeds with ten static routes.
+
+#### Evidence
+
+PASS node-smoke assertions=16. HUD contracts PASS. Web Bundled 1068 modules; Exported dist.
+
+#### Failures / Observations
+
+No on-device runtime proven. npm reports 20 dependency vulnerabilities (15 moderate, 5 high); no broad dependency remediation authorized or attempted.
+
+#### Related DEVNOTES
+
+DEV-2026-09-07-025
+
+#### Related Tests
+
+TEST-2026-09-07-003
+
+#### Disposition
+
+Automated regression/build subset passes. Continue runtime/visual verification; device T3 remains a release gate.

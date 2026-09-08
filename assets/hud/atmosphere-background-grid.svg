@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="390" height="844" viewBox="0 0 390 844" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Atmosphere / Background Grid" clip-path="url(#clip0_0_54)">
+<path id="Atmosphere / Background Grid / Path" d="M390 0H0V844H390V0Z" fill="url(#paint0_radial_0_54)"/>
+<g id="Atmosphere / Background Grid / Path_2">
+</g>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_54" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(195 360) rotate(90) scale(410 210)">
+<stop stop-color="#152033"/>
+<stop offset="1" stop-color="#070B12"/>
+</radialGradient>
+<clipPath id="clip0_0_54">
+<rect width="390" height="844" fill="white"/>
+</clipPath>
+</defs>
+</svg>

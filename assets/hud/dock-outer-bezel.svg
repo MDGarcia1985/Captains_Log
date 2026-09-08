@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="350" height="96" viewBox="0 0 350 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Dock / Outer Bezel" clip-path="url(#clip0_0_20)">
+<path id="Dock / Outer Bezel / Path" d="M14 0H336L350 14V82L336 96H14L0 82V14L14 0Z" fill="#0C121C" fill-opacity="0.82" stroke="#2A5A6E"/>
+</g>
+<defs>
+<clipPath id="clip0_0_20">
+<rect width="350" height="96" fill="white"/>
+</clipPath>
+</defs>
+</svg>

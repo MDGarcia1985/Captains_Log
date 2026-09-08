@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Local HUD verification/font conversion scratch space
+/.tmp/

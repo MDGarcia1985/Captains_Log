@@ -1225,7 +1225,7 @@ None.
 
 ---
 
-### DEV-2026-08-24-0XX — Add code-structure constraints to master YAML
+### DEV-2026-08-24-021 — Add code-structure constraints to master YAML
 
 **Date:** 2026-08-24
 **Time:** 11:07 EDT
@@ -1331,3 +1331,677 @@ Do not perform unrelated repository-wide refactoring solely to conform existing 
 #### Deferred Decisions
 
 None.
+
+---
+
+---
+
+### DEV-2026-08-31-022 — Declarative UI Specification Architecture
+
+**Date:** 2026-08-31
+**Time:** 21:24 EDT
+**Engineer:** Michael Garcia
+**Status:** ACCEPTED
+**Type:** DECISION
+
+#### Problem
+
+The current mobile UI implementation does not yet match the intended interaction model or visual structure.
+
+The previous UI review identified several issues and open requirements:
+
+- The current sidebar does not represent the intended traditional vertically oriented tab interaction.
+- Search and Settings should be separate navigation targets.
+- The Log tab requires chronological entry display and an empty state.
+- Top telemetry is functionally useful but its final graphical treatment remains unresolved.
+- Search requires `*` wildcard behavior.
+- Navigation and application controls require a consistent icon strategy, likely based on vector/SVG assets.
+- The user workspace requires stronger visual framing without materially reducing usable content area.
+- The capture workspace should be storyboarded before the revised implementation is finalized.
+- Location unavailability currently produces an uncaught runtime error.
+- Existing capture, persistence, extraction, attachment, and entity-navigation behavior must be preserved through the UI refactor.
+
+A consistent architectural boundary is needed between visual design, declarative UI specification, application behavior, and rendering implementation.
+
+#### Context and Constraints
+
+The revised mobile interface is being designed in Figma before implementation.
+
+The UI must support later extension to additional form factors, including tablet and foldable layouts, without requiring duplication of reusable component definitions.
+
+The UI specification should remain human-readable and suitable for agent-assisted implementation and review.
+
+The declarative layer should describe UI intent, reusable components, visual tokens, typography, and layout composition.
+
+The declarative layer should not contain:
+
+- Business logic
+- Complex rendering algorithms
+- Application state machines
+- Data transformations
+- Complex vector path geometry
+- Platform-specific implementation logic
+
+Complex graphical geometry should remain in SVG/vector assets or renderer code.
+
+React Native/TypeScript remains responsible for rendering, state handling, navigation behavior, platform integration, and application logic.
+
+Figma remains the visual design and reference environment. The YAML specification is intended to become the canonical declarative description of the implemented UI rather than a one-to-one reproduction of the Figma layer hierarchy.
+
+#### Solutions Considered
+
+1. Continue defining UI directly in React Native/TypeScript
+
+**Advantages:**
+
+- Lowest immediate implementation overhead
+- No additional schema or loading layer
+- Native compile-time integration
+
+**Disadvantages:**
+
+- Visual decisions become distributed across implementation files
+- Harder to distinguish design intent from renderer implementation
+- Increased duplication across phone, tablet, and foldable layouts
+- More difficult for human or agent review of the complete UI architecture
+
+2. Maintain Figma as the sole UI specification
+
+**Advantages:**
+
+- Visual design remains centralized
+- Strong graphical authoring workflow
+- No additional declarative format required
+
+**Disadvantages:**
+
+- Figma layer structure contains graphical construction details that do not map cleanly to semantic application components
+- Behavioral intent and application relationships are not fully represented
+- Creates a weak boundary between design reference and implementation specification
+
+3. Use a monolithic ui.yaml containing theme, typography, layouts, components, and behavior
+
+**Advantages:**
+
+- Single source file
+- Easy initial discovery
+
+**Disadvantages:**
+
+- File would grow rapidly
+- Weak separation of concerns
+- Higher merge and maintenance cost
+- Difficult to reuse components and layouts independently
+- Encourages unrelated configuration to accumulate in one file
+
+4. Use a modular YAML-based declarative UI specification
+
+**Structure:**
+
+```text
+ui/
+├── ui.yaml
+├── theme.yaml
+├── typography.yaml
+├── layouts/
+│   └── mobile.yaml
+└── components/
+    ├── status-header.yaml
+    ├── scanner.yaml
+    ├── title-block.yaml
+    ├── viewport.yaml
+    ├── navigation-rail.yaml
+    └── action-dock.yaml
+```
+
+This separates root composition, design tokens, typography, form-factor layout, and reusable component intent.
+
+#### Trade-offs
+
+The modular YAML approach introduces additional schema-management and validation requirements.
+
+A resolver will eventually be required to load references and normalize the UI specification before use by React Native.
+
+If YAML is allowed to become executable or overly renderer-specific, it could duplicate responsibilities already handled more appropriately by TypeScript. The implementation boundary therefore needs to remain explicit.
+
+Separating component definitions from layout definitions adds file count, but improves reuse and permits future form-factor layouts to share the same semantic components.
+
+Using YAML as the canonical declarative specification also creates a synchronization requirement between Figma and repository implementation. Figma should therefore be treated as the design/reference environment rather than an independently authoritative runtime specification.
+
+#### Final Outcome
+
+Adopt a modular declarative UI specification under ui/.
+
+ui/ui.yaml will serve only as the root manifest and will reference the active theme, typography specification, layouts, and reusable components.
+
+Initial structure:
+
+```yaml
+ui:
+  version: 1
+
+  theme: ./theme.yaml
+  typography: ./typography.yaml
+
+  layouts:
+    mobile: ./layouts/mobile.yaml
+
+  components:
+    status_header: ./components/status-header.yaml
+    scanner: ./components/scanner.yaml
+    title_block: ./components/title-block.yaml
+    viewport: ./components/viewport.yaml
+    navigation_rail: ./components/navigation-rail.yaml
+    action_dock: ./components/action-dock.yaml
+```
+
+theme.yaml will define shared visual tokens such as palette, semantic colors, spacing, stroke widths, radii, opacity, and effects.
+
+typography.yaml will define font families and semantic typography roles.
+
+layouts/mobile.yaml will define mobile-region composition and component placement.
+
+Files under ui/components/ will define reusable semantic UI components without reproducing Figma's graphical layer hierarchy.
+
+Figma remains the visual design reference.
+
+React Native/TypeScript remains responsible for rendering and executable behavior.
+
+#### Implementation Impact
+
+Affected or new paths:
+
+- `ui/ui.yaml`
+- `ui/theme.yaml`
+- `ui/typography.yaml`
+- `ui/layouts/mobile.yaml`
+- `ui/components/status-header.yaml`
+- `ui/components/scanner.yaml`
+- `ui/components/title-block.yaml`
+- `ui/components/viewport.yaml`
+- `ui/components/navigation-rail.yaml`
+- `ui/components/action-dock.yaml`
+
+Future implementation may require:
+
+- YAML schema validation
+- Reference resolution
+- UI-spec normalization
+- Generated or strongly typed TypeScript representation
+- Shared SVG/vector asset registry
+- React Native component bindings
+
+Existing UI implementation will eventually need to be reconciled with the new specification.
+
+#### Verification Required
+
+T0 validation is required for:
+
+- YAML syntax
+- Referenced file paths
+- Required root keys
+- Duplicate or unresolved component identifiers
+
+T1 validation is required for:
+
+- UI-spec loading and normalization
+- Token reference resolution
+- Component reference resolution
+- Layout-to-component bindings
+
+T2 validation is required for:
+
+- Navigation rail behavior
+- Search and Settings separation
+- Log chronological ordering
+- No entries yet empty state
+- `*` wildcard search behavior
+- Graceful location-unavailable handling
+- Preservation of capture, persistence, entity extraction, attachment display, and entity navigation
+
+T3 validation should be considered after the revised UI is integrated across supported device/form-factor targets.
+
+No validation result is asserted by this record.
+
+#### Related Records
+
+- DEVNOTES: Previous UI review/findings entry; exact DEV ID to be linked
+- Tests: Pending
+- Source: `ui/`, Figma mobile UI reference, existing React Native navigation and capture implementation
+
+#### Next Steps
+
+- Create the `ui/` directory structure.
+- Create the root `ui/ui.yaml` manifest.
+- Define `theme.yaml` values from the Figma design.
+- Define typography roles and font choices.
+- Record mobile layout measurements from the Figma reference.
+- Define semantic component YAML files.
+- Establish SVG/vector asset naming and storage conventions.
+- Determine whether YAML is loaded at runtime or compiled/generated into TypeScript.
+- Implement schema validation.
+- Reconcile the revised navigation model with the current React Native implementation.
+- Implement remaining behavioral requirements from the prior UI review.
+- Add required TEST records during implementation and validation.
+
+#### Deferred Decisions
+
+The following decisions remain intentionally deferred:
+
+- Final graphical treatment of top telemetry/status information.
+- Final capture-workspace interaction flow pending storyboard review.
+- Exact production font family.
+- Final primitive and semantic color values.
+- SVG asset organization and rendering library.
+- Runtime YAML loading versus build-time generation into TypeScript.
+- Tablet and foldable layout specifications.
+
+These should be resolved as the Figma design and implementation architecture mature.
+
+---
+
+---
+
+### DEV-2026-09-07-023 — Portable Export and Long-Term Data Ownership
+
+**Date:** 2026-09-07
+**Time:** 13:06 EDT
+**Engineer:** Michael Garcia & Emily Garcia
+**Status:** ACCEPTED
+**Type:** OBSERVATION
+
+#### Problem
+
+Captain’s Log currently emphasizes capture, persistence, metadata, entity extraction, search, and graph relationships, but does not yet define a first-class mechanism for exporting a user’s journal into durable, application-independent formats.
+
+A key user concern is long-term accessibility. Journal content should remain readable and usable even if Captain’s Log is no longer available, the user changes platforms, or the data is being preserved for family or archival purposes.
+
+The current action dock also contains an unresolved bottom-right action that may be better used for export.
+
+#### Context and Constraints
+
+The observation arose from discussion between Michael and Emily Garcia regarding journaling workflows and long-term ownership of personal notes.
+
+Emily currently prefers generic note-taking tools for journaling because the resulting content feels portable, accessible from a computer, and less dependent on a specific application remaining available in the future.
+
+Captain’s Log already assigns metadata such as dates and timestamps to entries, making structured export possible without requiring the user to manually organize journal content.
+
+Export should preserve the accessibility of a conventional document while allowing Captain’s Log to retain richer application-specific capabilities internally.
+
+Potential export scopes include:
+
+* A specific day
+* A date range
+* Selected entries
+* Current search results
+* A topic or entity
+* A connected cluster of related ideas
+* The full journal/archive
+
+Potential durable output formats include:
+
+* Markdown
+* Plain text
+* HTML
+* DOCX
+* PDF
+* Structured JSON/archive data
+
+Long-term archival output should not depend exclusively on proprietary formats or Captain’s Log-specific software.
+
+#### Solutions Considered
+
+No final implementation solution has been selected.
+
+Initial concepts include:
+
+* A simple document export organized chronologically by date and timestamp.
+* A multi-day export using dates and entry times as hierarchical headings.
+* Document formats capable of exposing headings through a navigation pane, table of contents, or bookmarks.
+* Topic- or graph-based export that collects related entries into a single document.
+* A portable archive containing both human-readable journal content and machine-readable metadata.
+* Repurposing the unresolved bottom-right action-dock control as an `EXPORT` action.
+
+A potential archival structure is:
+
+```text
+Captains_Log_Archive/
+├── README.md
+├── log.md
+├── entries/
+├── attachments/
+└── metadata/
+    └── archive.json
+```
+
+#### Trade-offs
+
+Providing multiple export formats increases implementation and validation requirements.
+
+Presentation formats such as PDF and DOCX are convenient for reading and sharing but are weaker as canonical archival formats than plain-text-based representations.
+
+Markdown provides strong long-term readability and portability but may be unfamiliar to some users.
+
+Structured JSON preserves machine-readable metadata and relationships but is not appropriate as the sole human-readable archive.
+
+Graph- or entity-based export introduces additional complexity because relationships must be resolved into a meaningful document ordering and hierarchy.
+
+Exporting attachments introduces additional questions around file organization, duplication, naming, and broken references.
+
+A first-class export function also creates a compatibility commitment: future schema changes should not prevent older records from being exported into durable representations.
+
+#### Final Outcome
+
+Portable export is recognized as a first-class product requirement for Captain’s Log.
+
+The product should preserve a clear distinction between:
+
+* Rich internal application representation
+* Durable external representation
+
+Captain’s Log may maintain application-specific metadata, entities, relationships, graph connections, and other derived information internally, but users should be able to export their journal into formats that remain accessible independently of the application.
+
+The current product principle is:
+
+> Captain’s Log may add intelligence to the user’s data, but should not trap that data inside Captain’s Log.
+
+The unresolved bottom-right action-dock control should be evaluated as a potential `EXPORT` action.
+
+#### Implementation Impact
+
+Potentially affected areas include:
+
+* `ui/components/action-dock.yaml`
+* Export workflow UI
+* Entry serialization
+* Metadata serialization
+* Attachment handling
+* Graph/entity traversal
+* Date-range selection
+* Search-result export
+* Document generation
+* Archive generation
+* Persistence compatibility
+* Share/export platform integration
+* Test coverage for export fidelity
+
+Future component or workflow specifications may be required for:
+
+* Export scope selection
+* Export format selection
+* Export preview
+* Archive generation
+* Share/save destination handling
+
+#### Verification Required
+
+T0 validation should cover:
+
+* Export schema definitions
+* Supported format declarations
+* Serialization field requirements
+* Archive path and naming conventions
+
+T1 validation should cover:
+
+* Entry ordering
+* Date and timestamp formatting
+* Metadata preservation
+* Attachment reference generation
+* Topic/entity selection
+* Graph-connected entry resolution
+
+T2 validation should cover:
+
+* Single-day export
+* Date-range export
+* Selected-entry export
+* Full-journal export
+* Search-result export
+* Topic/entity export
+* Successful opening of generated files outside Captain’s Log
+* Preservation of journal content after export and re-open
+* Graceful handling of missing attachments or incomplete metadata
+
+T3 validation should be considered for cross-platform export behavior and long-term archive compatibility.
+
+No validation result is asserted by this observation.
+
+#### Related Records
+
+* DEVNOTES: Current UI redesign findings and action-dock investigation; exact DEV ID to be linked
+* Tests: Pending
+* Source: `ui/components/action-dock.yaml`, persistence model, entity/graph model, export implementation paths pending
+
+#### Next Steps
+
+* Add export to the current UI/product requirements.
+* Evaluate replacing the unresolved bottom-right action-dock control with `EXPORT`.
+* Define minimum supported export formats.
+* Define export scope options.
+* Define a durable archival format.
+* Determine how headings, dates, timestamps, entities, and attachments are represented.
+* Determine whether topic/entity exports should preserve chronological order, graph hierarchy, or both.
+* Define export-specific schemas and tests before implementation.
+
+#### Deferred Decisions
+
+* Exact export formats supported in the first implementation.
+* Whether Markdown is the canonical archival representation.
+* Whether JSON metadata is included in all archives or only full exports.
+* Exact archive directory structure.
+* Whether graph-connected exports are available in the initial release.
+* How attachments are packaged and referenced.
+* Whether `EXPORT` permanently occupies the bottom-right action-dock position.
+* Exact document heading hierarchy and navigation behavior.
+
+---
+
+### DEV-2026-09-07-024 — Proposed Figma and YAML UI Harmonization Plan
+
+**Date:** 2026-09-07
+
+**Time:** 17:46 EDT
+
+**Engineer:** Codex
+
+**Status:** PROPOSED
+
+**Type:** DECISION
+
+#### Problem
+
+The new modular UI YAML specifications and the current Figma mobile HUD do not yet
+share consistent references, names, visual structure, state definitions or tokens.
+The draft specifications contain broken manifest references and status-header syntax
+errors, and they differ from Figma in navigation/dock composition and several
+graphical roles. Blindly treating either the raw Figma layer hierarchy or unfinished
+YAML declarations as authoritative could change accepted visuals or remove existing
+application capabilities.
+
+#### Context and Constraints
+
+DEV-2026-08-31-022 establishes YAML as the canonical declarative UI specification,
+Figma as the visual reference, and TypeScript/React Native as the owners of executable
+behavior and rendering. The actual new specifications reside under `src/ui/`.
+
+The user requested an analysis-only harmonization plan for human approval. This pass
+may create the Markdown plan and append this record only. It must not normalize YAML,
+rename or modify Figma assets, create variables/components, change application code,
+or delete anything. Existing worktree changes and historical DEVNOTES content must
+be preserved.
+
+The current Figma file is `dFwk8LAWauplWqrOKaQplU`, page `0:1`, HUD frame `2:20`.
+Live default/hidden assets, style/token values and scanner keyframes were inspected.
+The current file has four rail buttons and Camera/Gallery/Location/Add in its dock;
+the draft YAML includes additional Settings/Export visual placements. Settings is an
+existing application destination; DEV-2026-09-07-023 recognizes portable export while
+leaving its dock placement undecided.
+
+#### Solutions Considered
+
+1. Reshape Figma to match all YAML declarations. Rejected for this pass: it would
+   introduce unsupported visuals and potentially redesign the accepted HUD.
+2. Copy Figma's raw hierarchy into YAML. Rejected: this would duplicate graphical
+   construction details and discard legitimate runtime-only semantics.
+3. Propose minimum necessary normalization with exact mappings, role distinctions,
+   explicit removal candidates and approval gates. Recommended for human review;
+   no harmonization implementation is authorized by this proposed record.
+
+#### Trade-offs
+
+Detailed node/property mappings reduce interpretation during later execution, but
+must be revalidated against concurrent Figma and repository edits. Preserving current
+appearance means some incomplete states and patterns remain unresolved rather than
+being silently improved. Deferring Settings access, dock action semantics, telemetry
+bindings, scanner timing and hidden active-state styling avoids accidental behavior
+changes but requires human decisions before those portions can proceed.
+
+#### Final Outcome
+
+Created [UI_HARMONIZATION_PLAN.md](UI_HARMONIZATION_PLAN.md) for human review. It
+classifies matched concepts, meaningful Figma-only additions, construction details,
+runtime-only YAML semantics, unsupported visual candidates, token/style changes,
+ambiguous mappings, risks and the exact later change surface.
+
+The current pass is analysis-only. No Figma or YAML normalization changes have yet
+been executed. No application code, variables, components or graphical assets have
+been created, modified or deleted. The proposed plan is awaiting approval; this
+record does not supersede or change the accepted architectural or product decisions.
+
+#### Implementation Impact
+
+Current documentation changes are limited to `docs/UI_HARMONIZATION_PLAN.md` and
+this appended record in `docs/DEVNOTES.md`.
+
+Affected specification paths for a later approved harmonization pass:
+
+- `src/ui/ui.yaml`
+- `src/ui/theme.yaml`
+- `src/ui/typography.yaml`
+- `src/ui/layout/mobile.yaml`
+- `src/ui/components/status-header.yaml`
+- `src/ui/components/scanner.yaml`
+- `src/ui/components/title_block.yaml`
+- `src/ui/components/viewports.yaml`
+- `src/ui/components/navigation-rail.yaml`
+- `src/ui/components/action-dock.yaml`
+
+The plan identifies exact Figma node, variable and style IDs. Resolver construction,
+SVG storage/export, font delivery and runtime UI integration remain separately scoped
+work; no TypeScript, React Native, route or service changes are included in this pass.
+
+#### Verification Required
+
+Verification of proposed normalization and runtime behavior is pending. Read-only
+parser/reference checks and live Figma inspection inform the plan but are not runtime
+acceptance or a formal TEST PASS. No harmonized specifications have been tested.
+
+- T0 after approved edits: YAML parsing, schema/root keys, unique IDs, manifest paths,
+  token types/references and asset identifiers; documentation link and mapping checks.
+- T1 when a resolver/renderer module exists: specification loading, token/component
+  resolution, visual asset/state rendering and approved scanner-motion behavior.
+- T2 during integration: navigation including Settings, approved dock action semantics,
+  capture/commit, persistence, attachments, telemetry truth and location failure handling.
+- T3 at the UI milestone: visual parity, hidden/default states, form factors,
+  handedness, keyboard/safe-area behavior, typography and established workflow regressions.
+
+Executed implementation verification must be recorded later in `docs/TEST_LOG.md`
+under the repository standard. No test-log entry is added by this analysis-only pass.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-08-22-020, DEV-2026-08-31-022, DEV-2026-09-07-023
+- Tests: Pending
+- Source: `docs/UI_HARMONIZATION_PLAN.md`, the ten specification paths above,
+  `src/ui/layout/NavigationRail.tsx`, `src/ui/layout/AppShell.tsx`,
+  `src/ui/screens/CaptureScreen.tsx`, `src/theme/tokens.ts`
+- Figma: [Mobile HUD, frame 2:20](https://www.figma.com/design/dFwk8LAWauplWqrOKaQplU?node-id=2-20)
+
+#### Next Steps
+
+- Review the Markdown plan and resolve or explicitly defer approval questions Q1–Q8.
+- Record approval of the intended subset in a new DEVNOTES entry.
+- Rebaseline live Figma/YAML before executing approved changes.
+- Perform the plan's staged normalization and required verification only after approval.
+
+#### Deferred Decisions
+
+Settings access with a four-button rail; Add/commit/Export action placement and
+contracts; status-source meanings and inactive appearances; scanner timing and tick
+response intent; New's hidden active-light treatment; device chrome and safe-area
+policy; absent grid/scanline rendering; semantic schema/typography units; and the
+separate resolver/asset/renderer implementation strategy. See Q1–Q8 in the plan for
+the evidence and specific decisions required.
+
+---
+
+### DEV-2026-09-07-025 — Approved Mobile HUD Implementation
+
+**Date:** 2026-09-07
+
+**Time:** 20:41 EDT
+
+**Engineer:** Codex
+
+**Status:** ACCEPTED
+
+**Type:** DECISION
+
+#### Problem
+
+DEV-024 proposed harmonization only. The user now approves execution, including
+React Native behavior, and resolves Q1–Q8 through explicit instructions A1–A8.
+
+#### Context and Constraints
+
+Figma is the visual authority; YAML owns declarative specification; TypeScript
+owns behavior. Preserve existing artwork and hidden active states except the
+explicit changes below. Preserve larger-screen workflows and historical records.
+
+#### Decision
+
+- A1: Place a three-bar Settings/future-options menu between scanner and NEW.
+- A2: Dock order Add, Camera, Location, Export. Gallery belongs to Add's menu.
+  NEW opens capture with Commit/Cancel replacing home rail destinations. Other
+  rails expose safe contextual actions: Log New/Home, Search Clear/Home,
+  Graph Reset/Home, Settings Home, detail Back/Home. Export is an explicit,
+  non-mutating not-implemented stub pending the owner's export mechanics.
+- A3: One backup row, synced or local only, with a reserved blank second row.
+  Never infer synchronization from connectivity alone.
+- A4: One continuous ten-second React Native animation clock; inner clockwise,
+  outer counterclockwise about a shared scanner center. Respect reduced motion.
+  This overrides Figma's opposite signs and bottom-arc HOLD artifact.
+- A5/A6: Bundle original SVG exports and open-licensed fonts. Normalize YAML
+  coordinates, colors, fonts, strokes and references against the live baseline.
+  Generate checked-in TypeScript mechanically from YAML, not an independent
+  hand-maintained visual specification. Keep geometry in assets, not YAML.
+- A7: Do not render the unpainted grid/scanline reference layers.
+- A8: Execute the prior plan where consistent with A1–A7. Runtime implementation
+  is now explicitly in scope, superseding DEV-024's analysis-only restriction.
+
+#### Rationale
+
+Exact vector exports retain independently reusable assets. A compact mobile
+shell can adopt the HUD without disrupting tablet/context-pane behavior.
+Focus-scoped commands connect the rail to existing services and retain failed
+drafts. Cancel requires confirmation when a draft contains data. A stub avoids
+prematurely choosing data formats, privacy boundaries or export destinations.
+
+#### Verification Required
+
+T0 specification validation, deterministic generation, typecheck and lint;
+T1 motion/action/specification contracts; T2 command-to-service behavior;
+T3 regression and visual/runtime checks where the environment permits. Record
+unexecuted device checks honestly; they remain release gates, not implied PASS.
+
+#### Related Records
+
+DEV-2026-08-31-022, DEV-2026-09-07-023, DEV-2026-09-07-024;
+docs/UI_HARMONIZATION_PLAN.md. Tests will be appended after execution.
+
+#### Deferred Decisions
+
+Michael owns export mechanics and future hidden options/header content. The Export
+stub must remain visibly unfinished and perform no archive reads or external writes
+until a subsequent decision defines its contract.

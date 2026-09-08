@@ -76,7 +76,7 @@ export function LogScreen() {
 
   return (
     <View style={styles.screen}>
-      <TelemetryLabel k="VIEW" v="CHRONOLOGICAL LOG" />
+      {mode !== 'compact' && <TelemetryLabel k="VIEW" v="CHRONOLOGICAL LOG" />}
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.entry.id}

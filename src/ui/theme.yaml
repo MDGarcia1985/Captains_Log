@@ -1,0 +1,34 @@
+# Live Figma palette, frame 2:20. Geometry lives in SVG assets, not YAML.
+theme:
+  colors:
+    background: '#070B12'
+    surface: '#0C121C'
+    panel: '#101826'
+    border: '#1E3A4C'
+    borderStrong: '#2A5A6E'
+    cyan: '#3DDEE5'
+    orange: '#F5A14A'
+    text: '#E8EEF4'
+    textMuted: '#8A9BB0'
+    textDim: '#5C6F86'
+    activeCyan: '#30C4CC'
+    activeNew: '#F9C692'
+    black: '#000000'
+  strokes:
+    hairline: 1
+    scannerInner: 1.5
+    viewport: 1.6
+    icon: 1.8
+    scannerRing: 2
+    add: 2.5
+    accent: 3
+  opacity:
+    statusBezel: 0.72
+    dockBezel: 0.82
+    dockPlate: 0.9
+    railGuide: 0.18
+  effects:
+    neon: { color: cyan, radius: 8, opacity: 0.55 }
+    panelInner: { color: black, radius: 8, offsetY: 2, opacity: 0.65 }
+    panelOuter: { color: cyan, radius: 14, opacity: 0.16 }
+    active: { color: activeCyan, radius: 10, spread: 1, opacity: 0.62 }

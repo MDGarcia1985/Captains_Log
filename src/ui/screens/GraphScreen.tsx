@@ -24,6 +24,7 @@ import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';
 import { ClippedPanel, TelemetryLabel } from '@/ui/components/primitives';
 import { useSelection } from '@/ui/state/SelectionContext';
+import { useHudRegistration } from '@/ui/state/HudCommands';
 
 /*
  * Purpose: Show only the selected entity's first-degree neighborhood.
@@ -38,6 +39,7 @@ export function GraphScreen() {
   const { mode } = useBreakpoint();
   const [entities, setEntities] = useState<Entity[]>([]);
   const [neighborhood, setNeighborhood] = useState<EntityNeighborhood | null>(null);
+  useHudRegistration('graph', { reset: () => selection.setEntityId(null) });
 
   useEffect(() => {
     void services.entities.listEntities().then(setEntities);
@@ -45,10 +47,11 @@ export function GraphScreen() {
 
   useEffect(() => {
     if (!selection.entityId) {
-      setNeighborhood(null);
       return;
     }
-    void services.entities.getRelatedEntities(selection.entityId).then(setNeighborhood);
+    let active = true;
+    void services.entities.getRelatedEntities(selection.entityId).then(value => { if (active) setNeighborhood(value); });
+    return () => { active = false; };
   }, [selection.entityId, services]);
 
   /*
@@ -64,13 +67,14 @@ export function GraphScreen() {
     }
   }
 
-  const related = neighborhood?.relatedEntities ?? [];
-  const focus = neighborhood?.entity;
+  const currentNeighborhood = neighborhood?.entity.id === selection.entityId ? neighborhood : null;
+  const related = currentNeighborhood?.relatedEntities ?? [];
+  const focus = currentNeighborhood?.entity;
 
   return (
     <View style={styles.screen}>
-      <TelemetryLabel k="GRAPH" v="FIRST DEGREE" />
-      <Text style={styles.hint}>The full database is never drawn as one hairball.</Text>
+      {mode !== 'compact' && <TelemetryLabel k="GRAPH" v="FIRST DEGREE" />}
+      {mode !== 'compact' && <Text style={styles.hint}>The full database is never drawn as one hairball.</Text>}
       <View style={styles.canvas}>
         {focus ? (
           <>

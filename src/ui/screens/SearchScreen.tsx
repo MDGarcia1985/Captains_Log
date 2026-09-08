@@ -14,7 +14,7 @@
  *     SPDX-License-Identifier: MPL-2.0
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -25,6 +25,7 @@ import { colors, fonts } from '@/theme/tokens';
 import { formatClock } from '@/utilities/time';
 import { ClippedPanel, TelemetryLabel } from '@/ui/components/primitives';
 import { useSelection } from '@/ui/state/SelectionContext';
+import { useHudRegistration } from '@/ui/state/HudCommands';
 
 /*
  * Purpose: Deterministic local search over log text and entity names.
@@ -40,6 +41,8 @@ export function SearchScreen() {
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
+  const requestSequence = useRef(0);
+  const [error, setError] = useState('');
 
   /*
    * Purpose: Run lexical search as the user types.
@@ -48,15 +51,25 @@ export function SearchScreen() {
    * Data Handoff: Sets SearchHit[] and Entity[] from SearchService.
    */
   async function run(nextQuery: string) {
+    const sequence = ++requestSequence.current;
     setQuery(nextQuery);
+    setError('');
     if (!nextQuery.trim()) {
       setHits([]);
       setEntities([]);
       return;
     }
-    setHits(await services.search.searchEntries(nextQuery));
-    setEntities(await services.search.searchEntities(nextQuery));
+    try {
+      const [nextHits, nextEntities] = await Promise.all([
+        services.search.searchEntries(nextQuery), services.search.searchEntities(nextQuery),
+      ]);
+      if (sequence === requestSequence.current) { setHits(nextHits); setEntities(nextEntities); }
+    } catch (failure) {
+      if (sequence === requestSequence.current) setError(failure instanceof Error ? failure.message : 'SEARCH UNAVAILABLE');
+    }
   }
+  // DEV-025: Clear invalidates in-flight queries, so old results cannot reappear.
+  useHudRegistration('search', { clear: () => run('') });
 
   /*
    * Purpose: Open an entity in context or as a compact route.
@@ -73,10 +86,11 @@ export function SearchScreen() {
 
   return (
     <View style={styles.screen}>
-      <TelemetryLabel k="QUERY MODE" v="LEXICAL" />
-      <View style={styles.nlReserve}>
+      {mode !== 'compact' && <TelemetryLabel k="QUERY MODE" v="LEXICAL" />}
+      {mode !== 'compact' && <View style={styles.nlReserve}>
         <Text style={styles.nlText}>NATURAL LANGUAGE // STANDBY</Text>
-      </View>
+      </View>}
+      {error ? <Text accessibilityRole="alert" style={styles.meta}>{error}</Text> : null}
       <TextInput
         value={query}
         onChangeText={(value) => void run(value)}

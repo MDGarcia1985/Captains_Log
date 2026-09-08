@@ -1,0 +1,7 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Dock / Location Icon">
+<path id="Dock / Location Icon / Path" d="M16 26C21.5228 26 26 21.5228 26 16C26 10.4772 21.5228 6 16 6C10.4772 6 6 10.4772 6 16C6 21.5228 10.4772 26 16 26Z" stroke="#3DDEE5" stroke-width="1.8"/>
+<path id="Dock / Location Icon / Path_2" d="M16 19C17.6569 19 19 17.6569 19 16C19 14.3431 17.6569 13 16 13C14.3431 13 13 14.3431 13 16C13 17.6569 14.3431 19 16 19Z" stroke="#3DDEE5" stroke-width="1.8"/>
+<path id="Dock / Location Icon / Path_3" d="M16 1V8M16 24V31M1 16H8M24 16H31" stroke="#3DDEE5" stroke-width="1.8"/>
+</g>
+</svg>

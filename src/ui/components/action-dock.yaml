@@ -1,0 +1,15 @@
+component:
+  id: action_dock
+  bezel: dock-outer-bezel
+  plate: { asset: dock-camera-button-plate, width: 72, height: 62, y: 8 }
+  addPlate: dock-add-button-plate
+  icon: { width: 32, height: 32, x: 20, y: 23 }
+  label: { y: 74, width: 72, typography: dock, color: textMuted, addColor: orange }
+  items:
+    - { id: add, x: 7, icon: dock-add-icon, label: ADD }
+    - { id: camera, x: 93, icon: dock-camera-icon, label: CAMERA }
+    - { id: location, x: 179, icon: dock-location-icon, label: LOCATION }
+    - { id: export, x: 265, icon: dock-export-icon, label: EXPORT }
+  addMenu:
+    - { id: gallery, icon: dock-gallery-icon, label: Gallery }
+  export: { implementation: stub, decision: DEV-2026-09-07-025 }

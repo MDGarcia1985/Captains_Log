@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="40" height="10" viewBox="0 0 40 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Viewport / Accent Top Right" clip-path="url(#clip0_0_36)">
+<g id="Viewport / Accent Top Right / Path">
+<path d="M0 0H30L40 10" fill="black"/>
+<path d="M0 0H30L40 10" stroke="#3DDEE5" stroke-width="3"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_36">
+<rect width="40" height="10" fill="white"/>
+</clipPath>
+</defs>
+</svg>

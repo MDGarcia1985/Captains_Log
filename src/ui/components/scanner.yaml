@@ -1,0 +1,13 @@
+component:
+  id: scanner
+  ring: { asset: scanner-outer-ring, x: 3, y: 11, width: 54, height: 54 }
+  rotationBounds: { x: 0, y: 8, width: 60, height: 60 }
+  inner:
+    asset: scanner-inner-arc-centered-rotation-pivot
+    direction: clockwise
+  outer:
+    assets: [scanner-arc-top, scanner-arc-right, scanner-arc-bottom, scanner-arc-left]
+    direction: counterclockwise
+  motion: { owner: react_native, easing: linear, repeat: continuous, reducedMotion: static }
+  core: { asset: scanner-core, x: 15.5, y: 23.5, width: 29, height: 29 }
+  tick: { x: 21, y: 77, width: 18, height: 2, color: cyan, behavior: static }

@@ -1,0 +1,15 @@
+# Figma AUTO line heights resolved from measured text boxes. Tracking is px.
+typography:
+  fonts:
+    display: CaptainsHUDDisplayMedium
+    rail: CaptainsHUDDisplaySemiBold
+    technical: ShareTechMono
+  styles:
+    status: { font: technical, size: 12, lineHeight: 14, tracking: 0.96 }
+    heading: { font: display, size: 24, lineHeight: 30, tracking: 4.32 }
+    subtitle: { font: technical, size: 13, lineHeight: 15, tracking: 1.82 }
+    entry: { font: technical, size: 15, lineHeight: 18, tracking: 0.45 }
+    rail: { font: rail, size: 12, lineHeight: 20, tracking: 1.2 }
+    railSearch: { font: rail, size: 9.5, lineHeight: 17, tracking: 0.76 }
+    railGraph: { font: rail, size: 10.5, lineHeight: 18, tracking: 0.84 }
+    dock: { font: technical, size: 9, lineHeight: 10, tracking: 0.72 }

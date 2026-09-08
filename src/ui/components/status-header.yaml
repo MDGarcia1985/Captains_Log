@@ -1,0 +1,11 @@
+component:
+  id: status_header
+  bezel: status-angular-bezel
+  icon: { asset: status-backup-cloud-icon, x: 14, y: 14, width: 20, height: 20 }
+  label: { text: 'BACKUP //', x: 44, y: 15, color: cyan, typography: status }
+  value: { x: 124, y: 15, color: text, typography: status }
+  states: { synced: SYNCED, local_only: LOCAL ONLY }
+  binding: backup_service_verified_snapshot
+  indicator: { x: 248, y: 20, width: 8, height: 8, color: cyan }
+  divider: { x: 14, y: 41, width: 244, height: 1, color: border }
+  reserved: { x: 14, y: 49, width: 244, height: 20, visible: false }

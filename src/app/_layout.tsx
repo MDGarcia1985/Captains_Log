@@ -20,11 +20,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '@/global.css';
 
 import { AppServicesProvider } from '@/services/AppServicesProvider';
-import { colors } from '@/theme/tokens';
 import { AppShell } from '@/ui/layout/AppShell';
 import { AuthGate } from '@/ui/screens/AuthGate';
 import { ChromeProvider } from '@/ui/state/ChromeContext';
 import { SelectionProvider } from '@/ui/state/SelectionContext';
+import { HudCommandsProvider } from '@/ui/state/HudCommands';
 
 /*
  * Purpose: Compose providers, auth gate, and the responsive shell around Expo Router screens.
@@ -39,15 +39,17 @@ export default function RootLayout() {
         <ChromeProvider>
           <SelectionProvider>
             <AuthGate>
+              <HudCommandsProvider>
               <AppShell>
                 <Stack
                   screenOptions={{
                     headerShown: false,
-                    contentStyle: { backgroundColor: colors.background },
+                    contentStyle: { backgroundColor: 'transparent' },
                     animation: 'fade',
                   }}
                 />
               </AppShell>
+              </HudCommandsProvider>
             </AuthGate>
           </SelectionProvider>
         </ChromeProvider>

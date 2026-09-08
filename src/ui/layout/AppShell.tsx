@@ -30,6 +30,7 @@ import { ContextPane } from '@/ui/layout/ContextPane';
 import { NavigationRail, type RailDestination } from '@/ui/layout/NavigationRail';
 import { useChrome } from '@/ui/state/ChromeContext';
 import { useSelection } from '@/ui/state/SelectionContext';
+import { HudShell } from '@/ui/layout/HudShell';
 
 /*
  * Purpose: Map the current route to which rail item is selected.
@@ -76,6 +77,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const chrome = useChrome();
   const insets = useSafeAreaInsets();
   const handedness = chrome.handedness;
+  const setHandedness = chrome.setHandedness;
   const [backupLabel, setBackupLabel] = useState('UNKNOWN');
   const [lastBackup, setLastBackup] = useState('NEVER');
   const [entity, setEntity] = useState<Entity | null>(null);
@@ -90,19 +92,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [decisions, setDecisions] = useState<Entity[]>([]);
 
   useEffect(() => {
-    void services.settings.get().then((settings) => chrome.setHandedness(settings.handedness));
+    void services.settings.get().then((settings) => setHandedness(settings.handedness));
     void services.backup.getStatus().then((status) => {
       setBackupLabel(status.state.toUpperCase());
       setLastBackup(formatTelemetryTime(status.lastBackupAt));
     });
-  }, [services, pathname, chrome]);
+  }, [services, pathname, setHandedness]);
 
   useEffect(() => {
     if (!selection.entityId) {
-      setEntity(null);
-      setNeighborhood(null);
-      setHistory(null);
-      setAttachments([]);
       return;
     }
     void (async () => {
@@ -117,6 +115,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [selection.entityId, services]);
 
   const active = destinationFromPath(pathname);
+  // DEV-2026-09-07-025: preserve larger-screen panes; compact uses the exact HUD.
+  if (mode === 'compact') return <HudShell>{children}</HudShell>;
   const rail = (
     <NavigationRail
       active={active}
@@ -127,10 +127,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
   const context = (
     <ContextPane
-      entity={entity}
-      neighborhood={neighborhood}
-      history={history}
-      attachments={attachments}
+      entity={entity?.id === selection.entityId ? entity : null}
+      neighborhood={entity?.id === selection.entityId ? neighborhood : null}
+      history={entity?.id === selection.entityId ? history : null}
+      attachments={entity?.id === selection.entityId ? attachments : []}
       questions={questions}
       decisions={decisions}
     />
