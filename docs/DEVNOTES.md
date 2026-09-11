@@ -2221,3 +2221,90 @@ until a subsequent decision defines its contract.
 
 ---
 
+### DEV-2026-09-10-030 — Reproduction of Existing Android UI and Attachment Defects
+
+**Date:** 2026-09-10
+**Time:** 14:12 ET
+**Engineer:** Michael Garcia
+**Type:** OBSERVATION
+**Environment:** Captain's Log React Native / Expo Android development build; Android emulator; no intervening code changes since prior observation
+
+#### Findings
+
+- The previously observed nested `VirtualizedList` warning is reproducible.
+- React Native repeatedly reports that `LogScreen.tsx` renders a `SectionList` inside a same-orientation plain `ScrollView`.
+- The reported application location remains `LogScreen.tsx:80`.
+- The call stack passes through `LogRoute` and `RootLayout`.
+- The warning repeats across rerenders during normal application execution.
+- The previously observed attachment thumbnail failure is also reproducible.
+- `Context.renderAsync` again fails to load a stored `original.jpeg`.
+- The attachment URI again contains `%2540mande-design%252Fcaptainslog`, consistent with possible double URI encoding.
+- No code changes were made before this reproduction.
+
+#### Immediate Concerns
+
+- Scroll ownership and list virtualization remain unresolved.
+- Repeated warnings may correspond to the previously observed stuck scrolling and viewport clipping.
+- Thumbnail generation remains unreliable for stored attachments.
+- No evidence yet confirms whether the two defects are related.
+
+#### Follow-up Candidates
+
+- Trace the parent hierarchy above `LogScreen` to identify the plain `ScrollView` wrapping the `SectionList`.
+- Inspect `RootLayout`, route wrappers, HUD viewport wrappers, and any shared shell components for same-orientation scrolling.
+- Inspect attachment URI construction and normalization for double encoding.
+- Verify whether the stored JPEG physically exists and is otherwise decodable.
+- Re-test both issues after targeted fixes rather than changing unrelated UI or graph architecture.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-08-002; DEV-2026-09-08-003; DEV-2026-09-08-004
+- Tests: Reproduction only; targeted verification Pending
+- Source: `src/ui/screens/LogScreen.tsx`; `src/app/index.tsx`; `src/app/_layout.tsx`; `src/adapters/filesystem/attachmentStorage.ts`; `src/utilities/diagnostics.ts`
+
+---
+
+---
+
+### DEV-2026-09-10-031 — Dock Context and Redundant Log Navigation
+
+**Date:** 2026-09-10
+**Time:** 14:12 ET
+**Engineer:** Michael Garcia
+**Type:** OBSERVATION
+**Environment:** Captain's Log React Native / Expo Android development build; compact HUD navigation
+
+#### Findings
+
+- The action dock remains visible when navigating away from the New Record / Capture screen.
+- The dock currently retains Capture-oriented controls even when the active viewport is Home, Graph, or Search.
+- The intended dock behavior outside the Capture workflow has not yet been defined.
+- Home currently presents the chronological log and is functionally equivalent to the LOG destination.
+- The navigation rail therefore contains both HOME and LOG destinations that currently lead to the same primary content.
+
+#### Immediate Concerns
+
+- Dock controls may present actions that are irrelevant or misleading for the active viewport.
+- Keeping both HOME and LOG in the navigation rail creates redundant navigation.
+- Removing or repurposing navigation and dock controls before their contextual behavior is defined could prematurely constrain the HUD interaction model.
+
+#### Follow-up Candidates
+
+- Define the dock as a contextual action surface whose controls change according to the active viewport.
+- Determine appropriate dock actions for:
+  - Home
+  - Graph
+  - Search
+  - New Record / Capture
+  - Settings, if the dock remains visible there
+- Determine whether the dock should disappear entirely on screens without meaningful contextual actions.
+- Remove LOG from the navigation rail if Home remains the canonical chronological-log destination.
+- Preserve the chronological log functionality on Home rather than maintaining two equivalent navigation destinations.
+- Review whether removal of LOG creates space for a future distinct top-level destination.
+- Define dock behavior in the canonical UI specification before implementing viewport-specific controls.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-08-004; DEV-2026-09-10-001
+- Tests: Exploratory only
+- Source: HUD action dock; navigation rail; Home/Log route behavior
