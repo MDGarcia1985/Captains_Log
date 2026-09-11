@@ -1,7 +1,7 @@
 layout:
   id: mobile
   viewport: { width: 390, height: 844 }
-  # Uniform width scaling; overflow scrolls rather than compressing button geometry.
+  # Uniform safe-area width/height fit; route content owns scrolling (DEV-2026-09-11-001).
   safe_area: system
   regions:
     status_header: { x: 20, y: 28, width: 278, height: 82 }

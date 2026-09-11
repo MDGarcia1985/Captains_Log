@@ -2308,3 +2308,100 @@ until a subsequent decision defines its contract.
 - DEVNOTES: DEV-2026-09-08-004; DEV-2026-09-10-001
 - Tests: Exploratory only
 - Source: HUD action dock; navigation rail; Home/Log route behavior
+
+---
+
+### DEV-2026-09-11-032 — Restore compact HUD viewport scroll ownership
+
+**Date:** 2026-09-11  
+**Time:** 10:45 America/New_York  
+**Engineer:** Codex  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+The compact HudShell places the route stack inside a vertical plain ScrollView. LogScreen's vertical SectionList therefore has a same-orientation plain-scroll ancestor, producing the warning observed in DEV-2026-09-08-027 and reproduced in DEV-2026-09-10-030. The clipped viewport View does not remove the scroll ancestor.
+
+#### Context and Constraints
+
+The hierarchy is RootLayout/providers/AuthGate -> AppShell -> HudShell/ScrollView -> artboard/viewport Views -> Stack -> LogRoute -> LogScreen/SectionList. All compact routes share this shell; medium and expanded branches do not. Preserve SectionList as the chronological Log scroll owner, HUD geometry and route actions. Limit this update to the nested-scroll defect.
+
+#### Solutions Considered
+
+- Replace the shell ScrollView with a View and uniformly fit the artboard to available safe-area width and height: selected.
+- Remove the wrapper without fitting height: rejected because the dock could become unreachable on shorter displays.
+- Switch wrapper type by route: rejected because it can remount the route stack and still exposes retained screens to a scroll ancestor.
+- Disable list scrolling or suppress the warning: rejected because neither preserves proper list ownership.
+
+#### Trade-offs
+
+Screen content retains its own scrolling while HUD chrome remains fixed. Height-constrained displays use a uniformly smaller artboard instead of scrolling the entire HUD; keyboard and viewport containment require Android verification. Existing Graph/Settings layout defects are not assumed resolved by this fix.
+
+#### Final Outcome
+
+Supersedes the width-only/outer-overflow scrolling aspect of DEV-2026-09-07-025, not its accepted artwork or navigation. Use a non-scrolling compact shell; Search and Settings retain their own ScrollViews, Graph retains its non-scrolling layout, and Capture retains its multiline input and keyboard handling. No duplicated stable scroll-ownership algorithm was found and no consolidation is warranted. Verification pending.
+
+#### Implementation Impact
+
+HudShell.tsx: replace the outer scroll owner with a View and fit uniform scale to safe-area width and height. Update the directly related mobile.yaml scaling comment; no YAML geometry or generated contract changes. No screen, service, persistence, navigation, dock, or attachment changes.
+
+#### Verification Required
+
+T0 typecheck, targeted lint and ui:check; existing node/HUD tests; Android runtime warning absence, chronological scrolling, entry expansion/collapse, entity selection and HUD containment. Check Search, Graph, Settings and Capture including keyboard behavior. Retain the exact runtime procedure in TEST_LOG. No new reusable module/T1 contract is introduced. Do not commit before required runtime checks pass.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-07-025; DEV-2026-09-08-027; DEV-2026-09-08-029; DEV-2026-09-10-030
+- Tests: Pending
+- Source: src/ui/layout/HudShell.tsx; src/ui/layout/mobile.yaml; src/ui/screens/LogScreen.tsx; src/app/_layout.tsx
+
+#### Next Steps
+
+Implement the bounded shell correction, execute required validation, and append observed results to TEST_LOG. Preserve unrelated working-tree changes and make one defect-only commit after verification.
+
+#### Deferred Decisions
+
+useSelectEntity and attachmentDisplayUri remain future candidates outside this update. EntityService.getInspector/getEntityInspectorData or equivalent inspector-query aggregation is explicitly deferred until the Graph contract and local data-engine architecture are resolved. No service-layer abstraction is introduced or modified.
+
+---
+
+---
+
+### DEV-2026-09-11-033 — UI Observations after fixes implemented under DEV-2026-09-11-032
+
+**Date:** 2026-09-11
+**Time:** 13:01 ET
+**Engineer:** Michael Garcia
+**Type:** OBSERVATION
+**Environment:** Captain's Log React Native / Expo Android development build; compact HUD navigation; Motorola Edge Plus 5G UW (2022)
+
+#### Findings
+
+- The nested `VirtualizedList` runtime warning documented under DEV-2026-09-08-027 was not reproduced during this test.
+- Log scrolling now operates without generating new nested `VirtualizedList` warnings.
+- The attachment thumbnail error documented under DEV-2026-09-08-028 persists.
+- A new landscape-orientation issue was observed.
+- When the phone is rotated to landscape orientation, the UI does not generate an appropriate horizontal layout.
+- No landscape/horizontal HUD variant has yet been created for the current portrait/vertical HUD design.
+
+#### Immediate Concerns
+
+- Continue through the existing defect backlog.
+- Add the landscape-orientation behavior as a separate backlog item.
+- Do not treat portrait HUD correctness as proof of responsive or landscape support.
+
+#### Follow-up Candidates
+
+- Create a landscape HUD variant in Figma using the existing Captain's Log visual language and accepted UI specifications.
+- Define the layout and behavior of existing controls in landscape orientation before implementation.
+- Determine whether landscape uses the same navigation rail and dock semantics or requires orientation-specific placement.
+- Add responsive/orientation behavior to the React Native implementation after the landscape design is approved.
+- Verify button targets and contextual actions in the landscape layout.
+- Add landscape-specific runtime verification on physical Android hardware.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-08-027; DEV-2026-09-08-028; DEV-2026-09-08-029; DEV-2026-09-11-032
+- Tests: Visual/runtime test using `npx expo start --android` on a Motorola Edge Plus 5G UW (2022)
+- Source: HUD/layout implementation; `src/utilities/diagnostics.ts`; `src/adapters/filesystem/attachmentStorage.ts`

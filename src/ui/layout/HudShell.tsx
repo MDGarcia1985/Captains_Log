@@ -3,10 +3,10 @@
  * Purpose: Faithful compact mobile HUD with live route content and contextual actions.
  * Author: Codex; Contact: michael@mandedesign.studio
  * License: SPDX-License-Identifier: MPL-2.0
- * Decision: DEV-2026-09-07-025
+ * Decisions: DEV-2026-09-07-025; DEV-2026-09-11-001
  */
 import { useEffect, useState, type ReactNode } from 'react';
-import { AppState, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { AppState, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useFonts } from 'expo-font';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,7 +25,7 @@ const dock = uiSpec.components.action_dock;
 const viewport = uiSpec.components.viewport;
 
 /* Purpose: Preserve individual native text/asset layers and wire existing capabilities.
- * Design: Width-scaled 390x844 artboard; overflow scrolls for keyboard/small heights.
+ * Design: Uniformly fit the 390x844 artboard to safe-area bounds; route content owns scrolling.
  * Workflow: Compact branch of AppShell. Data Handoff: Focus-scoped commands/services. */
 export function HudShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -34,7 +34,7 @@ export function HudShell({ children }: { children: ReactNode }) {
   const hud = useHud();
   const { handedness } = useChrome();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [fontsReady, fontError] = useFonts({
     CaptainsHUDDisplayMedium: require('../../../assets/fonts/CaptainsHUDDisplay-Medium.ttf'),
     CaptainsHUDDisplaySemiBold: require('../../../assets/fonts/CaptainsHUDDisplay-SemiBold.ttf'),
@@ -45,7 +45,7 @@ export function HudShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState<'settings' | 'add' | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const activeView = hudView(pathname);
-  const scale = Math.min((width - insets.left - insets.right) / 390, 1.5);
+  const scale = Math.min((width - insets.left - insets.right) / 390, (height - insets.top - insets.bottom) / 844, 1.5);
   const mirrored = handedness === 'left';
   const available = hud.current?.scope === activeView ? hud.current : null;
   const busy = available?.busy ?? false;
@@ -100,7 +100,7 @@ export function HudShell({ children }: { children: ReactNode }) {
   const decoration = uiSpec.layout.chrome;
   return <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
     <StatusBar style="light" />
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ alignItems: 'center' }}>
+    <View style={{ flex: 1, alignItems: 'center' }}>
       <View style={{ width: 390 * scale, height: 844 * scale }}>
         <View testID="mobile-hud" style={{ width: 390, height: 844, transform: [{ scale }], transformOrigin: 'top left', backgroundColor: c.background }}>
           <Art name={uiSpec.layout.atmosphere.paintedWashAsset} bounds={{ x: 0, y: 0, width: 390, height: 844 }} />
@@ -162,7 +162,7 @@ export function HudShell({ children }: { children: ReactNode }) {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </View>
     <Modal visible={menu !== null || notice !== null} transparent animationType="fade" onRequestClose={() => { setMenu(null); setNotice(null); }}>
       <View style={styles.scrim}><View accessibilityViewIsModal style={styles.modal}>
         <Text accessibilityRole="header" style={[styles.notice, typeStyle('subtitle')]}>{notice ? 'EXPORT / NOTICE' : menu === 'add' ? 'ADD ATTACHMENT' : 'OPTIONS'}</Text>
