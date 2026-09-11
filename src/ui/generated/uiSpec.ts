@@ -60,8 +60,8 @@ export const uiSpec = {
   },
   "typography": {
     "fonts": {
-      "display": "OrbitronMedium",
-      "rail": "OrbitronSemiBold",
+      "display": "CaptainsHUDDisplayMedium",
+      "rail": "CaptainsHUDDisplaySemiBold",
       "technical": "ShareTechMono"
     },
     "styles": {

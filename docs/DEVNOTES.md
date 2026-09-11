@@ -2005,3 +2005,219 @@ docs/UI_HARMONIZATION_PLAN.md. Tests will be appended after execution.
 Michael owns export mechanics and future hidden options/header content. The Export
 stub must remain visibly unfinished and perform no archive reads or external writes
 until a subsequent decision defines its contract.
+
+---
+
+---
+
+### DEV-2026-09-08-026 — Android HUD Bundle Failure from Missing Font Assets
+
+**Date:** 2026-09-08
+**Time:** 13:32 ET
+**Engineer:** Michael Garcia -- Proposed fixes from Cursor--Grok 4.6
+**Type:** OBSERVATION
+**Environment:** Captain's Log React Native / Expo Android development build; Metro development server; HUD implementation from commit `7ee54f2`
+
+#### Findings
+
+- Android development server returns HTTP 500 while Metro attempts to bundle the application.
+- Failure is an `UnableToResolveError` originating from `src/ui/layout/HudShell.tsx`.
+- `HudShell.tsx` statically requires:
+  - `assets/fonts/CaptainsHUDDisplay-Medium.ttf`
+  - `assets/fonts/CaptainsHUDDisplay-SemiBold.ttf`
+- Both `CaptainsHUDDisplay-*.ttf` files are absent from `assets/fonts/`.
+- The relative asset path from `src/ui/layout/HudShell.tsx` is correct.
+- `ShareTechMono-Regular.ttf` and the source Orbitron font files are present.
+- `scripts/prepare-hud-fonts.py` is intended to generate the missing `Captains HUD Display` font files from Orbitron at weights 500 and 600.
+- The font-preparation script appears not to have been run and its generated outputs were not committed.
+- `typography.yaml` now uses `CaptainsHUDDisplayMedium` and `CaptainsHUDDisplaySemiBold`.
+- Generated `uiSpec.ts` still references `OrbitronMedium` and `OrbitronSemiBold`.
+- `npm run ui:check` currently reports `uiSpec.ts` as stale.
+- Existing TEST records covered YAML/SVG generation, TypeScript, lint, HUD smoke, and web export, but did not verify Android native bundling.
+- Current `generate-ui.mjs` asset validation checks SVG assets but does not verify referenced font files.
+
+#### Immediate Concerns
+
+- Android application cannot bundle or start while the required font assets are missing.
+- Regenerating only the missing TTF files would leave `uiSpec.ts` inconsistent with the canonical YAML.
+- Stale generated font-family names may cause HUD text to fall back to the system font after the bundle error is resolved.
+- Existing validation does not detect missing bundled font assets before runtime.
+
+#### Follow-up Candidates
+
+- Run `scripts/prepare-hud-fonts.py` with `fonttools` available.
+- Generate:
+  - `assets/fonts/CaptainsHUDDisplay-Medium.ttf`
+  - `assets/fonts/CaptainsHUDDisplay-SemiBold.ttf`
+- Verify the generated font naming and licensing requirements.
+- Commit the generated fonts while retaining the Orbitron source fonts and applicable OFL license text.
+- Run `npm run ui:generate` to synchronize `uiSpec.ts` with the canonical YAML.
+- Run `npm run ui:check`.
+- Reload/rebuild the Android application and verify that the Metro 500 is cleared.
+- Verify that HUD text renders with the intended `Captains HUD Display` font rather than a system fallback.
+- Consider extending `generate-ui.mjs` validation to confirm that referenced font assets exist.
+- Record native Android verification in TEST_LOG after remediation.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-07-025
+- Tests: TEST-2026-09-07-002; TEST-2026-09-07-004; Android verification Pending
+- Source: `src/ui/layout/HudShell.tsx`; `src/ui/HudArtwork.tsx`; `scripts/prepare-hud-fonts.py`; `assets/fonts/`; `typography.yaml`; generated `uiSpec.ts`; commit `7ee54f2`
+
+---
+
+---
+
+### DEV-2026-09-08-027 — Nested VirtualizedList Runtime Warning
+
+**Date:** 2026-09-08
+**Time:** 14:42 ET
+**Engineer:** Michael Garcia
+**Type:** OBSERVATION
+**Environment:** Captain's Log React Native / Expo Android development build; Android emulator; React Native Fabric renderer
+
+#### Findings
+
+- React Native emitted a console error stating:
+  - `VirtualizedLists should never be nested inside plain ScrollViews with the same orientation`
+- The warning indicates that a `VirtualizedList`-backed component is nested inside a plain `ScrollView` using the same scroll orientation.
+- React Native warns that this configuration can interfere with list windowing and other `VirtualizedList` functionality.
+- The stack trace originates through React Native `LogBox`, `VirtualizedList`, and the Fabric renderer.
+- The application remained running when the warning was observed.
+- The specific application component responsible for the nesting has not yet been identified.
+
+#### Immediate Concerns
+
+- Potential loss of `VirtualizedList` windowing behavior.
+- Possible rendering, scrolling, memory, or performance issues for larger datasets.
+- Severity and user-visible impact are not yet determined.
+
+#### Follow-up Candidates
+
+- Identify the application component containing the nested `ScrollView` and `VirtualizedList`.
+- Determine whether the inner component is a `FlatList`, `SectionList`, or another `VirtualizedList` implementation.
+- Confirm whether the parent and child scroll containers use the same orientation.
+- Evaluate replacing the outer `ScrollView` with a `VirtualizedList`-backed container where appropriate.
+- Evaluate moving surrounding content into `ListHeaderComponent` / `ListFooterComponent` if the inner list should remain the primary scrolling container.
+- Re-test scrolling, list rendering, and memory behavior after any correction.
+- Record a separate decision or implementation entry if the layout architecture is changed.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-08-001
+- Tests: Exploratory only
+- Source: Application component not yet identified; React Native `VirtualizedList` runtime warning
+
+---
+
+---
+
+### DEV-2026-09-08-028 — Attachment Thumbnail Render Failure
+
+**Date:** 2026-09-08
+**Time:** 14:42 ET
+**Engineer:** Michael Garcia
+**Type:** OBSERVATION
+**Environment:** Captain's Log React Native / Expo Android development build; Android emulator; Expo attachment storage and thumbnail generation path
+
+#### Findings
+
+- A console warning was emitted from the attachment thumbnail workflow.
+- Diagnostic tag:
+  - `[Captain's Log:attachment.thumbnail]`
+- `Context.renderAsync` rejected while attempting to render a thumbnail.
+- The failure was caused by inability to load the source image:
+  - `file:///data/user/0/host.exp.exponent/files/ExperienceData/%2540mande-design%252Fcaptainslog/attachments/c0dd10d4-52cc-437b-be9a-14f9f5de7389/original.jpeg`
+- Native error reports:
+  - `java.lang.Exception: Loading bitmap failed`
+- The warning is recorded through `src/utilities/diagnostics.ts`.
+- The failing call originates from `storeImage()` in `src/adapters/filesystem/attachmentStorage.ts`.
+- The application remained running after the warning was emitted.
+- It is not yet established whether the original attachment file is missing, unreadable, malformed, incorrectly encoded in the URI, or unsupported by the thumbnail renderer.
+
+#### Immediate Concerns
+
+- Attachment thumbnail generation is failing for at least one stored image.
+- The attachment may exist without a usable thumbnail.
+- The encoded path segment `%2540mande-design%252Fcaptainslog` suggests the URI may contain double-encoded characters and should be investigated.
+- It is not yet known whether this affects only legacy/test attachments or newly captured images.
+
+#### Follow-up Candidates
+
+- Verify whether `original.jpeg` physically exists at the expected attachment-storage location.
+- Verify that the stored file is a valid decodable JPEG.
+- Inspect URI construction and normalization in `attachmentStorage.ts`.
+- Determine whether the `%2540` / `%252F` path segments are intentional or indicate double URL encoding.
+- Test thumbnail generation with a newly captured image.
+- Test thumbnail generation with an imported image.
+- Determine whether thumbnail failure should fall back to displaying the original image or a placeholder.
+- Confirm that attachment metadata does not mark thumbnail generation as successful when rendering fails.
+- Add a targeted attachment-storage / thumbnail-generation test after the root cause is identified.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-08-001; DEV-2026-09-08-002
+- Tests: Exploratory only
+- Source: `src/utilities/diagnostics.ts`; `src/adapters/filesystem/attachmentStorage.ts`; attachment `c0dd10d4-52cc-437b-be9a-14f9f5de7389/original.jpeg`
+
+---
+
+---
+
+### DEV-2026-09-08-029 — HUD Viewport Regression After Figma Asset Integration
+
+**Date:** 2026-09-08  
+**Time:** 14:51 ET  
+**Engineer:** Michael Garcia  
+**Type:** OBSERVATION  
+**Environment:** Captain's Log React Native / Expo Android development build; Android emulator; HUD/Figma asset implementation active
+
+#### Findings
+
+- Graph content is no longer rendering in the graph viewport as it did prior to the Figma asset integration.
+- The graph viewport frame renders, but the expected graph visualization/content is absent.
+- Settings viewport becomes stuck and cannot be scrolled through normally.
+- Viewport content appears to extend behind or beneath other HUD viewport layers.
+- Similar background/underlay behavior appears to affect the Log and Search views.
+- Log viewport content is visibly clipped and overlaps internal frame boundaries.
+- Text and content from adjacent sections appear partially behind the viewport frame.
+- The viewport appears to be layering decorative/frame assets independently from the scrollable content region rather than constraining content to the intended visible bounds.
+- React Native continues to emit:
+  - `VirtualizedLists should never be nested inside plain ScrollViews with the same orientation`
+- The warning indicates that at least one `VirtualizedList`-backed component is nested inside a same-orientation plain `ScrollView`.
+- The nested-scroll warning may be related to the observed stuck scrolling and viewport clipping, but causality has not yet been established.
+
+#### Immediate Concerns
+
+- Graph functionality appears visually nonfunctional.
+- Settings viewport scrolling is impaired.
+- Log and Search content may be rendering outside intended clipping/layout bounds.
+- HUD frame assets may be obscuring or mis-layering application content.
+- Nested `ScrollView` / `VirtualizedList` composition may be breaking windowing and scroll behavior.
+- Current viewport implementation may not preserve the pre-Figma application behavior.
+
+#### Follow-up Candidates
+
+- Compare current viewport composition against the last known-good pre-Figma implementation.
+- Identify where viewport content, decorative frame assets, and scroll containers are layered.
+- Verify `zIndex`, absolute positioning, clipping, overflow behavior, and container bounds for HUD viewport assets.
+- Identify the specific `ScrollView` / `VirtualizedList` nesting responsible for the React Native warning.
+- Determine whether Log, Search, Graph, and Settings are sharing a parent scroll container that conflicts with their own list/scroll behavior.
+- Verify that each viewport owns only the scrolling behavior required for its content.
+- Confirm whether graph data is still being generated and passed to the graph renderer even though it is not visible.
+- Check whether the graph is hidden behind a HUD asset, clipped outside the viewport, or not mounted.
+- Preserve the accepted Figma visual frame while restoring pre-existing viewport behavior.
+- Avoid redesigning the UI unless required to resolve the regression.
+- Re-test Log, Search, Graph, and Settings independently after correction.
+- Record targeted TEST_LOG entries for viewport scrolling, graph rendering, and content clipping after remediation.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-08-002
+- Tests: Exploratory only
+- Source: HUD viewport/layout components; Log view; Search view; Graph view; Settings view; React Native `ScrollView` / `VirtualizedList` composition
+
+---
+
+---
+
