@@ -57,7 +57,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test:node": "tsx scripts/node-smoke.ts",
+    "test:node": "tsx scripts/node-smoke.ts && node scripts/attachment-smoke.mjs",
     "ui:generate": "node scripts/generate-ui.mjs",
     "ui:check": "node scripts/generate-ui.mjs --check",
     "test:hud": "node --experimental-strip-types scripts/hud-smoke.ts",

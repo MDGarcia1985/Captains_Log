@@ -2405,3 +2405,106 @@ useSelectEntity and attachmentDisplayUri remain future candidates outside this u
 - DEVNOTES: DEV-2026-09-08-027; DEV-2026-09-08-028; DEV-2026-09-08-029; DEV-2026-09-11-032
 - Tests: Visual/runtime test using `npx expo start --android` on a Motorola Edge Plus 5G UW (2022)
 - Source: HUD/layout implementation; `src/utilities/diagnostics.ts`; `src/adapters/filesystem/attachmentStorage.ts`
+---
+
+### DEV-2026-09-11-034 - TASK-005 await attachment file copies
+
+**Date:** 2026-09-11
+**Time:** 20:51 America/New_York
+**Engineer:** Codex
+**Status:** IMPLEMENTED
+**Type:** DECISION
+
+#### Problem
+
+TASK-005: thumbnail generation can run before the original image exists, and attachment metadata can be returned before the thumbnail copy completes.
+
+#### Context and Constraints
+
+Follow-up to DEV-2026-09-08-028 and DEV-2026-09-10-030. Reviewed project standards, specification, architecture, and versioned Expo SDK 57 documentation before implementation. Installed SDK 57 File.copy returns Promise<void>. The adapter ignored both copy promises. Native reproduction confirmed the original-copy race. The existing pre-fix original was accessible and decodable. Its %2540/%252F URI escapes are correct for Expo Go's literal encoded directory name; decoding them caused ENOENT.
+
+#### Solutions Considered
+
+Await both copies at the filesystem adapter boundary. Rejected URI decoding, UI workarounds, and metadata migration: the observed URI and stored metadata are valid.
+
+#### Trade-offs
+
+Creation now waits for actual bytes before generating a derivative or handing metadata to SQLite. Original-copy rejection propagates to the existing entry-service failure handling. Thumbnail-copy rejection uses the existing diagnostic and original-image fallback.
+
+#### Final Outcome
+
+Two awaited copies implement the correction. Impact classification: A, new creation, is reproduced; valid pre-fix stored attachments decode successfully. No legacy normalization is necessary for the observed storage format. No records are discarded and no schema or path format changes.
+
+#### Implementation Impact
+
+src/adapters/filesystem/attachmentStorage.ts; scripts/attachment-smoke.mjs; package.json adds the targeted smoke test to the existing regression command. No UI changes.
+
+#### Verification Required
+
+T0 typecheck/lint; T1 controlled asynchronous copy ordering and rejection checks; T2 native new/persisted/existing/missing attachment rendering and association checks; existing node regression suite.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-08-028; DEV-2026-09-10-030; DEV-2026-08-21-017
+- Tests: TEST-2026-09-11-001; TEST-2026-09-11-002; TEST-2026-09-11-003
+- Source: src/adapters/filesystem/attachmentStorage.ts; scripts/attachment-smoke.mjs
+
+#### Next Steps
+
+Complete the single TASK-005 verification cycle and independent commit.
+
+#### Deferred Decisions
+
+Recovery of actually missing original files or unsupported image formats is outside TASK-005. No evidence warrants a legacy URI migration.
+
+---
+
+### DEV-2026-09-11-035 - TASK-005 verification complete
+
+**Date:** 2026-09-11
+**Time:** 20:57 America/New_York
+**Engineer:** Codex
+**Status:** CLOSED
+**Type:** DECISION
+
+#### Problem
+
+Close the verification required by DEV-2026-09-11-034 before the independent TASK-005 commit.
+
+#### Context and Constraints
+
+One task, minimum correction, one verification cycle, one commit. Preserve historical failed reproduction and setup evidence.
+
+#### Solutions Considered
+
+Retain the two awaited copies and existing URI format; no broader change is supported by the evidence.
+
+#### Trade-offs
+
+Native verification covers Android Expo Go. iOS was not exercised. Local test records and screenshots are excluded from version control.
+
+#### Final Outcome
+
+Required T0/T1 checks and native T2 attachment checks passed. New thumbnails render immediately and after persisted retrieval; the valid pre-fix image renders; the missing-image record keeps the existing blank fallback without crashing. No production UI, schema, migration, or retrieval changes were required.
+
+#### Implementation Impact
+
+Only the storage adapter, targeted regression test, regression command, and append-only journals are committed.
+
+#### Verification Required
+
+Completed by the records below; no additional TASK-005 verification remains.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-11-034
+- Tests: TEST-2026-09-11-001 through TEST-2026-09-11-005; passing gates are 003, 004, and 005
+- Source: src/adapters/filesystem/attachmentStorage.ts; scripts/attachment-smoke.mjs; package.json
+
+#### Next Steps
+
+Commit TASK-005 independently and stop.
+
+#### Deferred Decisions
+
+Recovery of genuinely missing originals and unsupported image formats remains outside scope.

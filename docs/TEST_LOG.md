@@ -670,3 +670,294 @@ TEST-2026-09-07-003
 #### Disposition
 
 Automated regression/build subset passes. Continue runtime/visual verification; device T3 remains a release gate.
+
+
+---
+
+### TEST-2026-09-11-001 - TASK-005 native defect reproduction
+
+**Date:** 2026-09-11
+**Time:** 20:55 America/New_York
+**Tester:** Codex
+**Level:** T1
+**Result:** FAIL
+
+#### Scope
+
+Attachment creation before the correction.
+
+#### Files Under Validation
+
+src/adapters/filesystem/attachmentStorage.ts
+
+#### Objective
+
+Generate a managed thumbnail from a valid local JPEG.
+
+#### Preconditions
+
+Android emulator-5554, API 37, Expo Go, SDK 57; existing 63,907-byte JPEG.
+
+#### Procedure
+
+Called the unchanged storeImage with the accessible pre-fix original as input. Inspected File.exists/size and attempted native Image.loadAsync/manipulateAsync on the original and alternative URI forms.
+
+#### Expected Result
+
+storeImage returns a generated thumb.jpg after both copies complete.
+
+#### Actual Result
+
+Context.renderAsync rejected with Loading bitmap failed for the new original URI; storeImage returned original.jpeg as the fallback. The original existed by the time the call returned and decoded as 1440x1920. The pre-fix stored image also decoded successfully.
+
+#### Evidence
+
+Metro native warning [Captain\'s Log:attachment.thumbnail], reproduction file task005-before-1789173902941/original.jpeg. Installed NativeFileSystem.types.ts declares copy(...): Promise<void>; both application calls ignored that promise.
+
+#### Failures / Observations
+
+Classification A: creation race reproduced. Valid previously stored files are accessible. %2540/%252F are valid escapes here; decoding once caused ENOENT at @mande-design/captainslog. No migration indicated.
+
+#### Related DEVNOTES
+
+DEV-2026-09-11-034
+
+#### Related Tests
+
+TEST-2026-09-11-004; TEST-2026-09-11-005
+
+#### Disposition
+
+Blocked progression except correction: await original and thumbnail copies, then verify.
+
+---
+
+### TEST-2026-09-11-002 - TASK-005 verification setup limitations
+
+**Date:** 2026-09-11
+**Time:** 20:55 America/New_York
+**Tester:** Codex
+**Level:** T2
+**Result:** PARTIAL
+
+#### Scope
+
+Local emulator instrumentation and test-runner setup.
+
+#### Files Under Validation
+
+Not applicable; temporary uncommitted .tmp/task005 probes.
+
+#### Objective
+
+Establish a reliable native verification session.
+
+#### Preconditions
+
+Windows, Node 22.19.0, running Expo Go and Metro.
+
+#### Procedure
+
+Attempted direct file inspection, CDP connection, and an initial temporary probe using another shared SQLite connection during Fast Refresh.
+
+#### Expected Result
+
+Reliable access to native files, metadata, and screen state.
+
+#### Actual Result
+
+Expo Go disallowed root/run-as inspection; CDP closed connections. A shared-connection probe produced NativeDatabase.prepareAsync NullPointerException and overlapping refreshes created two test attachments. Switched to an isolated Metro session through ADB reverse, a separate useNewConnection SQLite probe, a one-shot execution guard, and a fresh Expo Go launch.
+
+#### Evidence
+
+ADB permission denied / package not debuggable; CDP close 1006; initial probe logs. Standalone attachment smoke initially could not resolve dependencies in the filesystem sandbox; rerun with approved normal filesystem access succeeded.
+
+#### Failures / Observations
+
+These were verification setup failures, not evidence of attachment correctness. Temporary layout import was removed byte-for-byte before final checks. No production database or debugger workaround was introduced.
+
+#### Related DEVNOTES
+
+DEV-2026-09-11-034
+
+#### Related Tests
+
+TEST-2026-09-11-001; TEST-2026-09-11-004; TEST-2026-09-11-005
+
+#### Disposition
+
+Setup corrected. Only the subsequent isolated, observed checks establish runtime results.
+
+---
+
+### TEST-2026-09-11-003 - TASK-005 static validation
+
+**Date:** 2026-09-11
+**Time:** 20:55 America/New_York
+**Tester:** Codex
+**Level:** T0
+**Result:** PASS
+
+#### Scope
+
+Final implementation and regression test syntax, types, lint, and dependency resolution.
+
+#### Files Under Validation
+
+src/adapters/filesystem/attachmentStorage.ts; scripts/attachment-smoke.mjs; package.json
+
+#### Objective
+
+Pass required project static checks.
+
+#### Preconditions
+
+Temporary app instrumentation removed; installed dependencies.
+
+#### Procedure
+
+Ran npm.cmd run typecheck and npm.cmd run lint.
+
+#### Expected Result
+
+Both commands exit zero without errors or lint warnings.
+
+#### Actual Result
+
+Both commands exited zero with no diagnostics.
+
+#### Evidence
+
+tsc --noEmit exit 0; expo lint exit 0.
+
+#### Failures / Observations
+
+None.
+
+#### Related DEVNOTES
+
+DEV-2026-09-11-034
+
+#### Related Tests
+
+TEST-2026-09-11-004; TEST-2026-09-11-005
+
+#### Disposition
+
+T0 complete.
+
+---
+
+### TEST-2026-09-11-004 - TASK-005 copy sequencing and regression suite
+
+**Date:** 2026-09-11
+**Time:** 20:55 America/New_York
+**Tester:** Codex
+**Level:** T1
+**Result:** PASS
+
+#### Scope
+
+Real filesystem adapter with controlled native asynchronous-copy doubles, plus existing node smoke suite.
+
+#### Files Under Validation
+
+src/adapters/filesystem/attachmentStorage.ts; scripts/attachment-smoke.mjs; package.json
+
+#### Objective
+
+Require complete original bytes before manipulation and complete thumbnail bytes before returning metadata.
+
+#### Preconditions
+
+Installed dependencies; approved dependency access for esbuild.
+
+#### Procedure
+
+Ran node scripts/attachment-smoke.mjs, then the required npm.cmd run test:node suite. The test holds each copy unresolved, completes it explicitly, and separately rejects original and thumbnail copies.
+
+#### Expected Result
+
+No early manipulation/return; original rejection propagates; thumbnail rejection records the existing diagnostic and returns the accessible original; URI escapes remain intact.
+
+#### Actual Result
+
+All targeted assertions passed. Existing node-smoke reported PASS (runner prints assertions=16). The targeted test is retained in test:node.
+
+#### Evidence
+
+PASS TASK-005 attachment copy ordering, URI preservation, and failure fallback; npm.cmd run test:node exit 0.
+
+#### Failures / Observations
+
+None in the approved execution. Test doubles establish ordering/error contracts; native rendering is covered separately.
+
+#### Related DEVNOTES
+
+DEV-2026-09-11-034
+
+#### Related Tests
+
+TEST-2026-09-11-001; TEST-2026-09-11-002; TEST-2026-09-11-005
+
+#### Disposition
+
+T1 and established Node regressions complete.
+
+---
+
+### TEST-2026-09-11-005 - TASK-005 native rendering and persistence
+
+**Date:** 2026-09-11
+**Time:** 20:55 America/New_York
+**Tester:** Codex
+**Level:** T2
+**Result:** PASS
+
+#### Scope
+
+Creation -> managed files -> SQLite -> retrieval -> Expo Image rendering.
+
+#### Files Under Validation
+
+src/adapters/filesystem/attachmentStorage.ts; unchanged attachment/entry services, SQLite repositories, and EntryScreen.
+
+#### Objective
+
+Render new and valid pre-fix attachments across retrieval; tolerate a missing file without a crash.
+
+#### Preconditions
+
+Android emulator-5554/API 37, Expo Go/SDK 57, isolated local Metro session. Existing pre-fix attachment 32c6a343-b913-4fa8-8a1c-b61164202203 from September 10.
+
+#### Procedure
+
+Created a new image attachment through createEntry using the existing valid JPEG as selected input. Queried metadata and File.exists, decoded with native Image.loadAsync, and viewed EntryScreen. Left for the missing-image and pre-fix entries, then returned to the new entry, causing persisted metadata to reload. Also observed earlier new thumbnails after an Expo Go cold restart. Inserted an explicitly identified missing-file test record through the repository and visited its entry.
+
+#### Expected Result
+
+New thumbnail renders immediately and after return; valid pre-fix attachment renders; missing file preserves its record and blank fallback without crashing. Entry associations and previous rows remain correct.
+
+#### Actual Result
+
+New entry 538951de-53b5-487a-b4b5-a5c516781ee9 contains exactly one attachment, 44443b52-af55-4eda-9f20-053ea4798670, with existing thumb.jpg decoded as 480x640. Snapshot comparison confirmed all three pre-existing attachment rows unchanged. The thumbnail was visually present immediately and after return. The September 10 attachment rendered in its original entry; its original decoded as 1440x1920. Missing fixture task005-missing remained retrievable (one record, exists=false), displayed an empty bordered image region, and navigation continued. Log service loaded nine entries before the final two fixtures were added. No new JS warning/error appeared during the final guarded creation and screen checks.
+
+#### Evidence
+
+Local, uncommitted screenshots reviewed: .tmp/task005/new-immediate.png; new-return.png; new-reloaded.png; existing.png; missing.png. Native logs: TASK005 FINAL NEW PASS (count=1, oldRows=3, oldUnchanged=true, width=480, height=640); TASK005 MISSING FIXTURE (exists=false, records=1); TASK005 EXISTING PASS; TASK005 LOG PASS.
+
+#### Failures / Observations
+
+Initial setup problems are preserved in TEST-2026-09-11-002. Only image capture is implemented; no non-image creation pipeline exists or changed. No iOS device was exercised. Test fixtures remain explicitly named TASK-005 in the local emulator archive; no pre-existing record was deleted or normalized. Temporary instrumentation is excluded from the commit.
+
+#### Related DEVNOTES
+
+DEV-2026-09-11-034
+
+#### Related Tests
+
+TEST-2026-09-11-001; TEST-2026-09-11-002; TEST-2026-09-11-003; TEST-2026-09-11-004
+
+#### Disposition
+
+Required TASK-005 verification complete. Commit only this task and stop.

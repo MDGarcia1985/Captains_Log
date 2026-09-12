@@ -14,7 +14,7 @@
  *     SPDX-License-Identifier: MPL-2.0
  *
  * Related Decisions:
- *     DEV-2026-08-21-005, DEV-2026-08-21-010
+ *     DEV-2026-08-21-005, DEV-2026-08-21-010, DEV-2026-09-11-034
  */
 
 import { Directory, File, Paths } from 'expo-file-system';
@@ -61,7 +61,7 @@ export function createFilesystemAttachmentStorage(): AttachmentStorage {
   return {
     /*
      * Purpose: Copy a captured image into managed storage and create a thumbnail.
-     * Design: Preserve the original bytes; thumbnail failure is recorded and falls back to the original URI.
+     * Design: Await SDK 57 copies before consuming/persisting their URIs; thumbnail failure falls back to the original.
      * Workflow: Called by AttachmentService.addAttachment after camera/gallery returns a CapturedImage.
      * Data Handoff: Returns file/thumbnail URIs and dimensions stored in the attachments table.
      */
@@ -72,7 +72,7 @@ export function createFilesystemAttachmentStorage(): AttachmentStorage {
       const ext = extensionFor(image.mimeType, image.fileName);
       const original = new File(root, `original.${ext}`);
       const source = new File(image.uri);
-      source.copy(original);
+      await source.copy(original);
 
       let thumbnailUri: string | null = null;
       try {
@@ -82,7 +82,7 @@ export function createFilesystemAttachmentStorage(): AttachmentStorage {
           { compress: 0.72, format: SaveFormat.JPEG }
         );
         const thumbFile = new File(root, 'thumb.jpg');
-        new File(thumb.uri).copy(thumbFile);
+        await new File(thumb.uri).copy(thumbFile);
         thumbnailUri = thumbFile.uri;
       } catch (error) {
         recordDiagnostic('attachment.thumbnail', error);
