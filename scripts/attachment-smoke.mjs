@@ -18,8 +18,11 @@ const diagnostics = [];
 const root = 'file:///documents/%2540archive%252Flog';
 let manipulations = 0;
 
-/** Purpose: Model SDK 57 copies that finish later. Design: Explicit completion controls the race.
- * Workflow: Used by the real adapter below. Data Handoff: Marks bytes available only on completion. */
+/** Purpose: Model SDK 57 copies that finish later. 
+ * Design: Explicit completion controls the race.
+ * Workflow: Used by the real adapter below. 
+ * Data Handoff: Marks bytes available only on completion. 
+ **/
 class File {
   constructor(...parts) { this.uri = parts.map(part => part.uri ?? part).join('/'); }
   get size() { return files.has(this.uri) ? 123 : 0; }
