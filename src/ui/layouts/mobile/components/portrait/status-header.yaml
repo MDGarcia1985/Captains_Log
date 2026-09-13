@@ -1,0 +1,8 @@
+component:
+  id: status_header
+  icon: { x: 14, y: 14, width: 20, height: 20 }
+  label: { x: 44, y: 15 }
+  value: { x: 124, y: 15 }
+  indicator: { x: 248, y: 20 }
+  divider: { x: 14, y: 41, width: 244 }
+  reserved: { x: 14, y: 49, width: 244, height: 20 }

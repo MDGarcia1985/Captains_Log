@@ -961,3 +961,256 @@ TEST-2026-09-11-001; TEST-2026-09-11-002; TEST-2026-09-11-003; TEST-2026-09-11-0
 #### Disposition
 
 Required TASK-005 verification complete. Commit only this task and stop.
+
+---
+
+### TEST-2026-09-12-001 — TASK-006 YAML and static validation
+
+**Date:** 2026-09-12  
+**Time:** 21:53 America/New_York  
+**Tester:** Cursor Grok 4.6  
+**Level:** T0  
+**Result:** PASS
+
+#### Scope
+
+Canonical UI YAML hierarchy, generator, TypeScript, and lint after TASK-006.
+
+#### Files Under Validation
+
+- src/ui/ui.yaml
+- src/ui/layouts/mobile/**
+- src/ui/layouts/tablet/**
+- scripts/generate-ui.mjs
+- src/ui/generated/uiSpec.ts
+- src/ui/generated/hudAssets.ts
+- src/ui/layout/HudShell.tsx
+- src/ui/layout/HudArtwork.tsx
+- src/ui/layout/hudBehavior.ts
+- src/ui/layout/HudLayoutContext.tsx
+
+#### Objective
+
+YAML parses, references resolve, portrait/landscape IDs are unique, obsolete layout paths are absent, and TypeScript/lint succeed.
+
+#### Preconditions
+
+Project dependencies installed. Figma naming already applied.
+
+#### Procedure
+
+1. `node scripts/generate-ui.mjs`
+2. `node scripts/generate-ui.mjs --check`
+3. `npx tsc --noEmit`
+4. `npx expo lint`
+
+#### Expected Result
+
+Generation succeeds; check matches emitted files; no TypeScript errors; lint clean.
+
+#### Actual Result
+
+Generator reported `UI specification PASS: 26 YAML files, 38 SVG assets`. `--check` current. `tsc --noEmit` exit 0. `npx expo lint` exit 0 after replacing orientation `useEffect` dock reset with render-time state adjustment.
+
+#### Evidence
+
+Command output from generate-ui, tsc, and expo lint in this session.
+
+#### Failures / Observations
+
+Initial lint flagged `setDockExpanded` inside `useEffect`; corrected before this PASS.
+
+#### Related DEVNOTES
+
+DEV-2026-09-12-001
+
+#### Related Tests
+
+None.
+
+#### Disposition
+
+Static validation complete. Proceed to T1/T2.
+
+---
+
+### TEST-2026-09-12-002 — TASK-006 HUD contract smoke
+
+**Date:** 2026-09-12  
+**Time:** 21:53 America/New_York  
+**Tester:** Cursor Grok 4.6  
+**Level:** T1  
+**Result:** PASS
+
+#### Scope
+
+Orientation selection, Home/LOG aliasing, rail contexts, landscape dock spec, retained HUD contracts.
+
+#### Files Under Validation
+
+- scripts/hud-smoke.ts
+- src/ui/layout/hudBehavior.ts
+- src/ui/generated/uiSpec.ts
+
+#### Objective
+
+Home remains chronological log; LOG is not a rail destination; portrait and landscape layout IDs and dock behavior are present; existing scanner/backup/export contracts still hold.
+
+#### Preconditions
+
+Generated uiSpec current.
+
+#### Procedure
+
+`node --experimental-strip-types scripts/hud-smoke.ts`
+
+#### Expected Result
+
+All assertions pass, including `hudView('/log') === 'home'`, home rail `[graph, search, new]`, landscape collapsed dock, tablet unsupported.
+
+#### Actual Result
+
+`HUD contracts PASS: routes, Home chronological log, orientation layouts, contextual rail, dock, truthful backup, shared pivot, opposite motion, export stub`
+
+#### Evidence
+
+Command exit 0 in this session.
+
+#### Failures / Observations
+
+Node printed a pre-existing MODULE_TYPELESS_PACKAGE_JSON warning for hud-smoke.ts.
+
+#### Related DEVNOTES
+
+DEV-2026-09-12-001
+
+#### Related Tests
+
+TEST-2026-09-12-001
+
+#### Disposition
+
+Module contracts verified. Proceed to browser T2.
+
+---
+
+### TEST-2026-09-12-003 — TASK-006 HUD browser portrait/landscape
+
+**Date:** 2026-09-12  
+**Time:** 21:53 America/New_York  
+**Tester:** Cursor Grok 4.6  
+**Level:** T2  
+**Result:** PASS
+
+#### Scope
+
+Production HudShell via the isolated HUD harness: portrait layout, LOG absence, landscape layout/dock/handle, orientation state, retained capture/search/graph flows.
+
+#### Files Under Validation
+
+- scripts/hud-browser-test.mjs
+- src/ui/layout/HudShell.tsx
+- src/ui/layout/HudArtwork.tsx
+- src/ui/layout/HudLayoutContext.tsx
+
+#### Objective
+
+Portrait remains the accepted HUD; landscape is not a rotated portrait arrangement; LOG control is absent; Graph/Search/New remain; landscape dock is collapsed until the handle expands it; capture draft survives portrait↔landscape; portrait dock returns after rotation.
+
+#### Preconditions
+
+`HUD_BROWSER=C:\Program Files\Google\Chrome\Application\chrome.exe` because Playwright's bundled chromium_headless_shell was not installed in this environment.
+
+#### Procedure
+
+`npm run test:hud:browser` after the dock-state lint fix. Harness starts at 390×844, then 844×390, then 390×844, then 360×640.
+
+#### Expected Result
+
+Browser T2 script prints PASS. Screenshots written under `.tmp/hud-qa`.
+
+#### Actual Result
+
+`HUD browser T2 PASS: menu, dock, gallery intent, empty/failed/successful commit, discard, contextual rails, LOG absent, landscape dock/handle, orientation state, handedness, 12-second centered counter-rotation, reduced motion.` Re-run after dock-state fix also PASS. `npm run test:node` also PASS (node-smoke + TASK-005 attachment smoke).
+
+#### Evidence
+
+Harness screenshots: `.tmp/hud-qa/home.png`; `left-handed.png`; `reduced-motion.png`; `landscape-collapsed.png`; `landscape-expanded.png`; `small-phone.png`; `motion-samples.json`. Playwright used system Chrome.
+
+#### Failures / Observations
+
+Playwright's default headless shell was missing; system Chrome was used. No IME/keyboard. Tablet NavigationRail still labels the chronological destination Log (medium/expanded only).
+
+#### Related DEVNOTES
+
+DEV-2026-09-12-001
+
+#### Related Tests
+
+TEST-2026-09-12-001; TEST-2026-09-12-002
+
+#### Disposition
+
+Runtime HUD verification complete for the harness. Native Android remains a separate record.
+
+---
+
+### TEST-2026-09-12-004 — TASK-006 native Android rotation
+
+**Date:** 2026-09-12  
+**Time:** 21:53 America/New_York  
+**Tester:** Cursor Grok 4.6  
+**Level:** T1  
+**Result:** PARTIAL
+
+#### Scope
+
+Android emulator rotation, keyboard/content space, and live Metro load of this working tree.
+
+#### Files Under Validation
+
+Not applicable
+
+#### Objective
+
+Rotate emulator-5554 portrait→landscape→portrait against the TASK-006 HudShell without restart, lost entry state, or runtime errors.
+
+#### Preconditions
+
+`adb devices` showed `emulator-5554 device`. Packages `com.captainslog.app` and `host.exp.exponent` installed. Launcher was focused.
+
+#### Procedure
+
+1. Confirmed emulator attached.
+2. `npx expo start --android --non-interactive` failed: port 8081 in use; Expo required interactive port substitution.
+3. Node PID 125760 was listening on 8081; session ownership of this working tree was not established.
+4. Did not load this change into Expo Go or the native package, and did not rotate a live TASK-006 build.
+
+#### Expected Result
+
+Live native HUD uses portrait.yaml in portrait and landscape.yaml in landscape, with collapsed dock/handle and preserved capture state.
+
+#### Actual Result
+
+Native rotation/keyboard procedure was not executed against this working tree. Layout, dock, LOG removal, and orientation state were executed in TEST-2026-09-12-003 using production HudShell at the Figma reference viewports.
+
+#### Evidence
+
+`adb devices` listed emulator-5554. Expo start log: port 8081 in use, skipped dev server.
+
+#### Failures / Observations
+
+Native IME/keyboard landscape space was not observed. An existing Metro on 8081 was not reused because its project/session was unknown.
+
+#### Related DEVNOTES
+
+DEV-2026-09-12-001
+
+#### Related Tests
+
+TEST-2026-09-12-003
+
+#### Disposition
+
+Do not treat native Android keyboard/rotation as PASS. Browser T2 is the executed runtime evidence for layout selection and dock/handle. Native check remains for the user or a follow-up session.
+

@@ -1,0 +1,5 @@
+layout:
+  id: tablet_portrait
+  orientation: portrait
+  status: unsupported
+  note: Tablet portrait design has not been specified.

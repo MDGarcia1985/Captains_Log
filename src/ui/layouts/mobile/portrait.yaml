@@ -1,0 +1,77 @@
+layout:
+  id: mobile_portrait
+  orientation: portrait
+  reference_viewport:
+    width: 390
+    height: 844
+  # Uniform safe-area width/height fit; route content owns scrolling (DEV-2026-09-11-001).
+  safe_area: system
+  regions:
+    status_header:
+      component: status_header
+      x: 20
+      y: 28
+      width: 278
+      height: 82
+    scanner:
+      component: scanner
+      x: 310
+      y: 26
+      width: 60
+      height: 82
+    settings_menu:
+      x: 315
+      y: 127
+      width: 60
+      height: 50
+    title_block:
+      component: title_block
+      x: 20
+      y: 122
+      width: 278
+      height: 68
+    viewport:
+      component: viewport
+      x: 20
+      y: 206
+      width: 286
+      height: 500
+    navigation_rail:
+      component: navigation_rail
+      x: 315
+      y: 206
+      width: 60
+      height: 500
+    action_dock:
+      component: action_dock
+      x: 20
+      y: 724
+      width: 350
+      height: 96
+  chrome:
+    border:
+      x: 8
+      y: 8
+      width: 374
+      height: 828
+      radius: 40
+    notch:
+      x: 135
+      y: 4
+      width: 120
+      height: 8
+    home_indicator:
+      x: 148
+      y: 834
+      width: 94
+      height: 6
+    rail_guide:
+      x: 310
+      y: 112
+      width: 1
+      height: 600
+  atmosphere:
+    paintedWashAsset: atmosphere-background-grid
+    referenceOnly:
+      - atmosphere-crt-scanlines
+      - viewport-tactical-dot-grid

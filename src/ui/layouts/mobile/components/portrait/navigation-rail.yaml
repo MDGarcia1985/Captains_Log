@@ -1,0 +1,7 @@
+component:
+  id: navigation_rail
+  button: { width: 60, height: 155 }
+  spacing: { mode: offsets, item_offsets: [0, 172, 343] }
+  activeBounds: { x: -11, y: -11, width: 82, height: 157 }
+  label: { stacked: true }
+  menu: { iconBounds: { x: 0, y: 0, width: 60, height: 24 } }

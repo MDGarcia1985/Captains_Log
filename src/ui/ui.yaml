@@ -1,13 +1,8 @@
-# DEV-2026-09-07-025. Paths resolve relative to this manifest.
+# DEV-2026-09-12-001. Paths resolve relative to this manifest.
 ui:
   version: 1
   theme: ./theme.yaml
   typography: ./typography.yaml
-  layout: ./layout/mobile.yaml
-  components:
-    status_header: ./components/status-header.yaml
-    scanner: ./components/scanner.yaml
-    title_block: ./components/title_block.yaml
-    viewport: ./components/viewports.yaml
-    navigation_rail: ./components/navigation-rail.yaml
-    action_dock: ./components/action-dock.yaml
+  layouts:
+    mobile: ./layouts/mobile/mobile.yaml
+    tablet: ./layouts/tablet/tablet.yaml

@@ -1,0 +1,8 @@
+component:
+  id: viewport
+  content: { x: 20, y: 22, width: 590, height: 238 }
+  accents:
+    - { asset: viewport-accent-top-left, x: 0, y: 0, width: 40, height: 20 }
+    - { asset: viewport-accent-top-right, x: 588.484, y: 1.177, width: 41.516, height: 23.543 }
+    - { asset: viewport-accent-bottom-left, x: 0, y: 275.457, width: 41.516, height: 23.543 }
+    - { asset: viewport-accent-bottom-right, x: 588.484, y: 275.457, width: 41.516, height: 23.543 }

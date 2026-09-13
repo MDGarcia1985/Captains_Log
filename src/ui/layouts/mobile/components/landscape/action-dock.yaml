@@ -1,0 +1,8 @@
+component:
+  id: action_dock
+  behavior:
+    default_visibility: collapsed
+    expanded: visible
+    collapsed: hidden
+    viewport_space: overlay
+    handle: action_dock_handle

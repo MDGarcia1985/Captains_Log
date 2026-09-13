@@ -1,0 +1,7 @@
+component:
+  id: action_dock_handle
+  asset: action-dock-handle
+  controls: action_dock
+  default_visibility: visible
+  plate: { width: 77.5, height: 27.5 }
+  bar: { x: 9, y: 8, width: 60, height: 11, color: cyan }

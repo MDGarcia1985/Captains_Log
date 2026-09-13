@@ -1,12 +1,8 @@
 component:
   id: viewport
-  surface: panel
-  border: viewport-clipped-cyan-border
-  effects: [panelInner, panelOuter]
-  content: { x: 20, y: 22, width: 246, height: 456, source: active_route }
+  content: { x: 20, y: 22, width: 246, height: 456 }
   accents:
     - { asset: viewport-accent-top-left, x: 0, y: 0, width: 40, height: 10 }
     - { asset: viewport-accent-top-right, x: 246, y: 0, width: 40, height: 10 }
     - { asset: viewport-accent-bottom-left, x: 0, y: 490, width: 40, height: 10 }
     - { asset: viewport-accent-bottom-right, x: 246, y: 490, width: 40, height: 10 }
-  referenceOnly: [viewport-tactical-dot-grid]

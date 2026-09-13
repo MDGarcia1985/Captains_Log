@@ -1,0 +1,29 @@
+# Mobile family selection. Orientation geometry lives in portrait.yaml / landscape.yaml.
+family:
+  id: mobile
+  orientations:
+    - portrait
+    - landscape
+  portrait: ./portrait.yaml
+  landscape: ./landscape.yaml
+  components:
+    shared:
+      status_header: ./components/shared/status-header.yaml
+      scanner: ./components/shared/scanner.yaml
+      title_block: ./components/shared/title-block.yaml
+      viewport: ./components/shared/viewport.yaml
+      navigation_rail: ./components/shared/navigation-rail.yaml
+      action_dock: ./components/shared/action-dock.yaml
+    portrait:
+      status_header: ./components/portrait/status-header.yaml
+      title_block: ./components/portrait/title-block.yaml
+      viewport: ./components/portrait/viewport.yaml
+      navigation_rail: ./components/portrait/navigation-rail.yaml
+      action_dock: ./components/portrait/action-dock.yaml
+    landscape:
+      status_header: ./components/landscape/status-header.yaml
+      title_block: ./components/landscape/title-block.yaml
+      viewport: ./components/landscape/viewport.yaml
+      navigation_rail: ./components/landscape/navigation-rail.yaml
+      action_dock: ./components/landscape/action-dock.yaml
+      action_dock_handle: ./components/landscape/action-dock-handle.yaml

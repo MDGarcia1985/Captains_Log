@@ -1,0 +1,5 @@
+layout:
+  id: tablet_landscape
+  orientation: landscape
+  status: unsupported
+  note: Tablet landscape design has not been specified.

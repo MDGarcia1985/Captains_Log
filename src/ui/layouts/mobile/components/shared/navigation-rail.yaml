@@ -1,18 +1,14 @@
 component:
   id: navigation_rail
-  button: { width: 60, height: 135 }
-  spacing: { mode: space_evenly, homeOffsets: [9, 153, 297, 441] }
   shape: rail-button-log-base-shape
   newShape: rail-button-new-base-shape
   activeShape: rail-button-standard-active
   newActiveShape: rail-button-new-active
-  activeBounds: { x: -11, y: -11, width: 82, height: 157 }
-  label: { color: textMuted, activeColor: borderStrong, newColor: orange, typography: rail, stacked: true }
+  label: { color: textMuted, activeColor: borderStrong, newColor: orange, typography: rail }
   menu: { action: settings_menu, icon: menu-three-bars, futureOptions: [] }
   contexts:
-    home: [new, log, search, graph]
+    home: [graph, search, new]
     capture: [commit, cancel]
-    log: [new, home]
     search: [clear, home]
     graph: [reset, home]
     settings: [home]

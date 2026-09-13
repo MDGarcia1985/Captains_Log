@@ -3,14 +3,15 @@
  * Purpose: Layered Figma assets, exact typography, and centered native scanner motion.
  * Author: Codex; Contact: michael@mandedesign.studio
  * License: SPDX-License-Identifier: MPL-2.0
- * Decision: DEV-2026-09-07-025
+ * Decision: DEV-2026-09-07-025; DEV-2026-09-12-001
  */
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, AppState, Easing, Platform, Text, View, type TextStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { hudAssets, type HudAsset } from '@/ui/generated/hudAssets';
 import { uiSpec } from '@/ui/generated/uiSpec';
-import { rotationEnd, SCANNER_ROTATION_MS } from '@/ui/layout/hudBehavior';
+import { mergeHudComponent, rotationEnd, SCANNER_ROTATION_MS } from '@/ui/layout/hudBehavior';
+import { useHudLayout } from '@/ui/layout/HudLayoutContext';
 
 export const hudColors = uiSpec.theme.colors;
 export type Bounds = { x: number; y: number; width: number; height: number };
@@ -37,6 +38,7 @@ export function Art({ name, bounds }: { name: HudAsset; bounds: Bounds }) {
  * Design: One clock; two 60x60 wrappers. Stop in background/reduced motion/unmount.
  * Workflow: Shell lifetime. Data Handoff: Opposite signed rotation transforms only. */
 export function Scanner() {
+  const { layout } = useHudLayout();
   const scanner = uiSpec.components.scanner;
   const [phase] = useState(() => new Animated.Value(0));
   const [reduced, setReduced] = useState(true);
@@ -59,7 +61,7 @@ export function Scanner() {
     return () => loop.stop();
   }, [phase, reduced, active]);
   const rotate = (direction: 'clockwise' | 'counterclockwise') => phase.interpolate({ inputRange: [0, 1], outputRange: ['0deg', rotationEnd(direction)] });
-  return <View style={box(uiSpec.layout.regions.scanner)} pointerEvents="none" accessible accessibilityLabel="Scanner indicator">
+  return <View style={box(layout.regions.scanner)} pointerEvents="none" accessible accessibilityLabel="Scanner indicator">
     <Art name={scanner.ring.asset} bounds={scanner.ring} />
     <Animated.View testID="scanner-outer-pivot" style={[box(scanner.rotationBounds), { transform: [{ rotate: rotate(scanner.outer.direction) }] }]}>
       {scanner.outer.assets.map(name => <Art key={name} name={name} bounds={{ x: 0, y: 0, width: 60, height: 60 }} />)}
@@ -75,8 +77,9 @@ export function Scanner() {
  * Design: Figma typography and glow; copy is runtime-owned.
  * Workflow: Active route change. Data Handoff: Accessible page heading. */
 export function HudTitle({ title }: { title: string }) {
-  const c = uiSpec.components.title_block;
-  return <View style={box(uiSpec.layout.regions.title_block)}>
+  const { orientation, layout } = useHudLayout();
+  const c = mergeHudComponent(uiSpec.components.title_block, uiSpec.orientationComponents[orientation].title_block);
+  return <View style={box(layout.regions.title_block)}>
     <Text accessibilityRole="header" numberOfLines={1} style={[box(c.title), typeStyle('heading'), {
       color: hudColors.cyan, textShadowColor: 'rgba(61,222,229,0.55)', textShadowRadius: 8, textShadowOffset: { width: 0, height: 0 },
     }]}>{title}</Text>

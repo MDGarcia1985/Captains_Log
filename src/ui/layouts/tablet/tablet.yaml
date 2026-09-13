@@ -1,0 +1,10 @@
+# Structural placeholder only. Do not invent tablet dimensions or behavior.
+family:
+  id: tablet
+  status: unsupported
+  note: Tablet-specific dimensions and behavior have not been designed.
+  orientations:
+    - portrait
+    - landscape
+  portrait: ./portrait.yaml
+  landscape: ./landscape.yaml

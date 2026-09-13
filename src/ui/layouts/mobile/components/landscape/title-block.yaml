@@ -1,0 +1,5 @@
+component:
+  id: title_block
+  title: { x: 0, y: 3, width: 231, height: 30 }
+  subtitle: { x: 185, y: 30 }
+  divider: { x: 0, y: 30, width: 351, height: 18 }

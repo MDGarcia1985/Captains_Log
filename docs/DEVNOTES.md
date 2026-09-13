@@ -2511,3 +2511,76 @@ Commit TASK-005 independently and stop.
 
 Recovery of genuinely missing originals and unsupported image formats remains outside scope.
 
+---
+
+### DEV-2026-09-12-001 — TASK-006 harmonize mobile portrait/landscape specifications
+
+**Date:** 2026-09-12  
+**Time:** 21:53 America/New_York  
+**Engineer:** Cursor Grok 4.6  
+**Status:** IMPLEMENTED  
+**Type:** DECISION
+
+#### Problem
+
+Compact HUD implementation was portrait-only. Landscape was an inferred flex/scale of the 390×844 artboard. Former TASK-011 (standalone landscape implementation) is superseded by TASK-006, which requires one canonical portrait/landscape specification shared between Figma and YAML, then implemented.
+
+#### Context and Constraints
+
+- Figma source of truth: file `dFwk8LAWauplWqrOKaQplU`, pages `Portrait_Viewport` (`0:1`) and `Landscape_Viewport` (`96:3`).
+- Portrait root frame `Mobile_Portrait / 390×844` (`2:20`). Landscape root frame `Mobile HUD Landscape / 844x390` (`96:4`).
+- Accepted portrait region values from TASK-006 are preserved; they are not recalculated from a rotated canvas.
+- Home (`/`) already renders `LogScreen` chronological history. `/log` re-exported the same screen. DEV-2026-09-10-031 observed HOME and LOG as redundant.
+- Do not invent tablet dimensions, new Graph/Search/Home dock semantics, or animations not in the accepted design.
+- `app.json` already declares `orientation: default`.
+
+#### Solutions Considered
+
+- Rotate portrait YAML into landscape: rejected; TASK-006 forbids deriving landscape from portrait.
+- Keep a single `uiSpec.layout` and generic flex in landscape: rejected; landscape must select the canonical specification.
+- Delete `/log` route: rejected; keep as Home alias so old links do not 404, but remove the rail destination.
+- Change tablet `NavigationRail` Log item: rejected as out of scope; medium/expanded still use Log as the chronological primary destination.
+
+#### Trade-offs
+
+YAML moves from `src/ui/layout/` + `src/ui/components/` to `src/ui/layouts/` with shared/portrait/landscape component overlays. Runtime HudShell now merges overlays. Landscape rail/handle SVGs are Figma-derived plates cleaned of export chrome. Native Android keyboard/safe-area rotation was not completed in this session; browser T2 exercised production HudShell at both reference viewports.
+
+#### Final Outcome
+
+- Semantic Figma frames renamed to canonical YAML identifiers on both viewport pages.
+- `src/ui/layouts/mobile/{mobile,portrait,landscape}.yaml` plus shared/portrait/landscape component YAML.
+- Tablet hierarchy established as `status: unsupported` with no invented regions.
+- Portrait specification matches the accepted TASK-006 values, including scanner `(310,26,60,82)` even though live Figma scanner is `(315,28,60,82)`.
+- Landscape specification uses Figma-measured 844×390 regions, including collapsed `action_dock` and `action_dock_handle`.
+- Home rail is Graph / Search / New. LOG rail destination removed. `hudView('/log')` returns `home`. Home remains the chronological log.
+- HudShell selects portrait vs landscape from window axes and implements collapsed landscape dock with handle toggle. Portrait dock remains always visible. Orientation change resets dock expansion without remounting route children.
+- Former TASK-011 is superseded by TASK-006. No TASK-011 record existed in `docs/captains-log.yaml` or `docs/ROADMAP.md` to mark in backlog metadata.
+
+#### Implementation Impact
+
+Canonical UI YAML hierarchy under `src/ui/layouts/`; generated `uiSpec.ts` / `hudAssets.ts`; HudShell/HudArtwork/hudBehavior; HUD smoke and browser tests; append-only journals.
+
+#### Verification Required
+
+T0 YAML/generation/typecheck/lint; T1 hud-smoke; T2 hud-browser portrait/landscape/rotation/navigation. Native Android emulator rotation and keyboard remaining as PARTIAL.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-07-025; DEV-2026-09-10-031; DEV-2026-09-11-001; DEV-2026-09-11-032
+- Tests: TEST-2026-09-12-001 through TEST-2026-09-12-004
+- Source: `src/ui/ui.yaml`; `src/ui/layouts/`; `src/ui/layout/HudShell.tsx`; `src/ui/layout/HudArtwork.tsx`; `src/ui/layout/hudBehavior.ts`; `scripts/generate-ui.mjs`
+
+#### Next Steps
+
+User review, then one authorized TASK-006 commit. Native Android rotation/keyboard check when a Metro session for this working tree can be attached to emulator-5554.
+
+#### Deferred Decisions
+
+- Live Figma portrait scanner at `(315,28)` vs accepted YAML `(310,26)`: accepted YAML preserved.
+- Left-handed mirroring remains portrait-only; landscape handedness is not designed.
+- Tablet UI design and implementation.
+- Contextual dock actions outside Capture (DEV-2026-09-10-031).
+- Native Android IME/keyboard landscape space; browser harness has no IME.
+- Landscape viewport accent SVG reuse stretches portrait accent assets to Figma landscape bounds.
+
+

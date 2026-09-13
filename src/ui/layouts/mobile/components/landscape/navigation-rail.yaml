@@ -1,0 +1,9 @@
+component:
+  id: navigation_rail
+  button: { width: 155, height: 55 }
+  spacing: { mode: offsets, item_offsets: [43, 113, 183] }
+  shape: landscape-rail-button-base
+  newShape: landscape-rail-button-new
+  activeBounds: { x: 0, y: 0, width: 155, height: 55 }
+  label: { stacked: false }
+  menu: { iconBounds: { x: 0, y: 0, width: 77.5, height: 27.5 } }

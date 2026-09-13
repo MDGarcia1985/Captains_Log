@@ -1,0 +1,7 @@
+component:
+  id: viewport
+  surface: panel
+  border: viewport-clipped-cyan-border
+  effects: [panelInner, panelOuter]
+  content: { source: active_route }
+  referenceOnly: [viewport-tactical-dot-grid]
