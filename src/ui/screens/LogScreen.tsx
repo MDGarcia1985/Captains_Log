@@ -18,7 +18,7 @@ import { useCallback, useState } from 'react';
 import { SectionList, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
-import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useHudLayout } from '@/ui/layout/HudLayoutContext';
 import type { Attachment, Entity, LogEntry } from '@/models/types';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';
@@ -35,7 +35,7 @@ interface Row {
 
 /*
  * Purpose: Show reverse-chronological history grouped by local day.
- * Design: Inline expand on the card; entity chips select context or route by breakpoint.
+ * Design: Inline expand on the card; the selected layout determines entity navigation.
  * Workflow: / route; reloads on focus after capture.
  * Data Handoff: Reads Entry/Entity/Attachment services and renders EntryCard rows.
  */
@@ -43,7 +43,7 @@ export function LogScreen() {
   const services = useRequiredAppServices();
   const selection = useSelection();
   const router = useRouter();
-  const { mode } = useBreakpoint();
+  const { capabilities } = useHudLayout();
   const [rows, setRows] = useState<Row[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -76,7 +76,7 @@ export function LogScreen() {
 
   return (
     <View style={styles.screen}>
-      {mode !== 'compact' && <TelemetryLabel k="VIEW" v="CHRONOLOGICAL LOG" />}
+      {!capabilities.shellCommands && <TelemetryLabel k="VIEW" v="CHRONOLOGICAL LOG" />}
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.entry.id}
@@ -95,7 +95,7 @@ export function LogScreen() {
             }
             onEntityPress={(id) => {
               selection.setEntityId(id);
-              if (mode === 'compact') {
+              if (!capabilities.entityPane) {
                 router.push(`/entity/${id}`);
               }
             }}

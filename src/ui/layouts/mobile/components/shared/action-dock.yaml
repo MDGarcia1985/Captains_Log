@@ -1,6 +1,7 @@
 component:
   id: action_dock
   bezel: dock-outer-bezel
+  item: { width: 72, y: 0 }
   plate: { asset: dock-camera-button-plate, width: 72, height: 62, y: 8 }
   addPlate: dock-add-button-plate
   icon: { width: 32, height: 32, x: 20, y: 23 }

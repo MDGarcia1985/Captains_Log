@@ -28,7 +28,7 @@ import {
   View,
 } from 'react-native';
 
-import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useHudLayout } from '@/ui/layout/HudLayoutContext';
 import type { CapturedImage, GeoLocation } from '@/models/types';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';
@@ -39,14 +39,14 @@ import { typeStyle } from '@/ui/layout/HudArtwork';
 
 /*
  * Purpose: Fast local capture of text, optional photos, and optional location.
- * Design: No required metadata; autofocus only on compact; handedness flips control clustering.
+ * Design: No required metadata; autofocus follows the layout capability; handedness flips control clustering.
  * Workflow: /capture route; commit calls EntryService.createEntry then dismisses on phone.
  * Data Handoff: Sends CreateEntryInput to the service layer and navigates to the log.
  */
 export function CaptureScreen() {
   const services = useRequiredAppServices();
   const router = useRouter();
-  const { mode } = useBreakpoint();
+  const { capabilities } = useHudLayout();
   const { handedness } = useChrome();
   const inputRef = useRef<TextInput>(null);
   const [text, setText] = useState('');
@@ -58,17 +58,17 @@ export function CaptureScreen() {
   const operation = useRef(false);
 
   useEffect(() => {
-    if (mode === 'compact') {
+    if (capabilities.captureAutoFocus) {
       const timer = setTimeout(() => inputRef.current?.focus(), 250);
       return () => clearTimeout(timer);
     }
-  }, [mode]);
+  }, [capabilities.captureAutoFocus]);
 
   /*
    * Purpose: Save the draft immediately to the local archive.
    * Design: Reject empty drafts; never wait on backup or extraction (those run inside the service).
    * Workflow: Fired by Commit Log; expects text and/or images/location from this screen's state.
-   * Data Handoff: Calls createEntry then clears draft and, on compact, replaces the route with /.
+   * Data Handoff: Calls createEntry then clears draft and returns home when the layout requests it.
    */
   async function commit() {
     if (operation.current) {
@@ -91,7 +91,7 @@ export function CaptureScreen() {
       setImages([]);
       setLocation(null);
       setStatus('COMMITTED');
-      if (mode === 'compact') {
+      if (capabilities.returnHomeAfterCapture) {
         router.replace('/');
       }
     } catch (error) {
@@ -175,10 +175,10 @@ export function CaptureScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.screen, mode === 'compact' && { padding: 0 }]}
+      style={[styles.screen, capabilities.shellCommands && { padding: 0 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {mode !== 'compact' || status !== 'READY' ? <TelemetryLabel k="CAPTURE" v={status} accent="orange" /> : null}
-      {mode !== 'compact' && <Text style={styles.hint}>
+      {!capabilities.shellCommands || status !== 'READY' ? <TelemetryLabel k="CAPTURE" v={status} accent="orange" /> : null}
+      {!capabilities.shellCommands && <Text style={styles.hint}>
         No title, tags, or project required. Use [[Entity]], @Person, or #Project if you want
         links.
       </Text>}
@@ -186,13 +186,13 @@ export function CaptureScreen() {
         ref={inputRef}
         value={text}
         onChangeText={setText}
-        placeholder={mode === 'compact' ? 'Enter log entry…' : 'Record observation…'}
+        placeholder={capabilities.shellCommands ? 'Enter log entry…' : 'Record observation…'}
         accessibilityLabel="Log entry"
         editable={!busy}
         placeholderTextColor={colors.textDim}
         multiline
         textAlignVertical="top"
-        style={[styles.input, mode === 'compact' && { ...typeStyle('entry'), padding: 0, borderWidth: 0, backgroundColor: 'transparent', minHeight: 80 }]}
+        style={[styles.input, capabilities.shellCommands && { ...typeStyle('entry'), padding: 0, borderWidth: 0, backgroundColor: 'transparent', minHeight: 80 }]}
       />
       {images.length > 0 ? (
         <View style={styles.photos}>
@@ -206,7 +206,7 @@ export function CaptureScreen() {
           {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
         </Text>
       ) : null}
-      {mode !== 'compact' && controls}
+      {!capabilities.shellCommands && controls}
       <Modal visible={confirmCancel} transparent animationType="fade" onRequestClose={() => setConfirmCancel(false)}>
         <View style={styles.scrim}><View accessibilityViewIsModal style={styles.confirm}>
           <Text style={styles.hint}>Discard this unsaved record?</Text>

@@ -61,13 +61,13 @@ export function Scanner() {
     return () => loop.stop();
   }, [phase, reduced, active]);
   const rotate = (direction: 'clockwise' | 'counterclockwise') => phase.interpolate({ inputRange: [0, 1], outputRange: ['0deg', rotationEnd(direction)] });
-  return <View style={box(layout.regions.scanner)} pointerEvents="none" accessible accessibilityLabel="Scanner indicator">
+  return <View testID="hud-scanner" style={box(layout.regions.scanner)} pointerEvents="none" accessible accessibilityLabel="Scanner indicator">
     <Art name={scanner.ring.asset} bounds={scanner.ring} />
     <Animated.View testID="scanner-outer-pivot" style={[box(scanner.rotationBounds), { transform: [{ rotate: rotate(scanner.outer.direction) }] }]}>
-      {scanner.outer.assets.map(name => <Art key={name} name={name} bounds={{ x: 0, y: 0, width: 60, height: 60 }} />)}
+      {scanner.outer.assets.map(name => <Art key={name} name={name} bounds={{ x: 0, y: 0, width: scanner.rotationBounds.width, height: scanner.rotationBounds.height }} />)}
     </Animated.View>
     <Animated.View testID="scanner-inner-pivot" style={[box(scanner.rotationBounds), { transform: [{ rotate: rotate(scanner.inner.direction) }] }]}>
-      <Art name={scanner.inner.asset} bounds={{ x: 0, y: 0, width: 60, height: 60 }} />
+      <Art name={scanner.inner.asset} bounds={{ x: 0, y: 0, width: scanner.rotationBounds.width, height: scanner.rotationBounds.height }} />
     </Animated.View>
     <Art name={scanner.core.asset} bounds={scanner.core} />
     <View style={[box(scanner.tick), { backgroundColor: hudColors.cyan }]} />
@@ -79,7 +79,7 @@ export function Scanner() {
 export function HudTitle({ title }: { title: string }) {
   const { orientation, layout } = useHudLayout();
   const c = mergeHudComponent(uiSpec.components.title_block, uiSpec.orientationComponents[orientation].title_block);
-  return <View style={box(layout.regions.title_block)}>
+  return <View testID="hud-title" style={box(layout.regions.title_block)}>
     <Text accessibilityRole="header" numberOfLines={1} style={[box(c.title), typeStyle('heading'), {
       color: hudColors.cyan, textShadowColor: 'rgba(61,222,229,0.55)', textShadowRadius: 8, textShadowOffset: { width: 0, height: 0 },
     }]}>{title}</Text>

@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native-web';
 import { RouterContext } from './hud-fixtures';
-import { HudShell } from '../src/ui/layout/HudShell';
+import { AppShell } from '../src/ui/layout/AppShell';
 import { CaptureScreen } from '../src/ui/screens/CaptureScreen';
 import { SearchScreen } from '../src/ui/screens/SearchScreen';
 import { GraphScreen } from '../src/ui/screens/GraphScreen';
@@ -15,8 +15,9 @@ import { HudCommandsProvider } from '../src/ui/state/HudCommands';
 import { ChromeProvider, useChrome } from '../src/ui/state/ChromeContext';
 import { SelectionProvider } from '../src/ui/state/SelectionContext';
 
-const fixture = globalThis.hudFixture = { calls: [], entries: [], failSave: false, pendingSave: null, holdSave: false, handedness: null };
+const fixture = globalThis.hudFixture = { calls: [], entries: [], entities: [], failSave: false, pendingSave: null, holdSave: false, handedness: null };
 fixture.services = {
+  settings: { get: async () => ({ handedness: 'right' }) },
   entries: {
     listEntries: async () => fixture.entries,
     createEntry: async input => {
@@ -34,20 +35,21 @@ fixture.services = {
   },
   location: { requestCurrentLocation: async () => { fixture.calls.push(['location']); return null; } },
   entities: {
-    listEntitiesForEntry: async () => [], listEntities: async () => [],
+    listEntitiesForEntry: async () => fixture.entities, listEntities: async () => fixture.entities,
     getRelatedEntities: async () => null,
   },
   search: {
     searchEntries: async query => { fixture.calls.push(['search', query]); await new Promise(r => setTimeout(r, 100)); return []; },
-    searchEntities: async () => [],
+    searchEntities: async () => fixture.entities,
   },
 };
 function Harness() {
   const [path, setPath] = useState('/');
+  useEffect(() => { fixture.path = path; }, [path]);
   const chrome = useChrome();
   useEffect(() => { fixture.handedness = chrome.setHandedness; }, [chrome.setHandedness]);
   const router = useMemo(() => ({ push: setPath, replace: setPath, canGoBack: () => true, back: () => setPath('/') }), []);
-  const screen = path === '/capture' ? <CaptureScreen /> : path === '/search' ? <SearchScreen /> : path === '/graph' ? <GraphScreen /> : path === '/settings' ? <View /> : <LogScreen />;
-  return <RouterContext.Provider value={{ path, router }}><HudCommandsProvider><HudShell><View key={path} style={{ flex: 1 }}>{screen}</View></HudShell></HudCommandsProvider></RouterContext.Provider>;
+  const screen = path === '/capture' ? <CaptureScreen /> : path === '/search' ? <SearchScreen /> : path === '/graph' ? <GraphScreen /> : path === '/settings' || path.startsWith('/entity/') ? <View /> : <LogScreen />;
+  return <RouterContext.Provider value={{ path, router }}><HudCommandsProvider><AppShell><View key={path} style={{ flex: 1 }}>{screen}</View></AppShell></HudCommandsProvider></RouterContext.Provider>;
 }
 createRoot(document.getElementById('root')).render(<ChromeProvider><SelectionProvider><Harness /></SelectionProvider></ChromeProvider>);

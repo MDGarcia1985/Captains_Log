@@ -2584,3 +2584,82 @@ User review, then one authorized TASK-006 commit. Native Android rotation/keyboa
 - Landscape viewport accent SVG reuse stretches portrait accent assets to Figma landscape bounds.
 
 
+
+---
+
+### DEV-2026-09-13-001 - Keep the YAML shell mounted across rotation and size differences
+
+**Date:** 2026-09-13
+
+**Time:** 13:27 America/New_York (recorded)
+
+**Engineer:** Codex
+
+**Status:** IMPLEMENTED
+
+**Type:** DECISION
+
+#### Problem
+
+AppShell mounted HudShell only below 600px wide. Rotating a 390x844 phone to
+844x390 selected the medium pane UI before the HUD could consume landscape YAML.
+Existing browser tests mounted HudShell directly and missed this boundary.
+
+#### Context and Constraints
+
+The user approved a plan to keep the correct orientation YAML, absorb size
+mismatches with buffer space, remove geometry overrides, align screen behavior,
+and test through AppShell. Tablet specifications remain unsupported placeholders.
+This supersedes the medium/expanded shell retention in DEV-2026-09-12-001.
+
+#### Solutions Considered
+
+Widening the compact breakpoint would leave another cutoff and retain divergent
+screen behavior. A single persistent AppShell layout context removes the bypass
+and makes screen behavior depend on declared capabilities instead of width.
+
+#### Trade-offs
+
+Larger screens show the mobile composition with unused background space until a
+tablet layout is designed. Native orientation follows display dimensions, while
+fitting follows available window dimensions; a native split window therefore
+retains the display orientation. Web orientation follows its own window. Native
+keyboard and rotation events still require device verification.
+
+#### Final Outcome
+
+AppShell selects portrait/landscape generated YAML and supplies capabilities to
+HUD and screens. Artboards are centered, retain reference size when possible,
+and shrink uniformly only when required. Handedness coordinates and component
+geometry come from YAML. Rotation preserves the shell and route subtree.
+Browser regression now renders AppShell and verifies YAML bounds and workflows.
+
+#### Implementation Impact
+
+AppShell, HudLayoutContext, useHudViewport, HudShell, HudArtwork, hudBehavior;
+Capture/Log/Search/Graph screen capability branches; mobile YAML and generated
+uiSpec; generator validation; HUD contract/browser tests; architecture notes.
+
+#### Verification Required
+
+T0 typecheck/lint/generation and T1 orientation/fitting contracts passed. T2
+AppShell browser integration passed after correcting a stale save-hold fixture.
+Native T2 rotation/keyboard remains blocked by an empty adb device list.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-12-001
+- Tests: TEST-2026-09-13-001 through TEST-2026-09-13-006
+- Source: src/ui/layout/AppShell.tsx; src/ui/layout/useHudViewport.ts; scripts/hud-browser-test.mjs
+
+#### Next Steps
+
+Connect an Android device/emulator, load this working tree, and verify rotation
+with a live draft and the keyboard open/closed. Owner: project maintainer or
+follow-up verification session. Native release acceptance is pending that check;
+browser verification is not evidence of native runtime correctness.
+
+#### Deferred Decisions
+
+Tablet-specific designs and landscape handedness remain undesigned. No dimensions
+or behaviors were invented for those specifications.

@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useHudLayout } from '@/ui/layout/HudLayoutContext';
 import type { Entity, EntityNeighborhood } from '@/models/types';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';
@@ -36,7 +36,7 @@ export function GraphScreen() {
   const services = useRequiredAppServices();
   const selection = useSelection();
   const router = useRouter();
-  const { mode } = useBreakpoint();
+  const { capabilities } = useHudLayout();
   const [entities, setEntities] = useState<Entity[]>([]);
   const [neighborhood, setNeighborhood] = useState<EntityNeighborhood | null>(null);
   useHudRegistration('graph', { reset: () => selection.setEntityId(null) });
@@ -56,13 +56,13 @@ export function GraphScreen() {
 
   /*
    * Purpose: Change the graph focus entity.
-   * Design: Compact still uses a full entity page; expanded/medium keep the user on Graph.
+   * Design: Layouts without an entity pane open the full entity page in either orientation.
    * Workflow: Fired from neighbor chips and the entity list.
    * Data Handoff: Updates SelectionContext and may navigate to /entity/[id].
    */
   function selectEntity(id: string) {
     selection.setEntityId(id);
-    if (mode === 'compact') {
+    if (!capabilities.entityPane) {
       router.push(`/entity/${id}`);
     }
   }
@@ -73,8 +73,8 @@ export function GraphScreen() {
 
   return (
     <View style={styles.screen}>
-      {mode !== 'compact' && <TelemetryLabel k="GRAPH" v="FIRST DEGREE" />}
-      {mode !== 'compact' && <Text style={styles.hint}>The full database is never drawn as one hairball.</Text>}
+      {!capabilities.shellCommands && <TelemetryLabel k="GRAPH" v="FIRST DEGREE" />}
+      {!capabilities.shellCommands && <Text style={styles.hint}>The full database is never drawn as one hairball.</Text>}
       <View style={styles.canvas}>
         {focus ? (
           <>

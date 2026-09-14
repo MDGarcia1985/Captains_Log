@@ -14,6 +14,9 @@ type MobileLayout = typeof uiSpec.layouts.mobile.portrait | typeof uiSpec.layout
 export interface HudLayoutValue {
   orientation: HudOrientation;
   layout: MobileLayout;
+  width: number;
+  height: number;
+  capabilities: typeof uiSpec.layouts.mobile.capabilities;
 }
 
 const HudLayoutContext = createContext<HudLayoutValue | null>(null);
@@ -22,9 +25,11 @@ export function HudLayoutProvider({ value, children }: { value: HudLayoutValue; 
   return <HudLayoutContext.Provider value={value}>{children}</HudLayoutContext.Provider>;
 }
 
-/* Purpose: Read the orientation-selected layout from HudShell.
+/* Purpose: Read the orientation-selected layout from AppShell.
  * Design: Fail closed if artwork is rendered outside the shell.
- * Workflow: Scanner and title layers. Data Handoff: Active layout. */
+ * Workflow: Scanner and title layers. 
+ * Data Handoff: Active layout. 
+ * */
 export function useHudLayout() {
   const value = useContext(HudLayoutContext);
   if (!value) throw new Error('HudLayoutProvider is required');

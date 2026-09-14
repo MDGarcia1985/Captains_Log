@@ -55,6 +55,9 @@ const typography = readRel(manifestFile, manifest.typography).data.typography;
 const mobileFile = readRel(manifestFile, manifest.layouts.mobile);
 const mobileFamily = mobileFile.data.family;
 assert.equal(mobileFamily.id, 'mobile');
+for (const key of ['shellCommands', 'entityPane', 'captureAutoFocus', 'returnHomeAfterCapture']) {
+  assert.equal(typeof mobileFamily.capabilities[key], 'boolean', `Missing mobile capability: ${key}`);
+}
 assert.deepEqual(mobileFamily.orientations, ['portrait', 'landscape']);
 
 const portraitLayout = readRel(mobileFile.filename, mobileFamily.portrait).data.layout;
@@ -116,6 +119,7 @@ validate(portraitComponents);
 validate(landscapeComponents);
 validate(theme.effects);
 validateLayout(portraitLayout);
+validateLayout(deepMerge(portraitLayout, portraitLayout.left_handed));
 validateLayout(landscapeLayout);
 Object.values(theme.colors).forEach(color => assert(/^#[\da-f]{6}$/i.test(color)));
 for (const item of shared.action_dock.items) assert(assets.has(item.icon));
@@ -152,6 +156,7 @@ const spec = {
   layouts: {
     mobile: {
       family: 'mobile',
+      capabilities: mobileFamily.capabilities,
       orientations: ['portrait', 'landscape'],
       portrait: portraitLayout,
       landscape: landscapeLayout,

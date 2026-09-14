@@ -19,9 +19,33 @@ export function hudView(path: string): HudView {
 }
 /* Purpose: Select the canonical mobile orientation specification.
  * Design: Compare window axes; do not invent a third responsive layout.
- * Workflow: HudShell on each dimension change. Data Handoff: portrait | landscape. */
+ * Workflow: AppShell on each dimension change. Data Handoff: portrait | landscape. */
 export function selectMobileOrientation(width: number, height: number): HudOrientation {
   return width >= height ? 'landscape' : 'portrait';
+}
+
+type Size = { width: number; height: number };
+type Insets = { top: number; right: number; bottom: number; left: number };
+
+// Native screen dimensions rotate but do not shrink for adjustResize keyboards.
+// Browser layouts follow their window, rather than the desktop monitor's axes.
+export function selectHudOrientation(window: Size, screen: Size, web: boolean): HudOrientation {
+  const size = web ? window : screen;
+  return selectMobileOrientation(size.width, size.height);
+}
+
+// Preserve the reference geometry; only shrink uniformly and extend the buffer.
+export function fitHudArtboard(window: Size, artboard: Size, insets: Insets) {
+  const width = Math.max(0, window.width - insets.left - insets.right);
+  const height = Math.max(0, window.height - insets.top - insets.bottom);
+  const scale = Math.min(width / artboard.width, height / artboard.height, 1);
+  return {
+    scale,
+    x: insets.left + (width - artboard.width * scale) / 2,
+    y: insets.top + (height - artboard.height * scale) / 2,
+    width: artboard.width * scale,
+    height: artboard.height * scale,
+  };
 }
 /* Purpose: Overlay orientation geometry onto shared component semantics.
  * Design: Nested objects merge; arrays and scalars replace. Missing overlay returns shared.

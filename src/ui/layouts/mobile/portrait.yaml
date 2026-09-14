@@ -6,6 +6,17 @@ layout:
     height: 844
   # Uniform safe-area width/height fit; route content owns scrolling (DEV-2026-09-11-001).
   safe_area: system
+  # Explicit handedness coordinates preserve the approved portrait composition.
+  left_handed:
+    regions:
+      status_header: { x: 92 }
+      scanner: { x: 20 }
+      settings_menu: { x: 15 }
+      title_block: { x: 92 }
+      viewport: { x: 84 }
+      navigation_rail: { x: 15 }
+    chrome:
+      rail_guide: { x: 81 }
   regions:
     status_header:
       component: status_header

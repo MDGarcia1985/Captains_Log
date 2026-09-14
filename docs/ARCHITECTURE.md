@@ -66,15 +66,28 @@ Google Drive is backup storage only. Derived entities and relationships are rege
 
 ## Responsive Shell
 
-One layout system, three breakpoints from `useWindowDimensions()`:
+`AppShell` selects the generated mobile portrait or landscape YAML once and shares
+that layout and its capabilities with the HUD and route screens. Width thresholds
+never replace this shell with another UI. Tablet YAML remains unsupported; larger
+viewports use the corresponding mobile composition until a tablet design exists.
 
-| Width | Mode | Panes |
-| --- | --- | --- |
-| < 600 | compact | primary + vertical rail |
-| 600–899 | medium | primary + rail; context as overlay |
-| >= 900 | expanded | nav + primary + context |
+Native orientation follows `Dimensions.get('screen')`, subscribed to dimension
+changes, so an Android keyboard shrinking the window cannot select landscape.
+Web orientation follows window axes. Available window dimensions and safe-area
+insets determine fitting separately from orientation selection.
 
-Handedness mirrors rail side, capture controls, tablet pane order, and inspector edge.
+The artboard retains its YAML coordinates at scale 1 whenever it fits. Smaller
+windows shrink it uniformly. Unused space becomes centered background padding on
+all sides; artboard regions are neither rearranged nor independently resized to fit
+the window. Portrait handedness offsets are declared in portrait YAML. Landscape
+handedness remains unchanged until designed.
+
+Screen capabilities in `mobile.yaml` determine shell commands, entity navigation,
+autofocus, and return-home behavior after capture. Rotation keeps the same shell and
+route subtree mounted, preserving drafts. `scripts/hud-browser-test.mjs` mounts
+`AppShell` and verifies geometry, old breakpoint boundaries, buffers, safe areas,
+state preservation, and navigation. See DEV-2026-09-13-001 and
+TEST-2026-09-13-001 through TEST-2026-09-13-006 for evidence and native test limits.
 
 ## Authentication
 

@@ -9,7 +9,11 @@ export const RouterContext = createContext(null);
 export function useRouter() { return useContext(RouterContext).router; }
 export function usePathname() { return useContext(RouterContext).path; }
 export function useFocusEffect(callback) { useEffect(callback, [callback]); }
-export function useSafeAreaInsets() { return { top: 0, right: 0, bottom: 0, left: 0 }; }
+export function useSafeAreaInsets() {
+  const [insets, setInsets] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
+  useEffect(() => { globalThis.hudFixture.setInsets = setInsets; }, []);
+  return insets;
+}
 export function StatusBar() { return null; }
 export function Image({ source, contentFit, style }) {
   return <img alt="" src={typeof source === 'string' ? source : source?.uri} style={{ ...StyleSheet.flatten(style), objectFit: contentFit === 'fill' ? 'fill' : 'contain', pointerEvents: 'none' }} />;

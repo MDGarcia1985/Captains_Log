@@ -18,7 +18,7 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useHudLayout } from '@/ui/layout/HudLayoutContext';
 import type { Entity, SearchHit } from '@/models/types';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';
@@ -36,7 +36,7 @@ import { useHudRegistration } from '@/ui/state/HudCommands';
 export function SearchScreen() {
   const services = useRequiredAppServices();
   const router = useRouter();
-  const { mode } = useBreakpoint();
+  const { capabilities } = useHudLayout();
   const selection = useSelection();
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<SearchHit[]>([]);
@@ -73,21 +73,21 @@ export function SearchScreen() {
 
   /*
    * Purpose: Open an entity in context or as a compact route.
-   * Design: Same handed/breakpoint rule as the log: compact navigates, larger layouts fill the inspector.
+   * Design: The selected layout decides between entity navigation and an inspector.
    * Workflow: Called from entity result cards.
    * Data Handoff: Writes SelectionContext.entityId and optionally pushes /entity/[id].
    */
   function openEntity(id: string) {
     selection.setEntityId(id);
-    if (mode === 'compact') {
+    if (!capabilities.entityPane) {
       router.push(`/entity/${id}`);
     }
   }
 
   return (
     <View style={styles.screen}>
-      {mode !== 'compact' && <TelemetryLabel k="QUERY MODE" v="LEXICAL" />}
-      {mode !== 'compact' && <View style={styles.nlReserve}>
+      {!capabilities.shellCommands && <TelemetryLabel k="QUERY MODE" v="LEXICAL" />}
+      {!capabilities.shellCommands && <View style={styles.nlReserve}>
         <Text style={styles.nlText}>NATURAL LANGUAGE // STANDBY</Text>
       </View>}
       {error ? <Text accessibilityRole="alert" style={styles.meta}>{error}</Text> : null}

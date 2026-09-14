@@ -1214,3 +1214,375 @@ TEST-2026-09-12-003
 
 Do not treat native Android keyboard/rotation as PASS. Browser T2 is the executed runtime evidence for layout selection and dock/handle. Native check remains for the user or a follow-up session.
 
+
+---
+
+### TEST-2026-09-13-001 - AppShell browser runner prerequisites
+
+**Date:** 2026-09-13
+
+**Time:** 13:27 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** BLOCKED
+
+#### Scope
+
+AppShell browser runner prerequisites
+
+#### Files Under Validation
+
+scripts/hud-browser-test.mjs; scripts/hud-harness.jsx
+
+#### Objective
+
+Run the real AppShell integration harness.
+
+#### Preconditions
+
+Windows; installed node modules; no downloaded Playwright Chromium.
+
+#### Procedure
+
+Ran npm.cmd run test:hud:browser in the sandbox, then with approved escalation.
+
+#### Expected Result
+
+Harness bundles and Chromium starts.
+
+#### Actual Result
+
+Sandbox denied esbuild parent-directory access. Escalated bundling succeeded, but Playwright could not find chromium_headless_shell-1243.
+
+#### Evidence
+
+Runner output: Cannot read directory ../..: Access is denied; Executable does not exist at the Playwright headless-shell path.
+
+#### Failures / Observations
+
+Configured the test runner to use installed Chrome when bundled Chromium is absent. No production behavior changed.
+
+#### Related DEVNOTES
+
+DEV-2026-09-13-001
+
+#### Related Tests
+
+TEST-2026-09-12-003
+
+#### Disposition
+
+Superseded by executed retests TEST-2026-09-13-002 and TEST-2026-09-13-005.
+
+---
+
+### TEST-2026-09-13-002 - Landscape save regression fixture failure
+
+**Date:** 2026-09-13
+
+**Time:** 13:27 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** FAIL
+
+#### Scope
+
+Landscape save regression fixture failure
+
+#### Files Under Validation
+
+scripts/hud-browser-test.mjs; scripts/hud-harness.jsx; src/ui/layout/AppShell.tsx
+
+#### Objective
+
+Return home after committing the preserved rotation draft in landscape.
+
+#### Preconditions
+
+Installed Chrome; AppShell harness; earlier save test enabled fixture.holdSave.
+
+#### Procedure
+
+Ran npm.cmd run test:hud:browser with approved escalation.
+
+#### Expected Result
+
+Commit resolves and the NEW button appears.
+
+#### Actual Result
+
+Rotation/geometry matrix completed, then waiting for NEW timed out because the test fixture still held saves.
+
+#### Evidence
+
+Timeout 30000ms at the NEW wait after the landscape COMMIT; tablet buffer screenshots were generated.
+
+#### Failures / Observations
+
+Corrected the fixture cleanup to set holdSave=false when resolving the earlier pending save.
+
+#### Related DEVNOTES
+
+DEV-2026-09-13-001
+
+#### Related Tests
+
+TEST-2026-09-13-001
+
+#### Disposition
+
+Repaired and retested in TEST-2026-09-13-005.
+
+---
+
+### TEST-2026-09-13-003 - YAML shell static validation
+
+**Date:** 2026-09-13
+
+**Time:** 13:27 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T0
+
+**Result:** PASS
+
+#### Scope
+
+YAML shell static validation
+
+#### Files Under Validation
+
+src/ui/layout/AppShell.tsx; src/ui/layout/useHudViewport.ts; src/ui/layout/HudLayoutContext.tsx; src/ui/layout/HudShell.tsx; src/ui/layout/HudArtwork.tsx; src/ui/layout/hudBehavior.ts; src/ui/screens/{Capture,Log,Search,Graph}Screen.tsx; src/ui/layouts/mobile/; scripts/generate-ui.mjs; src/ui/generated/uiSpec.ts
+
+#### Objective
+
+Compile the changed shell and screens and validate generated YAML data.
+
+#### Preconditions
+
+Installed repository dependencies.
+
+#### Procedure
+
+Ran npm.cmd run typecheck, npm.cmd run lint, and node scripts/generate-ui.mjs --check (also executed by test:hud).
+
+#### Expected Result
+
+No type/lint errors; generated specification matches YAML.
+
+#### Actual Result
+
+Typecheck and final lint exited 0 with no diagnostics; YAML check reported generation current.
+
+#### Evidence
+
+tsc --noEmit; expo lint; UI specification PASS: 26 YAML files, 38 SVG assets; generation current.
+
+#### Failures / Observations
+
+An initial BOM lint warning in AppShell was removed before the clean lint rerun.
+
+#### Related DEVNOTES
+
+DEV-2026-09-13-001
+
+#### Related Tests
+
+None
+
+#### Disposition
+
+Static gate passed; runtime evidence is in TEST-2026-09-13-005.
+
+---
+
+### TEST-2026-09-13-004 - Orientation and buffer contracts
+
+**Date:** 2026-09-13
+
+**Time:** 13:27 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T1
+
+**Result:** PASS
+
+#### Scope
+
+Orientation and buffer contracts
+
+#### Files Under Validation
+
+src/ui/layout/hudBehavior.ts; scripts/hud-smoke.ts; scripts/generate-ui.mjs
+
+#### Objective
+
+Preserve the selected composition and fit it safely without upscaling.
+
+#### Preconditions
+
+Generated uiSpec is current.
+
+#### Procedure
+
+Ran npm.cmd run test:hud.
+
+#### Expected Result
+
+Native keyboard window shrink preserves display orientation; web uses window axes; fitting preserves aspect ratio and safe-area bounds.
+
+#### Actual Result
+
+All new orientation/fitting assertions and retained HUD contracts passed.
+
+#### Evidence
+
+HUD contracts PASS; assertions cover 390x300 native window on a 390x844 screen, tablet padding, small windows, asymmetric insets, and old width thresholds.
+
+#### Failures / Observations
+
+Node emitted the existing MODULE_TYPELESS_PACKAGE_JSON warning. Native dimension events themselves were not simulated by this pure-function test.
+
+#### Related DEVNOTES
+
+DEV-2026-09-13-001
+
+#### Related Tests
+
+TEST-2026-09-13-003
+
+#### Disposition
+
+Module gate passed; native runtime remains separate.
+
+---
+
+### TEST-2026-09-13-005 - AppShell rotation and layout integration retest
+
+**Date:** 2026-09-13
+
+**Time:** 13:27 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** PASS
+
+#### Scope
+
+AppShell rotation and layout integration retest
+
+#### Files Under Validation
+
+scripts/hud-browser-test.mjs; scripts/hud-harness.jsx; scripts/hud-fixtures.jsx; src/ui/layout/; src/ui/screens/{Capture,Log,Search,Graph}Screen.tsx
+
+#### Objective
+
+Keep the YAML composition mounted through rotation and viewport changes while preserving working screen actions.
+
+#### Preconditions
+
+Installed Chrome; isolated service/router fixtures; real production AppShell, HUD, and feature screens.
+
+#### Procedure
+
+Ran npm.cmd run test:hud:browser with approved escalation after fixture repair. Inspected landscape-expanded and tablet-landscape-buffer screenshots.
+
+#### Expected Result
+
+YAML regions match rendered bounds; unused space is padding; rotation preserves the same input and draft; saving and entity routes work in both orientations.
+
+#### Actual Result
+
+Full suite passed, including 599/600/601 and 899/900/901 widths, portrait and landscape tablets, unusual aspect ratios, asymmetric insets, handedness, dock geometry, capture input identity, landscape commit, and entity navigation from Log/Search/Graph.
+
+#### Evidence
+
+HUD browser T2 PASS: AppShell rotation, YAML geometry, breakpoint/tablet buffers, safe areas, mounted draft preservation, landscape commit, entity routes, menu/dock/actions, handedness, scanner motion, reduced motion. Local artifacts: .tmp/hud-qa/*.png and motion-samples.json.
+
+#### Failures / Observations
+
+Geometry tolerance is 0.2 CSS px. Browser uses React Native Web and service/router doubles; this is not a native build test.
+
+#### Related DEVNOTES
+
+DEV-2026-09-13-001
+
+#### Related Tests
+
+TEST-2026-09-13-001; TEST-2026-09-13-002; TEST-2026-09-12-003
+
+#### Disposition
+
+Browser integration passed. Earlier isolated HudShell tests could not detect the AppShell bypass; this harness now covers it. Native verification remains TEST-2026-09-13-006.
+
+---
+
+### TEST-2026-09-13-006 - Native rotation device availability
+
+**Date:** 2026-09-13
+
+**Time:** 13:27 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** BLOCKED
+
+#### Scope
+
+Native rotation device availability
+
+#### Files Under Validation
+
+src/ui/layout/useHudViewport.ts; src/ui/layout/AppShell.tsx
+
+#### Objective
+
+Verify actual native rotation and keyboard behavior against this working tree.
+
+#### Preconditions
+
+Android SDK adb is installed; a connected device or running emulator is required.
+
+#### Procedure
+
+Checked the SDK path with approved escalation; ran adb devices -l.
+
+#### Expected Result
+
+An available Android device permits launching this working tree and testing rotation/IME.
+
+#### Actual Result
+
+adb started its daemon and returned an empty device list. No live build was launched or rotated.
+
+#### Evidence
+
+List of devices attached followed by no entries.
+
+#### Failures / Observations
+
+No native PASS is claimed. Native screen/window events, keyboard behavior, and real safe areas remain unobserved.
+
+#### Related DEVNOTES
+
+DEV-2026-09-13-001
+
+#### Related Tests
+
+TEST-2026-09-12-004; TEST-2026-09-13-004; TEST-2026-09-13-005
+
+#### Disposition
+
+Implementation is reviewable with browser evidence; native release acceptance remains pending a connected device and working-tree build. Owner: project maintainer or follow-up verification session.

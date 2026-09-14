@@ -118,6 +118,12 @@ export const uiSpec = {
   "layouts": {
     "mobile": {
       "family": "mobile",
+      "capabilities": {
+        "shellCommands": true,
+        "entityPane": false,
+        "captureAutoFocus": true,
+        "returnHomeAfterCapture": true
+      },
       "orientations": [
         "portrait",
         "landscape"
@@ -130,6 +136,33 @@ export const uiSpec = {
           "height": 844
         },
         "safe_area": "system",
+        "left_handed": {
+          "regions": {
+            "status_header": {
+              "x": 92
+            },
+            "scanner": {
+              "x": 20
+            },
+            "settings_menu": {
+              "x": 15
+            },
+            "title_block": {
+              "x": 92
+            },
+            "viewport": {
+              "x": 84
+            },
+            "navigation_rail": {
+              "x": 15
+            }
+          },
+          "chrome": {
+            "rail_guide": {
+              "x": 81
+            }
+          }
+        },
         "regions": {
           "status_header": {
             "component": "status_header",
@@ -480,6 +513,10 @@ export const uiSpec = {
     "action_dock": {
       "id": "action_dock",
       "bezel": "dock-outer-bezel",
+      "item": {
+        "width": 72,
+        "y": 0
+      },
       "plate": {
         "asset": "dock-camera-button-plate",
         "width": 72,
@@ -652,7 +689,10 @@ export const uiSpec = {
           "height": 157
         },
         "label": {
-          "stacked": true
+          "stacked": true,
+          "x": 12,
+          "y": 0,
+          "width": 36
         },
         "menu": {
           "iconBounds": {
@@ -779,7 +819,10 @@ export const uiSpec = {
           "height": 55
         },
         "label": {
-          "stacked": false
+          "stacked": false,
+          "x": 0,
+          "y": 0,
+          "width": 155
         },
         "menu": {
           "iconBounds": {

@@ -7,7 +7,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { uiSpec } from '../src/ui/generated/uiSpec.ts';
-import { backupIsSynced, hudView, mergeHudComponent, rotationEnd, SCANNER_ROTATION_MS, selectMobileOrientation } from '../src/ui/layout/hudBehavior.ts';
+import { backupIsSynced, fitHudArtboard, hudView, mergeHudComponent, rotationEnd, SCANNER_ROTATION_MS, selectHudOrientation, selectMobileOrientation } from '../src/ui/layout/hudBehavior.ts';
 import { requestExport } from '../src/services/exportService.ts';
 
 execFileSync(process.execPath, ['scripts/generate-ui.mjs', '--check'], { stdio: 'inherit' });
@@ -16,6 +16,26 @@ for (const [path, expected] of [['/', 'home'], ['/capture', 'capture'], ['/log',
 }
 assert.equal(selectMobileOrientation(390, 844), 'portrait');
 assert.equal(selectMobileOrientation(844, 390), 'landscape');
+// A keyboard can make the native window wider than it is tall without rotating.
+assert.equal(selectHudOrientation({ width: 390, height: 300 }, { width: 390, height: 844 }, false), 'portrait');
+assert.equal(selectHudOrientation({ width: 844, height: 180 }, { width: 844, height: 390 }, false), 'landscape');
+// Desktop monitor orientation must not override a narrow browser window.
+assert.equal(selectHudOrientation({ width: 390, height: 844 }, { width: 1920, height: 1080 }, true), 'portrait');
+const noInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+const portraitSize = { width: 390, height: 844 };
+assert.deepEqual(fitHudArtboard(portraitSize, portraitSize, noInsets), { scale: 1, x: 0, y: 0, width: 390, height: 844 });
+assert.deepEqual(fitHudArtboard({ width: 600, height: 1000 }, portraitSize, noInsets), { scale: 1, x: 105, y: 78, width: 390, height: 844 });
+assert.deepEqual(fitHudArtboard({ width: 1024, height: 768 }, { width: 844, height: 390 }, noInsets), { scale: 1, x: 90, y: 189, width: 844, height: 390 });
+for (const window of [{ width: 320, height: 568 }, { width: 599, height: 390 }, { width: 600, height: 390 }, { width: 900, height: 390 }]) {
+  const layout = uiSpec.layouts.mobile[selectMobileOrientation(window.width, window.height)];
+  const insets = { top: 27, right: 41, bottom: 19, left: 13 };
+  const fit = fitHudArtboard(window, layout.reference_viewport, insets);
+  assert(fit.scale > 0 && fit.scale <= 1);
+  assert(Math.abs(fit.width / fit.height - layout.reference_viewport.width / layout.reference_viewport.height) < 1e-9);
+  assert(fit.x >= insets.left && fit.y >= insets.top);
+  assert(fit.x + fit.width <= window.width - insets.right + 1e-9);
+  assert(fit.y + fit.height <= window.height - insets.bottom + 1e-9);
+}
 assert.equal(uiSpec.layouts.mobile.portrait.id, 'mobile_portrait');
 assert.equal(uiSpec.layouts.mobile.landscape.id, 'mobile_landscape');
 assert.deepEqual(uiSpec.components.navigation_rail.contexts.home, ['graph', 'search', 'new']);

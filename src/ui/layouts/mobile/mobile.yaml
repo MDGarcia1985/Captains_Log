@@ -1,6 +1,11 @@
 # Mobile family selection. Orientation geometry lives in portrait.yaml / landscape.yaml.
 family:
   id: mobile
+  capabilities:
+    shellCommands: true
+    entityPane: false
+    captureAutoFocus: true
+    returnHomeAfterCapture: true
   orientations:
     - portrait
     - landscape
