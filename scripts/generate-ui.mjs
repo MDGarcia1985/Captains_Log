@@ -8,8 +8,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { parseDocument } from 'yaml';
+import { validateChildBounds, validateContent } from './ui-geometry-validation.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const base = path.join(root, 'src/ui');
@@ -59,6 +61,13 @@ for (const key of ['shellCommands', 'entityPane', 'captureAutoFocus', 'returnHom
   assert.equal(typeof mobileFamily.capabilities[key], 'boolean', `Missing mobile capability: ${key}`);
 }
 assert.deepEqual(mobileFamily.orientations, ['portrait', 'landscape']);
+assert([null, 'portrait', 'landscape'].includes(mobileFamily.selection.override));
+assert(mobileFamily.orientations.includes(mobileFamily.selection.square));
+assert.equal(mobileFamily.selection.native_source, 'screen');
+assert.equal(mobileFamily.selection.web_source, 'window');
+assert.equal(mobileFamily.selection.fallback, 'authorized_mobile_orientation');
+assert.deepEqual(mobileFamily.fitting, { scale: 'uniform_contain', safe_area: 'system', border_inset: 8,
+  border_space: 'phone', letterbox: 'centered_unfilled_axis' });
 
 const portraitLayout = readRel(mobileFile.filename, mobileFamily.portrait).data.layout;
 const landscapeLayout = readRel(mobileFile.filename, mobileFamily.landscape).data.layout;
@@ -121,6 +130,29 @@ validate(theme.effects);
 validateLayout(portraitLayout);
 validateLayout(deepMerge(portraitLayout, portraitLayout.left_handed));
 validateLayout(landscapeLayout);
+assert.deepEqual(portraitLayout.handedness, { canonical: 'right', supported: ['right', 'left'], preference: 'editable' });
+assert.deepEqual(landscapeLayout.handedness, { canonical: 'right', supported: ['right'], preference: 'preserve_portrait' });
+assert.deepEqual(landscapeComponents.action_dock.behavior.transition, { type: 'assembled_slide', duration_ms: 240,
+  easing: 'cubic_out', handle_anchor: 'above_bezel_top', clip_boundary: 'collapsed_handle_bottom' });
+for (const [layout, overlay] of [[portraitLayout, portraitComponents], [landscapeLayout, landscapeComponents]]) {
+  const viewport = deepMerge(shared.viewport, overlay.viewport);
+  validateContent(layout.regions.viewport, viewport.content, `${layout.id}.viewport.content`);
+  for (const a of viewport.accents) validateChildBounds(layout.regions.viewport, a, a.asset);
+  for (const a of viewport.accentExports || []) validateChildBounds(layout.regions.viewport, a, 'accent export');
+  const dock = deepMerge(shared.action_dock, overlay.action_dock);
+  validateChildBounds(layout.regions.action_dock, dock.bezelBounds, 'dock bezel');
+  const rail = deepMerge(shared.navigation_rail, overlay.navigation_rail);
+  validateChildBounds(layout.regions.settings_menu, rail.menu.iconBounds, 'menu artwork');
+  for (const a of [rail.assetBounds, rail.newAssetBounds, ...Object.values(rail.labelBounds)]) validateChildBounds(rail.button, a, 'rail child');
+  assert(assets.has(rail.menu.icon)); assert(assets.has(viewport.border));
+  const status = deepMerge(shared.status_header, overlay.status_header);
+  if (status.bezelVisible) validateChildBounds(layout.regions.status_header, status.bezelBounds, 'status bezel');
+  const title = deepMerge(shared.title_block, overlay.title_block);
+  validateChildBounds(layout.regions.title_block, title.title, 'heading text box');
+  validateChildBounds(layout.regions.title_block, title.divider, 'title divider');
+  validateChildBounds(layout.regions.scanner, shared.scanner.core.visibleBounds, 'scanner visible core');
+  validateChildBounds(layout.regions.scanner, shared.scanner.core.exportBounds, 'scanner glow export');
+}
 Object.values(theme.colors).forEach(color => assert(/^#[\da-f]{6}$/i.test(color)));
 for (const item of shared.action_dock.items) assert(assets.has(item.icon));
 assert(assets.has(shared.navigation_rail.menu.icon));
@@ -157,6 +189,8 @@ const spec = {
     mobile: {
       family: 'mobile',
       capabilities: mobileFamily.capabilities,
+      selection: mobileFamily.selection,
+      fitting: mobileFamily.fitting,
       orientations: ['portrait', 'landscape'],
       portrait: portraitLayout,
       landscape: landscapeLayout,
@@ -179,7 +213,12 @@ const outputs = {
   'uiSpec.ts': header + `export const uiSpec = ${JSON.stringify(spec, null, 2)} as const;\n`,
   'hudAssets.ts': header + 'export const hudAssets = {\n' + names.map(p => `  '${p.slice(0, -4)}': require('../../../assets/hud/${p}'),`).join('\n') + '\n} as const;\nexport type HudAsset = keyof typeof hudAssets;\n',
 };
+// Generation cannot turn visually divergent YAML into a new runtime authority.
+if (!process.argv.includes('--check') && !process.argv.includes('--validate-only')) {
+  execFileSync(process.execPath, [path.join(root, 'scripts/ui-authority-test.mjs')], { cwd: root, stdio: 'inherit' });
+}
 for (const [name, contents] of Object.entries(outputs)) {
+  if (process.argv.includes('--validate-only')) continue;
   const target = path.join(base, 'generated', name);
   if (process.argv.includes('--check')) {
     assert.equal(fs.readFileSync(target, 'utf8'), contents, `Stale generated file: ${name}`);
@@ -189,4 +228,4 @@ for (const [name, contents] of Object.entries(outputs)) {
   }
 }
 const yamlCount = 3 + 3 + 3 + Object.keys(shared).length + Object.keys(portraitComponents).length + Object.keys(landscapeComponents).length;
-console.log(`UI specification PASS: ${yamlCount} YAML files, ${assets.size} SVG assets; ${process.argv.includes('--check') ? 'generation current' : 'generated'}`);
+console.log(`UI specification PASS: ${yamlCount} YAML files, ${assets.size} SVG assets; ${process.argv.includes('--validate-only') ? 'validated without generation' : process.argv.includes('--check') ? 'generation current' : 'generated'}`);

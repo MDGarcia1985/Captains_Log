@@ -20,6 +20,8 @@ const fixture = path.resolve('scripts/hud-fixtures.jsx');
 const layouts = Object.fromEntries(['portrait', 'landscape'].map(orientation => [orientation,
   parse(fs.readFileSync(`src/ui/layouts/mobile/${orientation}.yaml`, 'utf8')).layout,
 ]));
+const figma = JSON.parse(fs.readFileSync('scripts/fixtures/task007-figma.json', 'utf8'));
+const geometryResults = [];
 await build({
   entryPoints: ['scripts/hud-harness.jsx'], outfile: path.join(output, 'harness.js'), bundle: true,
   jsx: 'automatic', platform: 'browser', define: { 'process.env.NODE_ENV': '"development"', __DEV__: 'true', global: 'globalThis' },
@@ -49,19 +51,26 @@ try {
   page.on('pageerror', e => { errors.push(e.message); console.error('Browser error:', e.message); });
   await page.goto(`http://127.0.0.1:${server.address().port}`);
   const button = name => page.getByRole('button', { name, exact: true });
-  async function checkGeometry(size, { leftHanded = false, dockVisible = false, insets = { top: 0, right: 0, bottom: 0, left: 0 } } = {}) {
+  async function checkGeometry(size, { leftHanded = false, dockVisible = false, hostSize = size, insets = { top: 0, right: 0, bottom: 0, left: 0 } } = {}) {
     await page.setViewportSize(size);
     const orientation = size.width >= size.height ? 'landscape' : 'portrait';
     const layout = layouts[orientation];
     const art = layout.reference_viewport;
-    const scale = Math.min((size.width - insets.left - insets.right) / art.width, (size.height - insets.top - insets.bottom) / art.height, 1);
-    const origin = { x: insets.left + (size.width - insets.left - insets.right - art.width * scale) / 2,
-      y: insets.top + (size.height - insets.top - insets.bottom - art.height * scale) / 2 };
+    const scale = Math.min((hostSize.width - insets.left - insets.right) / art.width, (hostSize.height - insets.top - insets.bottom) / art.height);
+    const origin = { x: insets.left + (hostSize.width - insets.left - insets.right - art.width * scale) / 2,
+      y: insets.top + (hostSize.height - insets.top - insets.bottom - art.height * scale) / 2 };
     await page.waitForFunction(({ orientation, origin, width }) => {
       const hud = document.querySelector('[data-testid="mobile-hud"]');
       const rect = hud?.getBoundingClientRect();
-      return hud?.id === orientation && Math.abs(rect.x - origin.x) < 0.2 && Math.abs(rect.y - origin.y) < 0.2 && Math.abs(rect.width - width) < 0.2;
-    }, { orientation, origin, width: art.width * scale });
+      const frame = document.querySelector('[data-testid="hud-artboard-frame"]');
+      return frame && getComputedStyle(frame).opacity === '1' && hud?.id === orientation && Math.abs(rect.x - origin.x) < 0.2 && Math.abs(rect.y - origin.y) < 0.2 && Math.abs(rect.width - width) < 0.2;
+    }, { orientation, origin, width: art.width * scale }).catch(async error => {
+      console.error('Fit failure geometry', await page.evaluate(() => ['root', 'hud-buffer', 'hud-artboard-frame', 'mobile-hud'].map(id => {
+        const el = document.getElementById(id) || document.querySelector(`[data-testid="${id}"]`);
+        return { id, rect: el?.getBoundingClientRect().toJSON(), style: el?.getAttribute('style') };
+      })));
+      throw error;
+    });
     const regions = { ...layout.regions };
     if (leftHanded && layout.left_handed) {
       for (const [key, override] of Object.entries(layout.left_handed.regions)) regions[key] = { ...regions[key], ...override };
@@ -75,12 +84,44 @@ try {
       [button('Settings and more options'), regions.settings_menu],
     ];
     if (orientation === 'portrait' || dockVisible) targets.push([page.getByTestId('action-dock'), regions.action_dock]);
-    if (orientation === 'landscape') targets.push([button('Action dock handle'), regions.action_dock_handle]);
+    if (orientation === 'landscape') targets.push([button('Action dock handle'), { ...regions.action_dock_handle,
+      y: dockVisible ? regions.action_dock.y - regions.action_dock_handle.height : regions.action_dock_handle.y }]);
     for (const [target, region] of targets) {
       const actual = await target.boundingBox();
       const expected = { x: origin.x + region.x * scale, y: origin.y + region.y * scale, width: region.width * scale, height: region.height * scale };
       for (const key of ['x', 'y', 'width', 'height']) assert(Math.abs(actual[key] - expected[key]) < 0.2, `${orientation} ${await target.getAttribute('data-testid')} ${key}: ${actual[key]} != ${expected[key]}`);
     }
+    const border = await page.getByTestId('hud-outer-border').boundingBox();
+    for (const [key, value] of Object.entries({ x: origin.x + 8, y: origin.y + 8, width: art.width * scale - 16, height: art.height * scale - 16 }))
+      assert(Math.abs(border[key] - value) < 0.2, `${size.width}x${size.height} phone border ${key}`);
+    assert.equal(await page.getByTestId('mobile-hud').getByTestId('hud-outer-border').count(), 0, 'Border is inside scaled artboard');
+    const node = id => figma[orientation].find(n => n.id === id);
+    const checkAsset = async (testId, parent, bounds) => {
+      const actual = await page.getByTestId(testId).boundingBox();
+      const values = [origin.x + (parent.x + bounds[0]) * scale, origin.y + (parent.y + bounds[1]) * scale, bounds[2] * scale, bounds[3] * scale];
+      ['x', 'y', 'width', 'height'].forEach((k, i) => assert(Math.abs(actual[k] - values[i]) < 0.2, `${testId}.${k}`));
+    };
+    const menu = node(orientation === 'portrait' ? '88:7' : '96:121');
+    await checkAsset(`art-${orientation === 'portrait' ? '' : 'landscape-'}menu-three-bars`, regions.settings_menu, [0, 0, ...menu.b.slice(2)]);
+    assert.equal(await page.getByTestId('art-status-angular-bezel').count(), orientation === 'portrait' ? 1 : 0);
+    await checkAsset('hud-heading', regions.title_block, node(orientation === 'portrait' ? '3:28' : '96:41').local);
+    const heading = page.getByTestId('hud-heading');
+    assert.equal(await heading.evaluate(el => getComputedStyle(el).textOverflow), 'clip');
+    if (await heading.textContent() === 'NEW RECORD') {
+      assert(await heading.evaluate((el, scale) => {
+        const range = document.createRange(); range.selectNodeContents(el);
+        return range.getBoundingClientRect().right - 4.32 * scale <= el.getBoundingClientRect().right + 0.2;
+      }, scale), 'NEW RECORD glyphs clipped');
+    }
+    if (orientation === 'landscape') {
+      await checkAsset('art-landscape-viewport-clipped-cyan-border', regions.viewport, node('96:51').local);
+      await checkAsset('art-landscape-title-angular-rule', regions.title_block, node('96:43').local);
+      if (await button('NEW').count()) await checkAsset('art-landscape-rail-button-new', { x: regions.navigation_rail.x, y: regions.navigation_rail.y + 183 }, node('96:63').local);
+    }
+    const content = await page.getByTestId('hud-content').boundingBox();
+    const panel = await page.getByTestId('hud-viewport').boundingBox();
+    assert(content.x >= panel.x && content.y >= panel.y && content.x + content.width <= panel.x + panel.width + 0.2 && content.y + content.height <= panel.y + panel.height + 0.2);
+    geometryResults.push({ ...size, orientation, scale, origin, border, content, insets });
     assert.equal(await page.getByText('LOCAL ARCHIVE', { exact: true }).count(), 0);
     assert.equal(await button('LOG').count(), 0);
   }
@@ -97,6 +138,17 @@ try {
   await button('Close').click();
   await button('Settings and more options').click();
   await button('Settings').click();
+  await page.getByText('HANDEDNESS', { exact: true }).waitFor();
+  async function scrollContentToEnd() {
+    return page.getByTestId('hud-scroll-host').evaluate(host => {
+      const scroll = [...host.querySelectorAll('*')].find(el => el.scrollHeight > el.clientHeight + 10 && ['auto', 'scroll'].includes(getComputedStyle(el).overflowY));
+      if (!scroll) throw new Error('No scrollable content');
+      scroll.scrollTop = scroll.scrollHeight;
+      return { top: scroll.scrollTop, height: scroll.clientHeight, total: scroll.scrollHeight };
+    });
+  }
+  assert((await scrollContentToEnd()).top > 0);
+  await page.screenshot({ path: path.join(output, 'settings-scrolled-portrait.png') });
   await button('HOME').click();
   await button('ADD').click();
   await button('Gallery').click();
@@ -176,27 +228,54 @@ try {
   assert.equal(await button('NEW').count(), 1);
   const landscapeNew = await button('NEW').boundingBox();
   assert.equal(Math.round(landscapeNew.width), 155); assert.equal(Math.round(landscapeNew.height), 55);
-  await button('Action dock handle').click();
+  async function checkDockTransition() {
+    await page.evaluate(() => {
+      const dock = document.querySelector('[data-testid="action-dock"]');
+      const images = [...dock.querySelectorAll('img')];
+      globalThis.dockMotionDone = false;
+      globalThis.dockMotionSamples = [];
+      document.querySelector('[aria-label="Action dock handle"]').addEventListener('click', () => {
+        const start = performance.now();
+        const sample = () => {
+          const d = dock.getBoundingClientRect(), h = document.querySelector('[data-testid="action-dock-handle"]').getBoundingClientRect();
+          globalThis.dockMotionSamples.push({ y: d.y, handleBottom: h.bottom, attached: dock === document.querySelector('[data-testid="action-dock"]') && images.every(i => i.isConnected && i.complete) });
+          if (performance.now() - start < 320) requestAnimationFrame(sample); else globalThis.dockMotionDone = true;
+        }; requestAnimationFrame(sample);
+      }, { once: true });
+    });
+    await button('Action dock handle').click();
+    await page.waitForFunction(() => globalThis.dockMotionDone);
+    const samples = await page.evaluate(() => globalThis.dockMotionSamples);
+    assert(new Set(samples.map(s => Math.round(s.y))).size > 2, 'Dock did not slide');
+    assert(samples.every(s => s.attached && Math.abs(s.y - s.handleBottom) < 0.2), 'Dock remounted, artwork incomplete, or handle detached');
+    fs.writeFileSync(path.join(output, `dock-motion-${await button('Action dock handle').getAttribute('aria-expanded')}.json`), JSON.stringify(samples, null, 2));
+  }
+  await checkDockTransition();
   await button('ADD').waitFor();
   await page.screenshot({ path: path.join(output, 'landscape-expanded.png') });
   await checkGeometry({ width: 844, height: 390 }, { dockVisible: true });
-  // The visible dock artwork itself must fill the YAML region, not a 350x96 portrait box.
+  // Figma separates the 363.262 x 115.277 parent from the 350 x 96 bezel.
   const dockBox = await page.getByTestId('action-dock').boundingBox();
   const bezelBox = await page.getByTestId('action-dock').locator('img').first().boundingBox();
-  assert(Math.abs(dockBox.width - bezelBox.width) < 0.2 && Math.abs(dockBox.height - bezelBox.height) < 0.2);
-  await button('Action dock handle').click();
-  await page.waitForFunction(() => [...document.querySelectorAll('[aria-label="ADD"]')].length === 0);
+  assert(Math.abs(dockBox.width - 363.262) < 0.2);
+  assert.equal(bezelBox.width, 350); assert.equal(bezelBox.height, 96);
+  await checkDockTransition();
+  await page.waitForFunction(() => document.querySelector('[data-testid="action-dock"]')?.getAttribute('aria-hidden') === 'true');
   assert.equal(await button('ADD').count(), 0);
   await button('NEW').click();
   await page.getByRole('textbox', { name: 'Log entry' }).fill('Landscape rotation draft');
   await page.evaluate(() => { globalThis.rotationInput = document.querySelector('[aria-label="Log entry"]'); });
   await page.setViewportSize({ width: 390, height: 844 });
+  await checkGeometry({ width: 390, height: 844 });
   assert.equal(await page.getByRole('textbox', { name: 'Log entry' }).inputValue(), 'Landscape rotation draft');
   await button('COMMIT').waitFor();
   assert.equal(await button('Action dock handle').count(), 0);
   await button('ADD').waitFor();
   // Exercise AppShell at both old breakpoints, tablet sizes, and unusual ratios.
   for (const size of [
+    { width: 390, height: 844 }, { width: 393, height: 852 }, { width: 412, height: 915 },
+    { width: 430, height: 932 }, { width: 844, height: 390 }, { width: 932, height: 430 },
+    { width: 320, height: 568 }, { width: 600, height: 600 }, { width: 601, height: 600 },
     { width: 599, height: 390 }, { width: 600, height: 390 }, { width: 601, height: 390 },
     { width: 899, height: 390 }, { width: 900, height: 390 }, { width: 901, height: 390 },
     { width: 599, height: 1000 }, { width: 600, height: 1000 }, { width: 900, height: 1200 },
@@ -238,8 +317,54 @@ try {
   }
   await checkGeometry({ width: 360, height: 640 });
   await page.screenshot({ path: path.join(output, 'small-phone.png'), fullPage: true });
+  // Fit follows the actual host, even when the global browser window has a different height.
+  await page.setViewportSize({ width: 430, height: 932 });
+  await page.evaluate(() => { document.getElementById('root').style.height = '850px'; });
+  await checkGeometry({ width: 430, height: 932 }, { hostSize: { width: 430, height: 850 } });
+  await page.evaluate(() => { document.getElementById('root').style.height = '100%'; });
+  await checkGeometry({ width: 430, height: 932 });
+  await button('Settings and more options').click(); await button('Settings').click();
+  await button('Left').click();
+  await page.getByText('Active: left', { exact: true }).waitFor();
+  const savedWrites = await page.evaluate(() => globalThis.hudFixture.calls.filter(c => c[0] === 'setHandedness').length);
+  await page.setViewportSize({ width: 932, height: 430 });
+  await page.waitForFunction(() => document.querySelector('#landscape') !== null);
+  assert.equal(await button('Left').isDisabled(), true);
+  await page.getByText('Active: right', { exact: true }).waitFor();
+  await button('Right').click();
+  assert.equal(await page.evaluate(() => globalThis.hudFixture.savedHandedness), 'left');
+  assert.equal(await page.evaluate(() => globalThis.hudFixture.calls.filter(c => c[0] === 'setHandedness').length), savedWrites);
+  await page.setViewportSize({ width: 430, height: 932 });
+  await page.getByText('Active: left', { exact: true }).waitFor();
+  assert.equal(await button('Left').isDisabled(), false);
+  await button('Right').click(); await button('HOME').click();
+  for (const size of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
+    await checkGeometry(size);
+    await button('Settings and more options').click(); await button('Settings').click();
+    await page.getByText('HANDEDNESS', { exact: true }).waitFor();
+    assert((await scrollContentToEnd()).top > 0);
+    await page.screenshot({ path: path.join(output, `settings-scrolled-${size.width}.png`) });
+    await page.evaluate(() => {
+      const f = globalThis.hudFixture;
+      f.entities = [];
+      f.entries = Array.from({ length: 20 }, (_, i) => ({ id: `scroll-${i}`, createdAt: Date.now() - i * 1000, updatedAt: Date.now() - i * 1000, sourceText: `Chronological row ${i}`, source: 'manual' }));
+      f.attachments = { 'scroll-0': [{ id: 'photo', type: 'photo', thumbnailUri: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="cyan"/%3E%3C/svg%3E' }] };
+    });
+    await button('HOME').click();
+    await page.getByText('Chronological row 0', { exact: true }).waitFor();
+    const thumb = page.getByTestId('hud-content').locator('img').first();
+    await thumb.waitFor();
+    await thumb.evaluate(img => img.decode());
+    assert((await thumb.boundingBox()).width > 0);
+    const rows = await page.getByTestId('hud-content').textContent();
+    assert(rows.indexOf('Chronological row 0') < rows.indexOf('Chronological row 1'));
+    assert((await scrollContentToEnd()).top > 0);
+    await page.getByText('Chronological row 19', { exact: true }).waitFor();
+    await page.screenshot({ path: path.join(output, `log-scrolled-${size.width}.png`) });
+  }
   assert.deepEqual(errors, []);
   fs.writeFileSync(path.join(output, 'motion-samples.json'), JSON.stringify(samples, null, 2));
+  fs.writeFileSync(path.join(output, 'task007-geometry.json'), JSON.stringify(geometryResults, null, 2));
   console.log('HUD browser T2 PASS: AppShell rotation, YAML geometry, breakpoint/tablet buffers, safe areas, mounted draft preservation, landscape commit, entity routes, menu/dock/actions, handedness, scanner motion, reduced motion.');
 } finally {
   if (browser) await browser.close();

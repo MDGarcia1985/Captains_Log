@@ -1,0 +1,97 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+# Reference offsets are retained; runtime button positions come from fixed targets and bounded gaps.
+component:
+  id: navigation_rail
+  button:
+    width: 60
+    height: 155
+  assetBounds:
+    x: 0
+    y: 0
+    width: 60
+    height: 155
+  newAssetBounds:
+    x: 0
+    y: 0
+    width: 60
+    height: 155
+  spacing:
+    mode: bounded_gaps
+    origin: after_orientation_content_reservations
+    distribution: preserve_preferred_gaps_then_distribute_up_to_max
+    gap:
+      min: 0
+      preferred: 16.5
+      max: 20
+    trailing:
+      min: 2
+      preferred: 2
+      max: 2
+    extra_space: after_last_item
+    extra_space_may_exceed_trailing_max: true
+    trailing_max_role: reference_at_preferred_height
+    gap_max_role: hard_cap_on_inter_item_gaps
+    fewer_items: same_gap_policy
+    preferred_gaps:
+      - 17
+      - 16
+    preferred_gaps_role: per_interval
+    gap_preferred_role: fallback_when_interval_unspecified
+  activeBounds:
+    x: -11
+    y: -11
+    width: 82
+    height: 157
+  label:
+    stacked: true
+    x: 12
+    y: 0
+    width: 36
+  labelBounds:
+    graph:
+      x: 12
+      y: 29
+      width: 36
+      height: 90
+    search:
+      x: 12
+      y: 27
+      width: 36
+      height: 102
+    new:
+      x: 12
+      y: 48
+      width: 36
+      height: 60
+  menu:
+    iconBounds:
+      x: 0
+      y: 0
+      width: 60
+      height: 50
+    size:
+      width: 60
+      height: 50
+    sizing: fixed
+  reference_geometry:
+    item_offsets:
+      - 0
+      - 172
+      - 343
+  size:
+    width: 60
+    height: flexible
+  sizing: flexible_y
+  overflow:
+    axis: vertical
+    sequence:
+      - contract_gaps_to_min
+      - zero_gaps
+      - local_scroll
+    zero_gaps: gap.min_is_already_0
+    scroll_contents: buttons_only
+    pinned_parts: []
+    keep_button_dimensions: true
+    keep_rail_width: true
+    minimum_visible_extent: 155
+    below_minimum: unsupported_size

@@ -535,8 +535,8 @@ navigation:
       - context_inspector_edge
 
   primary_destinations:
-    - log
-    - capture
+    - home
+    - new
     - search
     - graph
 
@@ -645,12 +645,7 @@ pane_roles:
       - graph_neighborhood
 
 screens:
-  log:
-    route: /
-    required: true
-    purpose: chronological_canonical_history
-
-  capture:
+  new:
     route: /capture
     required: true
     purpose: fast_capture
@@ -760,8 +755,7 @@ edge_navigation:
       - vertical_text
 
   actions:
-    - log
-    - capture
+    - new
     - search
     - graph
 

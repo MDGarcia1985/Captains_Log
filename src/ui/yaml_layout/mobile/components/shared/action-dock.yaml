@@ -1,0 +1,83 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+# Fixed 72-wide controls; reference bezel and offsets remain separate from adaptable container rules.
+component:
+  id: action_dock
+  bezel: dock-outer-bezel
+  item:
+    width: 72
+    y: 0
+  plate:
+    asset: dock-camera-button-plate
+    width: 72
+    height: 62
+    y: 8
+  addPlate: dock-add-button-plate
+  icon:
+    width: 32
+    height: 32
+    x: 20
+    y: 23
+  label:
+    y: 74
+    width: 72
+    typography: dock
+    color: textMuted
+    addColor: orange
+  items:
+    - id: add
+      icon: dock-add-icon
+      label: ADD
+    - id: camera
+      icon: dock-camera-icon
+      label: CAMERA
+    - id: location
+      icon: dock-location-icon
+      label: LOCATION
+    - id: export
+      icon: dock-export-icon
+      label: EXPORT
+  addMenu:
+    - id: gallery
+      icon: dock-gallery-icon
+      label: Gallery
+  export:
+    implementation: stub
+    decision: DEV-2026-09-07-025
+  reference_geometry:
+    bezel_bounds:
+      x: 0
+      y: 0
+      width: 350
+      height: 96
+    item_offsets:
+      - 7
+      - 93
+      - 179
+      - 265
+  controls:
+    sizing: fixed
+    scale: 1
+  spacing:
+    axis: horizontal
+    leading:
+      min: 7
+      preferred: 7
+      max: 7
+    trailing:
+      min: 13
+      preferred: 13
+      max: 13
+    gap:
+      min: 6
+      preferred: 14
+      max: 14
+      max_kind: preferred_cap
+    sequence:
+      - preserve_controls
+      - contract_gaps
+      - unsupported_size
+  overflow:
+    scale_controls: false
+    wrap: false
+    below_minimum: unsupported_size
+  placement_owner: orientation

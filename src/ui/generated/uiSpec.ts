@@ -124,6 +124,20 @@ export const uiSpec = {
         "captureAutoFocus": true,
         "returnHomeAfterCapture": true
       },
+      "selection": {
+        "override": null,
+        "square": "landscape",
+        "native_source": "screen",
+        "web_source": "window",
+        "fallback": "authorized_mobile_orientation"
+      },
+      "fitting": {
+        "scale": "uniform_contain",
+        "safe_area": "system",
+        "border_inset": 8,
+        "border_space": "phone",
+        "letterbox": "centered_unfilled_axis"
+      },
       "orientations": [
         "portrait",
         "landscape"
@@ -136,6 +150,14 @@ export const uiSpec = {
           "height": 844
         },
         "safe_area": "system",
+        "handedness": {
+          "canonical": "right",
+          "supported": [
+            "right",
+            "left"
+          ],
+          "preference": "editable"
+        },
         "left_handed": {
           "regions": {
             "status_header": {
@@ -173,6 +195,7 @@ export const uiSpec = {
           },
           "scanner": {
             "component": "scanner",
+            "visual_exception": "DEV-2026-09-12-001",
             "x": 310,
             "y": 26,
             "width": 60,
@@ -256,6 +279,13 @@ export const uiSpec = {
           "height": 390
         },
         "safe_area": "system",
+        "handedness": {
+          "canonical": "right",
+          "supported": [
+            "right"
+          ],
+          "preference": "preserve_portrait"
+        },
         "regions": {
           "status_header": {
             "component": "status_header",
@@ -355,6 +385,13 @@ export const uiSpec = {
     "status_header": {
       "id": "status_header",
       "bezel": "status-angular-bezel",
+      "bezelVisible": true,
+      "bezelBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 278,
+        "height": 82
+      },
       "icon": {
         "asset": "status-backup-cloud-icon"
       },
@@ -421,10 +458,18 @@ export const uiSpec = {
       },
       "core": {
         "asset": "scanner-core",
-        "x": 15.5,
-        "y": 23.5,
-        "width": 29,
-        "height": 29
+        "visibleBounds": {
+          "x": 23.5,
+          "y": 31.5,
+          "width": 13,
+          "height": 13
+        },
+        "exportBounds": {
+          "x": 15.5,
+          "y": 23.5,
+          "width": 29,
+          "height": 29
+        }
       },
       "tick": {
         "x": 21,
@@ -440,7 +485,8 @@ export const uiSpec = {
       "title": {
         "typography": "heading",
         "color": "cyan",
-        "source": "active_view_title"
+        "source": "active_view_title",
+        "ellipsize": "clip"
       },
       "subtitle": {
         "typography": "subtitle",
@@ -460,7 +506,16 @@ export const uiSpec = {
         "panelOuter"
       ],
       "content": {
-        "source": "active_route"
+        "source": "active_route",
+        "policy": "symmetric_insets",
+        "insets": {
+          "left": 20,
+          "top": 22,
+          "right": 20,
+          "bottom": 22
+        },
+        "overflow": "forbid",
+        "overlay_clearance": "none"
       },
       "referenceOnly": [
         "viewport-tactical-dot-grid"
@@ -513,6 +568,12 @@ export const uiSpec = {
     "action_dock": {
       "id": "action_dock",
       "bezel": "dock-outer-bezel",
+      "bezelBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 350,
+        "height": 96
+      },
       "item": {
         "width": 72,
         "y": 0
@@ -615,7 +676,7 @@ export const uiSpec = {
         "title": {
           "x": 0,
           "y": 0,
-          "width": 278,
+          "width": 231,
           "height": 30
         },
         "subtitle": {
@@ -674,6 +735,18 @@ export const uiSpec = {
           "width": 60,
           "height": 155
         },
+        "assetBounds": {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 155
+        },
+        "newAssetBounds": {
+          "x": 0,
+          "y": 0,
+          "width": 60,
+          "height": 155
+        },
         "spacing": {
           "mode": "offsets",
           "item_offsets": [
@@ -694,12 +767,32 @@ export const uiSpec = {
           "y": 0,
           "width": 36
         },
+        "labelBounds": {
+          "graph": {
+            "x": 12,
+            "y": 29,
+            "width": 36,
+            "height": 90
+          },
+          "search": {
+            "x": 12,
+            "y": 27,
+            "width": 36,
+            "height": 102
+          },
+          "new": {
+            "x": 12,
+            "y": 48,
+            "width": 36,
+            "height": 60
+          }
+        },
         "menu": {
           "iconBounds": {
             "x": 0,
             "y": 0,
             "width": 60,
-            "height": 24
+            "height": 50
           }
         }
       },
@@ -714,6 +807,7 @@ export const uiSpec = {
     "landscape": {
       "status_header": {
         "id": "status_header",
+        "bezelVisible": false,
         "icon": {
           "x": 4,
           "y": 5,
@@ -751,6 +845,7 @@ export const uiSpec = {
           "y": 30
         },
         "divider": {
+          "asset": "landscape-title-angular-rule",
           "x": 0,
           "y": 30,
           "width": 351,
@@ -759,40 +854,68 @@ export const uiSpec = {
       },
       "viewport": {
         "id": "viewport",
+        "border": "landscape-viewport-clipped-cyan-border",
         "content": {
           "x": 20,
           "y": 22,
           "width": 590,
-          "height": 238
+          "height": 255,
+          "overlay_clearance": "action_dock_handle"
         },
         "accents": [
           {
-            "asset": "viewport-accent-top-left",
+            "asset": "landscape-viewport-accent-top-left",
             "x": 0,
             "y": 0,
             "width": 40,
             "height": 20
           },
           {
-            "asset": "viewport-accent-top-right",
-            "x": 588.484,
-            "y": 1.177,
-            "width": 41.516,
-            "height": 23.543
+            "asset": "landscape-viewport-accent-top-right",
+            "x": 588.484375,
+            "y": 1.1771653890609741,
+            "width": 41.51565170288086,
+            "height": 23.543306350708008
           },
           {
-            "asset": "viewport-accent-bottom-left",
+            "asset": "landscape-viewport-accent-bottom-left",
             "x": 0,
-            "y": 275.457,
-            "width": 41.516,
-            "height": 23.543
+            "y": 275.4566955566406,
+            "width": 41.51565170288086,
+            "height": 23.543306350708008
           },
           {
-            "asset": "viewport-accent-bottom-right",
-            "x": 588.484,
-            "y": 275.457,
-            "width": 41.516,
-            "height": 23.543
+            "asset": "landscape-viewport-accent-bottom-right",
+            "x": 588.484375,
+            "y": 275.4566955566406,
+            "width": 41.51565170288086,
+            "height": 23.543306350708008
+          }
+        ],
+        "accentExports": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 40,
+            "height": 20
+          },
+          {
+            "x": 588.484375,
+            "y": 0,
+            "width": 41.515625,
+            "height": 25.325546264648438
+          },
+          {
+            "x": 0,
+            "y": 274.85162353515625,
+            "width": 41.515655517578125,
+            "height": 24.14837646484375
+          },
+          {
+            "x": 588.484375,
+            "y": 275.4566955566406,
+            "width": 41.515625,
+            "height": 23.543304443359375
           }
         ]
       },
@@ -800,6 +923,18 @@ export const uiSpec = {
         "id": "navigation_rail",
         "button": {
           "width": 155,
+          "height": 55
+        },
+        "assetBounds": {
+          "x": 0,
+          "y": 0,
+          "width": 155,
+          "height": 55
+        },
+        "newAssetBounds": {
+          "x": 0,
+          "y": 0,
+          "width": 154,
           "height": 55
         },
         "spacing": {
@@ -824,7 +959,28 @@ export const uiSpec = {
           "y": 0,
           "width": 155
         },
+        "labelBounds": {
+          "graph": {
+            "x": 30,
+            "y": 19,
+            "width": 96,
+            "height": 18
+          },
+          "search": {
+            "x": 27,
+            "y": 19,
+            "width": 101,
+            "height": 18
+          },
+          "new": {
+            "x": 35,
+            "y": 18,
+            "width": 85,
+            "height": 20
+          }
+        },
         "menu": {
+          "icon": "landscape-menu-three-bars",
           "iconBounds": {
             "x": 0,
             "y": 0,
@@ -840,7 +996,14 @@ export const uiSpec = {
           "expanded": "visible",
           "collapsed": "hidden",
           "viewport_space": "overlay",
-          "handle": "action_dock_handle"
+          "handle": "action_dock_handle",
+          "transition": {
+            "type": "assembled_slide",
+            "duration_ms": 240,
+            "easing": "cubic_out",
+            "handle_anchor": "above_bezel_top",
+            "clip_boundary": "collapsed_handle_bottom"
+          }
         }
       },
       "action_dock_handle": {

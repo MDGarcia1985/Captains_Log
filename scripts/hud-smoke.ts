@@ -7,30 +7,50 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { uiSpec } from '../src/ui/generated/uiSpec.ts';
-import { backupIsSynced, fitHudArtboard, hudView, mergeHudComponent, rotationEnd, SCANNER_ROTATION_MS, selectHudOrientation, selectMobileOrientation } from '../src/ui/layout/hudBehavior.ts';
+import { backupIsSynced, dockAssemblyGeometry, fitHudArtboard, hudBorderBounds, hudUsableInsets, hudView, mergeHudComponent, rotationEnd, SCANNER_ROTATION_MS, selectHudOrientation, selectMobileOrientation } from '../src/ui/layout/hudBehavior.ts';
 import { requestExport } from '../src/services/exportService.ts';
 
 execFileSync(process.execPath, ['scripts/generate-ui.mjs', '--check'], { stdio: 'inherit' });
+execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/ui-authority-test.mjs', '--generated'], { stdio: 'inherit' });
 for (const [path, expected] of [['/', 'home'], ['/capture', 'capture'], ['/log', 'home'], ['/search', 'search'], ['/graph', 'graph'], ['/settings', 'settings'], ['/entry/1', 'detail']]) {
   assert.equal(hudView(path), expected);
 }
-assert.equal(selectMobileOrientation(390, 844), 'portrait');
-assert.equal(selectMobileOrientation(844, 390), 'landscape');
+const policy = uiSpec.layouts.mobile.selection;
+assert.equal(selectMobileOrientation(390, 844, policy), 'portrait');
+assert.equal(selectMobileOrientation(844, 390, policy), 'landscape');
 // A keyboard can make the native window wider than it is tall without rotating.
-assert.equal(selectHudOrientation({ width: 390, height: 300 }, { width: 390, height: 844 }, false), 'portrait');
-assert.equal(selectHudOrientation({ width: 844, height: 180 }, { width: 844, height: 390 }, false), 'landscape');
+assert.equal(selectHudOrientation({ width: 390, height: 300 }, { width: 390, height: 844 }, false, policy), 'portrait');
+assert.equal(selectHudOrientation({ width: 844, height: 180 }, { width: 844, height: 390 }, false, policy), 'landscape');
 // Desktop monitor orientation must not override a narrow browser window.
-assert.equal(selectHudOrientation({ width: 390, height: 844 }, { width: 1920, height: 1080 }, true), 'portrait');
+assert.equal(selectHudOrientation({ width: 390, height: 844 }, { width: 1920, height: 1080 }, true, policy), 'portrait');
 const noInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const portraitSize = { width: 390, height: 844 };
 assert.deepEqual(fitHudArtboard(portraitSize, portraitSize, noInsets), { scale: 1, x: 0, y: 0, width: 390, height: 844 });
-assert.deepEqual(fitHudArtboard({ width: 600, height: 1000 }, portraitSize, noInsets), { scale: 1, x: 105, y: 78, width: 390, height: 844 });
-assert.deepEqual(fitHudArtboard({ width: 1024, height: 768 }, { width: 844, height: 390 }, noInsets), { scale: 1, x: 90, y: 189, width: 844, height: 390 });
+assert.equal(fitHudArtboard({ width: 600, height: 1000 }, portraitSize, noInsets).scale, 1000 / 844);
+assert.equal(fitHudArtboard({ width: 1024, height: 768 }, { width: 844, height: 390 }, noInsets).scale, 1024 / 844);
+assert.equal(selectMobileOrientation(600, 600, policy), 'landscape');
+assert.equal(selectMobileOrientation(600, 600, { ...policy, square: 'portrait' }), 'portrait');
+assert.equal(selectMobileOrientation(390, 844, { ...policy, override: 'landscape' }), 'landscape');
+assert.equal(selectMobileOrientation(600, 600, { ...policy, override: 'portrait' }), 'portrait');
+assert.deepEqual(hudBorderBounds({ width: 430, height: 932 }, 8), { x: 8, y: 8, width: 414, height: 916 });
+// Native host and Dimensions.window can disagree; use the actual host/provider intersection.
+const host = { x: 0, y: 0, width: 430, height: 960 };
+const safe = { top: 24, right: 0, bottom: 24, left: 0 };
+const hostFit = fitHudArtboard(host, portraitSize, hudUsableInsets(host, host, safe));
+assert(Math.abs((hostFit.y - safe.top) - (host.height - safe.bottom - hostFit.y - hostFit.height)) < 1e-9);
+assert.equal(hostFit.scale, Math.min(430 / 390, 912 / 844));
+const insetHost = { x: 10, y: 24, width: 410, height: 900 };
+assert.deepEqual(hudUsableInsets(insetHost, host, safe), { left: 0, top: 0, right: 0, bottom: 0 });
+const assembly = dockAssemblyGeometry(uiSpec.layouts.mobile.landscape.regions.action_dock, uiSpec.layouts.mobile.landscape.regions.action_dock_handle);
+assert.equal(assembly.handle.y + assembly.handle.height, assembly.dock.y);
+assert.equal(assembly.clip.y + assembly.travel, 340);
+assert.equal(assembly.clip.y + assembly.dock.y, uiSpec.layouts.mobile.landscape.regions.action_dock.y);
+assert.deepEqual(uiSpec.layouts.mobile.landscape.handedness, { canonical: 'right', supported: ['right'], preference: 'preserve_portrait' });
 for (const window of [{ width: 320, height: 568 }, { width: 599, height: 390 }, { width: 600, height: 390 }, { width: 900, height: 390 }]) {
-  const layout = uiSpec.layouts.mobile[selectMobileOrientation(window.width, window.height)];
+  const layout = uiSpec.layouts.mobile[selectMobileOrientation(window.width, window.height, policy)];
   const insets = { top: 27, right: 41, bottom: 19, left: 13 };
   const fit = fitHudArtboard(window, layout.reference_viewport, insets);
-  assert(fit.scale > 0 && fit.scale <= 1);
+  assert(fit.scale > 0);
   assert(Math.abs(fit.width / fit.height - layout.reference_viewport.width / layout.reference_viewport.height) < 1e-9);
   assert(fit.x >= insets.left && fit.y >= insets.top);
   assert(fit.x + fit.width <= window.width - insets.right + 1e-9);

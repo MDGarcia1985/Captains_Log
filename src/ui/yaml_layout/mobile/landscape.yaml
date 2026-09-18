@@ -1,0 +1,540 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+# Axes resolve independently; reference frame aspect ratio never constrains the window.
+layout:
+  id: mobile_landscape
+  orientation: landscape
+  reference_viewport:
+    width: 844
+    height: 390
+  reference_source:
+    file_key: dFwk8LAWauplWqrOKaQplU
+    captured: 2026-09-14
+    usage: reference_only
+  reference_regions:
+    status_header:
+      x: 429
+      y: 24
+      width: 200
+      height: 58
+      figma_node: 96:10
+    scanner:
+      x: 719
+      y: 24
+      width: 60
+      height: 82
+      figma_node: 96:25
+    settings_menu:
+      x: 712
+      y: 122
+      width: 77.5
+      height: 27.5
+      figma_node: 96:121
+    title_block:
+      x: 31
+      y: 19
+      width: 391
+      height: 68
+      figma_node: 96:40
+    viewport:
+      x: 23
+      y: 73
+      width: 630
+      height: 299
+      figma_node: 96:46
+    navigation_rail:
+      x: 673
+      y: 122
+      width: 155
+      height: 238
+      figma_node: 96:61
+    action_dock:
+      x: 156.88796997070312
+      y: 256.6378173828125
+      width: 363.2619323730469
+      height: 115.27710723876953
+      figma_node: 96:82
+    action_dock_handle:
+      x: 299
+      y: 340
+      width: 77.5
+      height: 27.5
+      figma_node: 97:149
+  reference_chrome:
+    border:
+      x: 8
+      y: 8
+      width: 828
+      height: 374
+      radius: 40
+    rail_guide:
+      x: 663
+      y: 19
+      width: 1
+      height: 357
+  handedness:
+    canonical: right
+    supported:
+      - right
+    unavailable:
+      - left
+    unavailable_option:
+      visible: true
+      selectable: false
+      appearance: dim
+    preference: preserve_portrait
+    preference_scope: portrait
+    preference_writable: false
+    active: canonical
+  safe_area:
+    canvas: none
+    background: none
+    border: none
+    content: constrain_to_resolved_safe_regions
+    group_policy: family.layout_policy.safe_area
+  safe_groups:
+    header:
+      members:
+        - title_block
+        - status_header
+        - scanner
+      edges:
+        - left
+        - right
+        - top
+      safety_buffer:
+        min: 8
+        preferred: 8
+        max: 8
+      behavior: minimum_inward_displacement
+      preserve_internal_relationships: true
+    rail:
+      members:
+        - navigation_rail
+        - settings_menu
+      edges:
+        - right
+        - bottom
+      safety_buffer:
+        min: 8
+        preferred: 8
+        max: 8
+      behavior: minimum_inward_displacement
+      preserve_internal_relationships: true
+    dock:
+      members:
+        - action_dock
+        - action_dock_handle
+      edges:
+        - left
+        - right
+        - bottom
+      safety_buffer:
+        min: 8
+        preferred: 8
+        max: 8
+      behavior: minimum_inward_displacement
+      preserve_internal_relationships: true
+    content:
+      members:
+        - viewport
+      edges:
+        - left
+        - right
+        - top
+        - bottom
+      safety_buffer:
+        min: 8
+        preferred: 8
+        max: 8
+      behavior: constrain_flexible_edges
+      preserve_sibling_relationships: true
+  runtime_regions:
+    canvas:
+      alignment:
+        horizontal: stretch
+        vertical: stretch
+      sizing: flexible_both
+      anchors:
+        left:
+          target: window
+          edge: left
+          relation: aligned
+        right:
+          target: window
+          edge: right
+          relation: aligned
+        top:
+          target: window
+          edge: top
+          relation: aligned
+        bottom:
+          target: window
+          edge: bottom
+          relation: aligned
+      safe_area: none
+    background:
+      alignment:
+        horizontal: stretch
+        vertical: stretch
+      sizing: flexible_both
+      anchors:
+        left:
+          target: canvas
+          edge: left
+          relation: aligned
+        right:
+          target: canvas
+          edge: right
+          relation: aligned
+        top:
+          target: canvas
+          edge: top
+          relation: aligned
+        bottom:
+          target: canvas
+          edge: bottom
+          relation: aligned
+      safe_area: none
+      asset: atmosphere-background-grid
+    border:
+      alignment:
+        horizontal: stretch
+        vertical: stretch
+      sizing: flexible_both
+      anchors:
+        left:
+          target: canvas
+          edge: left
+          relation: after
+        right:
+          target: canvas
+          edge: right
+          relation: before
+        top:
+          target: canvas
+          edge: top
+          relation: after
+        bottom:
+          target: canvas
+          edge: bottom
+          relation: before
+      safe_area: none
+      buffer:
+        left:
+          min: 8
+          preferred: 8
+          max: 8
+        right:
+          min: 8
+          preferred: 8
+          max: 8
+        top:
+          min: 8
+          preferred: 8
+          max: 8
+        bottom:
+          min: 8
+          preferred: 8
+          max: 8
+      appearance:
+        radius: 40
+        stroke_width: 1
+        stroke_space: logical
+        scale_radius: false
+        scale_stroke: false
+    title_block:
+      component: title_block
+      alignment:
+        horizontal: stretch
+        vertical: top
+      sizing: flexible_x
+      anchors:
+        left:
+          target: window
+          edge: left
+          relation: after
+        right:
+          target: status_header
+          edge: left
+          relation: before
+          gap:
+            min: 3
+            preferred: 7
+            max: 11
+        top:
+          target: window
+          edge: top
+          relation: after
+      safe_area: header
+      buffer:
+        left:
+          min: 8
+          preferred: 31
+          max: 35
+        top:
+          min: 8
+          preferred: 19
+          max: 23
+    status_header:
+      component: status_header
+      alignment:
+        horizontal: right
+        vertical: top
+      sizing: fixed
+      anchors:
+        right:
+          target: viewport
+          edge: right
+          relation: before
+          gap:
+            min: 20
+            preferred: 24
+            max: 28
+        top:
+          target: title_block
+          edge: top
+          relation: after
+          gap:
+            min: 5
+            preferred: 5
+            max: 5
+      safe_area: header
+    scanner:
+      component: scanner
+      alignment:
+        horizontal: center
+        vertical: top
+      sizing: fixed
+      anchors:
+        center_x:
+          target: navigation_rail
+          edge: center_x
+          relation: aligned
+        top:
+          target: status_header
+          edge: top
+          relation: aligned
+      safe_area: header
+      optical_offset:
+        x: -1.5
+      reference_note: Figma scanner center 749 versus rail center 750.5.
+    settings_menu:
+      component: navigation_rail
+      alignment:
+        horizontal: center
+        vertical: top
+      sizing: fixed
+      anchors:
+        center_x:
+          target: navigation_rail
+          edge: center_x
+          relation: aligned
+        top:
+          target: navigation_rail
+          edge: top
+          relation: aligned
+      safe_area: rail
+      part: menu
+      optical_offset:
+        x: 0.25
+      reference_note: Figma menu center 750.75 versus rail center 750.5.
+    navigation_rail:
+      component: navigation_rail
+      alignment:
+        horizontal: right
+        vertical: stretch
+      sizing: flexible_y
+      anchors:
+        right:
+          target: window
+          edge: right
+          relation: before
+        top:
+          target: scanner
+          edge: bottom
+          relation: after
+          gap:
+            min: 12
+            preferred: 16
+            max: 20
+        bottom:
+          target: window
+          edge: bottom
+          relation: before
+      safe_area: rail
+      buffer:
+        right:
+          min: 8
+          preferred: 16
+          max: 20
+        bottom:
+          min: 8
+          preferred: 30
+          max: 34
+      content_reservations:
+        - region: settings_menu
+          edge: top
+          gap:
+            min: 8
+            preferred: 15.5
+            max: 19.5
+    viewport:
+      component: viewport
+      alignment:
+        horizontal: stretch
+        vertical: stretch
+      sizing: flexible_both
+      anchors:
+        left:
+          target: window
+          edge: left
+          relation: after
+        right:
+          target: navigation_rail
+          edge: left
+          relation: before
+          gap:
+            min: 16
+            preferred: 20
+            max: 24
+        top:
+          target: title_block
+          edge: bottom
+          relation: before
+          gap_role: overlap
+          gap:
+            min: 14
+            preferred: 14
+            max: 14
+        bottom:
+          target: window
+          edge: bottom
+          relation: before
+      safe_area: content
+      buffer:
+        left:
+          min: 8
+          preferred: 23
+          max: 27
+        bottom:
+          min: 8
+          preferred: 18
+          max: 22
+      reference_note: The reference viewport overlaps 14 units of the title parent empty lower extent; preserve this
+        relationship, not a guessed positive gap.
+      content_reservations:
+        - region: action_dock_handle
+          state: collapsed
+          edge: bottom
+          behavior: scroll_host_ends_before_region
+    action_dock:
+      component: action_dock
+      alignment:
+        horizontal: center
+        vertical: bottom
+      sizing: fixed
+      anchors:
+        center_x:
+          target: viewport
+          edge: center_x
+          relation: aligned
+        bottom:
+          target: viewport
+          edge: bottom
+          relation: aligned
+      safe_area: dock
+      optical_offset:
+        x: 0.519
+        y: -0.085
+      reference_note: Figma parent center offset +0.5189 and bottom remainder 0.085 above viewport bottom;
+        runtime uses quantized optical offset. Bezel remains a separate fixed 350x96 asset. Parent size is the
+        collapsed envelope, not the expanded assembly. Canonical expanded height is 123.5.
+      constraints:
+        contain_expanded_assembly_in: viewport
+        include_handle: true
+        expanded_height: 123.5
+        unsatisfied: unsupported_size
+    action_dock_handle:
+      component: action_dock_handle
+      alignment:
+        horizontal: center
+        vertical: bottom
+      sizing: fixed
+      anchors:
+        center_x:
+          target: action_dock
+          edge: center_x
+          relation: aligned
+        bottom:
+          target: viewport
+          edge: bottom
+          relation: before
+          gap:
+            min: 4.5
+            preferred: 4.5
+            max: 4.5
+      safe_area: dock
+      optical_offset:
+        x: -0.769
+      reference_note: Figma handle center 337.75 versus dock parent center 338.5189.
+      anchor_state: collapsed
+      expanded_placement: component.action_dock.behavior.transition.handle_anchor
+    rail_guide:
+      alignment:
+        horizontal: right
+        vertical: stretch
+      sizing: flexible_y
+      anchors:
+        right:
+          target: navigation_rail
+          edge: left
+          relation: before
+          gap:
+            min: 9
+            preferred: 9
+            max: 9
+        top:
+          target: title_block
+          edge: top
+          relation: aligned
+        bottom:
+          target: viewport
+          edge: bottom
+          relation: after
+          gap:
+            min: 4
+            preferred: 4
+            max: 4
+      safe_area: none
+      size:
+        width: 1
+  atmosphere:
+    paintedWashAsset: atmosphere-background-grid
+  reference_legacy_rounding:
+    action_dock:
+      x: 156.888
+      y: 256.638
+      width: 363.262
+      height: 115.277
+    action_dock_optical_offset:
+      x: 0.519
+      y: -0.085
+    action_dock_handle_optical_offset:
+      x: -0.769
+  constraints:
+    minimum_window_width: 775
+    minimum_width_basis: 8 title-left + 365 title ornament + 3 title/status gap + 200 status + 20
+      status/viewport inset + 16 viewport/rail gap + 155 rail + 8 right
+    minimum_width_kind: declared_min_floor
+    minimum_width_arithmetic: 8 + 365 + 3 + 200 + 20 + 16 + 155 + 8 = 775
+    minimum_width_note: Window-edge mins are safety 8. Preferred Figma edge spacing is retained. Sibling-gap mins
+      are unchanged. 798 is obsolete; it used preferred-4 edge floors. Safe obstructions can raise 775.
+    minimum_window_height: 206
+    minimum_height_basis: 8 title top + 5 status/title + 82 scanner + 12 rail top gap + 27.5 menu + 8 menu/button
+      gap + 55 one rail target + 8 rail bottom = 205.5, ceil 206
+    minimum_height_kind: declared_min_floor
+    vertical_feasibility: Use declared mins, then rail overflow (gaps to 0, then local button scroll with menu
+      pinned). Expanded dock height 123.5 must remain inside the viewport; that chain is not binding versus 206.
+      Unsupported only when those mins cannot fit.
+    unsatisfied: unsupported_size
+    reference_reconstruction: preferred_without_system_obstructions

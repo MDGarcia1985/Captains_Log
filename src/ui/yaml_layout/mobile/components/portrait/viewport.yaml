@@ -1,0 +1,102 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+# Only internal insets/assets/containment live here; all window/sibling placement is in orientation YAML.
+component:
+  id: viewport
+  accents:
+    - asset: viewport-accent-top-left
+      sizing: fixed
+      alignment:
+        horizontal: left
+        vertical: top
+      size:
+        width: 40
+        height: 10
+      insets:
+        left: 0
+        top: 0
+      export_envelope:
+        width: 40
+        height: 10
+        offset_from_shape:
+          x: 0
+          y: 0
+      rounding_tolerance: 0.001
+    - asset: viewport-accent-top-right
+      sizing: fixed
+      alignment:
+        horizontal: right
+        vertical: top
+      size:
+        width: 40
+        height: 10
+      insets:
+        right: 0
+        top: 0
+      export_envelope:
+        width: 40
+        height: 10
+        offset_from_shape:
+          x: 0
+          y: 0
+      rounding_tolerance: 0.001
+    - asset: viewport-accent-bottom-left
+      sizing: fixed
+      alignment:
+        horizontal: left
+        vertical: bottom
+      size:
+        width: 40
+        height: 10
+      insets:
+        left: 0
+        bottom: 0
+      export_envelope:
+        width: 40
+        height: 10
+        offset_from_shape:
+          x: 0
+          y: 0
+      rounding_tolerance: 0.001
+    - asset: viewport-accent-bottom-right
+      sizing: fixed
+      alignment:
+        horizontal: right
+        vertical: bottom
+      size:
+        width: 40
+        height: 10
+      insets:
+        right: 0
+        bottom: 0
+      export_envelope:
+        width: 40
+        height: 10
+        offset_from_shape:
+          x: 0
+          y: 0
+      rounding_tolerance: 0.001
+  reference_geometry:
+    accents:
+      - asset: viewport-accent-top-left
+        x: 0
+        y: 0
+        width: 40
+        height: 10
+      - asset: viewport-accent-top-right
+        x: 246
+        y: 0
+        width: 40
+        height: 10
+      - asset: viewport-accent-bottom-left
+        x: 0
+        y: 490
+        width: 40
+        height: 10
+      - asset: viewport-accent-bottom-right
+        x: 246
+        y: 490
+        width: 40
+        height: 10
+  classification: STRETCH_BOTH
+  classification_role: non_executable_alias_of_sizing
+  placement_owner: orientation

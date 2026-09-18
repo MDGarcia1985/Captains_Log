@@ -11,13 +11,17 @@ import { CaptureScreen } from '../src/ui/screens/CaptureScreen';
 import { SearchScreen } from '../src/ui/screens/SearchScreen';
 import { GraphScreen } from '../src/ui/screens/GraphScreen';
 import { LogScreen } from '../src/ui/screens/LogScreen';
+import { SettingsScreen } from '../src/ui/screens/SettingsScreen';
 import { HudCommandsProvider } from '../src/ui/state/HudCommands';
 import { ChromeProvider, useChrome } from '../src/ui/state/ChromeContext';
 import { SelectionProvider } from '../src/ui/state/SelectionContext';
 
 const fixture = globalThis.hudFixture = { calls: [], entries: [], entities: [], failSave: false, pendingSave: null, holdSave: false, handedness: null };
 fixture.services = {
-  settings: { get: async () => ({ handedness: 'right' }) },
+  auth: { getSession: async () => null },
+  processing: { listFailed: async () => [] },
+  settings: { get: async () => ({ handedness: fixture.savedHandedness || 'right' }),
+    setHandedness: async value => { fixture.savedHandedness = value; fixture.calls.push(['setHandedness', value]); } },
   entries: {
     listEntries: async () => fixture.entries,
     createEntry: async input => {
@@ -27,13 +31,14 @@ fixture.services = {
       fixture.entries.unshift({ id: String(Date.now()), createdAt: Date.now(), updatedAt: Date.now(), ...input });
     },
   },
-  backup: { getStatus: async () => ({ state: 'current', lastBackupAt: 1, detail: 'Test snapshot' }) },
+  backup: { getStatus: async () => ({ state: 'current', lastBackupAt: 1, detail: 'Test snapshot' }), isAuthorized: async () => false },
   attachments: {
-    getAttachments: async () => [],
+    getPermissionStatus: async () => ({ camera: 'granted', gallery: 'granted' }),
+    getAttachments: async id => fixture.attachments?.[id] || [],
     captureFromCamera: async () => { fixture.calls.push(['camera']); return null; },
     pickFromGallery: async () => { fixture.calls.push(['gallery']); return null; },
   },
-  location: { requestCurrentLocation: async () => { fixture.calls.push(['location']); return null; } },
+  location: { getPermissionStatus: async () => 'granted', requestCurrentLocation: async () => { fixture.calls.push(['location']); return null; } },
   entities: {
     listEntitiesForEntry: async () => fixture.entities, listEntities: async () => fixture.entities,
     getRelatedEntities: async () => null,
@@ -49,7 +54,7 @@ function Harness() {
   const chrome = useChrome();
   useEffect(() => { fixture.handedness = chrome.setHandedness; }, [chrome.setHandedness]);
   const router = useMemo(() => ({ push: setPath, replace: setPath, canGoBack: () => true, back: () => setPath('/') }), []);
-  const screen = path === '/capture' ? <CaptureScreen /> : path === '/search' ? <SearchScreen /> : path === '/graph' ? <GraphScreen /> : path === '/settings' || path.startsWith('/entity/') ? <View /> : <LogScreen />;
+  const screen = path === '/capture' ? <CaptureScreen /> : path === '/search' ? <SearchScreen /> : path === '/graph' ? <GraphScreen /> : path === '/settings' ? <SettingsScreen /> : path.startsWith('/entity/') ? <View /> : <LogScreen />;
   return <RouterContext.Provider value={{ path, router }}><HudCommandsProvider><AppShell><View key={path} style={{ flex: 1 }}>{screen}</View></AppShell></HudCommandsProvider></RouterContext.Provider>;
 }
 createRoot(document.getElementById('root')).render(<ChromeProvider><SelectionProvider><Harness /></SelectionProvider></ChromeProvider>);

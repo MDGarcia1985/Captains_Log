@@ -1,0 +1,260 @@
+# TASK-007 relational YAML contract; generator/runtime migration intentionally deferred.
+# External placement belongs to orientation files; internal geometry/overflow belongs to components.
+# Figma owns appearance. YAML owns meaning. Generated code and runtime implement both.
+family:
+  id: mobile
+  schema_version: 3
+  selection:
+    override: null
+    square: landscape
+    native_source: screen
+    web_source: window
+    fallback: authorized_mobile_orientation
+  layout_policy:
+    fill_window: true
+    global_uniform_scale: false
+    preserve_reference_aspect_ratio: false
+    letterbox: false
+    allow_unspecified_layout: false
+    units: logical
+    phone_controls_scale: 1
+    tablet_scaling: deferred
+    reference_geometry: measurement_only
+    resolution_precedence:
+      - preserve_fixed_component_dimensions
+      - satisfy_safe_interactive_constraints
+      - preserve_declared_anchor_edges
+      - prefer_declared_reference_gaps
+      - contract_flexible_gaps_and_regions
+      - apply_component_overflow_fallback
+      - report_unsupported_only_after_declared_fallback
+    safe_area:
+      root_canvas_uses_safe_area: false
+      decorative_elements_ignore_safe_area: true
+      mode: per_named_edge_minimum_inward_displacement
+      obstruction_inset: system_safe_distance_from_that_window_edge
+      safety_buffer: 8
+      edge_rule: max(resolved_edge_buffer, obstruction_inset + safety_buffer)
+      resolve_buffer_within_band_before_safety_clamp: true
+      preserve_internal_group_relationships: true
+      absorb_displacement: flexible_regions_and_declared_gaps
+      may_exceed_buffer_max_for_safety: true
+      application: constraints_during_axis_resolution_not_post_layout_transforms
+      not:
+        - rigid_aabb_group_translation
+        - global_canvas_inset
+        - adding_every_system_inset_to_every_coordinate
+    unsupported:
+      invent_intermediate_layout: false
+      global_scale_fallback: false
+      action: report_unsatisfied_constraints
+      meaning: fixed_controls_plus_min_gaps_plus_required_safety_plus_required_internal_padding_cannot_fit
+  contract:
+    authority:
+      figma: visual_sizes_reference_placement_asset_geometry_proportions_orientation_composition
+      yaml: naming_alignment_anchors_sizing_bands_safe_area_overflow_handedness_relationships_fallback
+      generated_and_runtime: implementation_only
+    resolver_consumes:
+      - family.layout_policy
+      - family.contract
+      - family.relationship_semantics
+      - family.constraints
+      - layout.runtime_regions
+      - layout.safe_area
+      - layout.safe_groups
+      - layout.handedness
+      - layout.constraints
+      - merged_components
+    resolver_must_ignore:
+      - layout.reference_viewport
+      - layout.reference_source
+      - layout.reference_regions
+      - layout.reference_chrome
+      - layout.reference_exceptions
+      - family.contract.superseded_exceptions
+      - layout.reference_handedness
+      - layout.reference_legacy_rounding
+      - component.reference_geometry
+      - component.classification
+    superseded_exceptions:
+      portrait_scanner:
+        decision: DEV-2026-09-12-001
+        status: superseded
+        historical_bounds: { x: 310, y: 26, width: 60, height: 82 }
+        canonical_bounds: { x: 315, y: 28, width: 60, height: 82 }
+        note: Historical YAML exception only. Runtime and reference_regions use current Figma geometry.
+          Do not execute the 310,26 placement.
+    reference_data_uses:
+      - validation
+      - regression_comparison
+      - preferred_value_derivation
+      - documentation
+    component_resolution:
+      merge: deep_objects_replace_arrays
+      orientation_overrides_shared: true
+      missing_orientation_key: use_shared
+      arrays_are_replaced_not_concatenated: true
+      part: named_subrect_of_merged_component
+    enums:
+      sizing:
+        - fixed
+        - flexible_x
+        - flexible_y
+        - flexible_both
+      sizing_aliases:
+        STRETCH_X: flexible_x
+        STRETCH_Y: flexible_y
+        STRETCH_BOTH: flexible_both
+        ANCHORED: fixed
+      alignment_x:
+        - left
+        - center
+        - right
+        - stretch
+      alignment_y:
+        - top
+        - center
+        - bottom
+        - stretch
+      relation:
+        - after
+        - before
+        - aligned
+      edge:
+        - left
+        - right
+        - top
+        - bottom
+        - center_x
+        - center_y
+      gap_role:
+        - clearance
+        - overlap
+      spacing_max_kind:
+        - preferred_cap
+        - hard_max
+    axis_resolution:
+      independent_axes: true
+      anchors_are_executable: true
+      alignment_must_match_anchor_set: true
+      optical_offset_applies_after_anchor_resolution: true
+      sizing_fixed_forbids_opposing_anchors_on_that_axis: true
+      sizing_flexible_requires_opposing_anchors_or_min_max_extent: true
+      window_edge_anchors_use_buffer: true
+      sibling_anchors_use_gap: true
+      never_sum_buffer_and_gap_on_the_same_edge: true
+      before_after_are_coordinate_operators: true
+      coordinate_system: x_right_y_down
+    spacing_bands:
+      min: hard_contraction_floor_for_that_token
+      preferred: figma_derived_or_declared_target
+      max: preferred_cap
+      max_kind: preferred_cap
+      null_max: unbounded_flexible_extent
+      hard_max: only_when_field_hard_max_is_present
+      safe_area_may_exceed_max: true
+      extra_centered_window_space: unallocated_background
+    safe_groups:
+      displacement: per_named_edge_not_rigid_aabb
+      members_sharing_an_edge: receive_the_same_extra_inset_for_that_edge
+      opposite_edges: independent
+      surplus_between_opposite_members: unallocated_or_flexible
+      apply_once_then_absorb_into_flex: true
+      canvas_background_border: never_inherit_group_transform
+    overflow:
+      local_scroll_only_after_gaps_at_min: true
+      rail_zero_gap_is_gap_min: true
+      rail_scroll_contents: buttons_only
+      rail_button_dimensions_remain_fixed: true
+      rail_width_remains_fixed_on_phone: true
+      rail_length_may_stretch: true
+    handedness_states:
+      supported: can_be_active_in_this_orientation
+      unavailable: visible_or_hidden_but_not_activatable
+      preference_scope: where_the_stored_choice_lives
+      preference_writable: whether_this_orientation_may_write_that_choice
+      active: which_geometry_the_resolver_uses_now
+    optical_offset:
+      requires_one_of:
+        - reference_note
+        - decision
+        - reason
+    validation:
+      - valid_alignment_enum
+      - valid_sizing_enum
+      - anchors_target_existing_regions_or_window_or_canvas
+      - anchor_edges_valid_for_axis
+      - min_lte_preferred_lte_max_when_numeric
+      - no_external_window_placement_in_component_yaml
+      - no_fixed_plus_opposing_anchors_on_same_axis
+      - reference_geometry_non_executable
+      - optical_offset_has_provenance
+      - overflow_policy_explicit_on_flexible_or_bounded_controls
+      - unsupported_only_after_declared_fallback
+      - file_and_asset_references_resolve
+      - component_overlay_merge_is_deep_objects_replace_arrays
+      - orientation_component_ids_exist_in_shared_or_are_orientation_only
+  relationship_semantics:
+    anchors: Each anchor names an edge of this region and relates it to a target edge; resolve X and Y independently.
+    directions: after adds the gap or buffer to the target edge coordinate; before subtracts it; aligned
+      equates the named edges. These are coordinate operators, not document-flow words. Centers use
+      semantic center_x/center_y.
+    gap_role: clearance is unused space between edges. overlap is an intentional negative clearance encoded
+      with relation before and a positive overlap distance. Default gap_role is clearance.
+    buffer: Window-edge anchors read the matching local buffer; sibling anchors carry their own gap. Do not add both.
+    spacing: min/preferred/max are logical distances. Prefer Figma-derived preferred values. Contract only to min.
+      max is a preferred cap, not a hard maximum, unless hard_max is present. null max means flexible extent,
+      never a spacing band. Safe-area clearance may exceed max.
+    fixed_size: Resolve component.size (or component.part.size); reference_regions never supply runtime dimensions.
+    safety: For each named safe_group edge, apply one inward clearance of max(resolved buffer, obstruction +
+      safety_buffer) to members that participate in that edge. Do not translate a group's axis-aligned bounding
+      box as a rigid body. Opposite-edge members move independently; declared relationships and flexible regions
+      absorb the change. Background and border never inherit a safe-group transform.
+    variants: A handedness variant replaces each listed region horizontal axis (alignment, horizontal anchors and
+      buffers) while preserving its vertical axis; do not merge stale opposite-edge anchors.
+    optical_offsets: A signed offset after anchor resolution preserves measured subpixel asymmetry; it is not a
+      window ratio. Every optical_offset requires provenance.
+    centered_buffers: For a centered fixed/preferred-width region, side buffers are contraction clearance budgets;
+      extra symmetric window space is unallocated background, not a forced buffer-max violation. A one-sided
+      obstruction may shift the region by the minimum amount needed to keep those budgets; it does not keep a
+      now-unsafe window center.
+    content_reservations: Orientation-owned sibling reservations reduce the available internal content area;
+      component overflow/minimum_visible_extent applies after reservations.
+    extra_space_on_rails: gap.max is a hard cap on inter-item gaps. extra_space after last item may exceed
+      trailing.max; trailing.max is the reference trailing at preferred height, not a surplus cap.
+  capabilities:
+    shellCommands: true
+    entityPane: false
+    captureAutoFocus: true
+    returnHomeAfterCapture: true
+  orientations:
+    - portrait
+    - landscape
+  portrait: ./portrait.yaml
+  landscape: ./landscape.yaml
+  components:
+    shared:
+      status_header: ./components/shared/status-header.yaml
+      scanner: ./components/shared/scanner.yaml
+      title_block: ./components/shared/title-block.yaml
+      viewport: ./components/shared/viewport.yaml
+      navigation_rail: ./components/shared/navigation-rail.yaml
+      action_dock: ./components/shared/action-dock.yaml
+    portrait:
+      status_header: ./components/portrait/status-header.yaml
+      title_block: ./components/portrait/title-block.yaml
+      viewport: ./components/portrait/viewport.yaml
+      navigation_rail: ./components/portrait/navigation-rail.yaml
+      action_dock: ./components/portrait/action-dock.yaml
+    landscape:
+      status_header: ./components/landscape/status-header.yaml
+      title_block: ./components/landscape/title-block.yaml
+      viewport: ./components/landscape/viewport.yaml
+      navigation_rail: ./components/landscape/navigation-rail.yaml
+      action_dock: ./components/landscape/action-dock.yaml
+      action_dock_handle: ./components/landscape/action-dock-handle.yaml
+  constraints:
+    below_minimum: unsupported_size
+    scale_fixed_controls: false
+    allow_control_overlap: false
+    allow_implicit_composition: false

@@ -1,8 +1,8 @@
-# DEV-2026-09-12-001. Paths resolve relative to this manifest.
+# Paths resolve relative to this manifest; YAML-only directory reference repair.
 ui:
   version: 1
   theme: ./theme.yaml
   typography: ./typography.yaml
   layouts:
-    mobile: ./layouts/mobile/mobile.yaml
-    tablet: ./layouts/tablet/tablet.yaml
+    mobile: ./yaml_layout/mobile/mobile.yaml
+    tablet: ./yaml_layout/tablet/tablet.yaml

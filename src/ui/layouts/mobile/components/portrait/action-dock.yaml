@@ -1,5 +1,0 @@
-component:
-  id: action_dock
-  behavior:
-    default_visibility: visible
-    handle: null

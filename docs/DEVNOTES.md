@@ -2663,3 +2663,483 @@ browser verification is not evidence of native runtime correctness.
 
 Tablet-specific designs and landscape handedness remain undesigned. No dimensions
 or behaviors were invented for those specifications.
+
+---
+
+### DEV-2026-09-14-001 — TASK-007 geometry authority and phone fitting
+
+**Date:** 2026-09-14  
+**Time:** 00:20 America/New_York  
+**Engineer:** Codex  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+The TASK-006 scale cap leaves excessive space on larger phones. The border scales
+with the artboard, stale portrait assets are stretched into landscape, and the
+landscape content rectangle exceeds its panel. Baseline: UI_LAYOUT_AUDIT_2026-09-13.md.
+
+#### Context and Constraints
+
+Figma is the final declarative authority for visual sizes, placements, and assets.
+YAML is the final declarative semantic authority for canonical naming and application behavior.
+Live frames 2:20 and 96:4 were re-read; correction nodes match the audit. The independent
+snapshot is scripts/fixtures/task007-figma.json. Expo v57 reference was read before code changes.
+One bounded TASK-007 correction; no feature expansion and no commit without explicit authorization.
+
+#### Solutions Considered
+
+Remove the scale cap, preserve a uniform fit, and draw the border outside the scale
+transform. Retaining the cap cannot satisfy larger phones. Adding an artboard margin
+would count the already inset border twice. Keep the accepted mobile layout family.
+
+#### Trade-offs
+
+Safe areas reduce usable dimensions. Aspect mismatch creates centered letterboxing
+on one axis. Border inset stays 8 logical units inside the fitted frame; distance
+from the usable boundary on the unfilled axis also includes that letterbox.
+Content insets are a YAML decision, not a claimed Figma measurement.
+
+#### Final Outcome
+
+Selection: YAML override, YAML square rule (landscape), then native screen/web window
+orientation. Fit scales up or down. Geometry fields distinguish region parents,
+assetBounds/bezelBounds, core visibleBounds/exportBounds, content, and button targets.
+Landscape content uses symmetric 20 horizontal / 22 vertical insets: 590 x 255.
+Dock overlay semantics remain; handle clearance reduces the scrolling host inside
+that content rectangle so the last row can be reached without being under the handle.
+Heading title means the actual 231 x 30 text box; the parent remains 278 x 68.
+Bundled font advance for NEW RECORD at 24 with nine 4.32 gaps is 230.088 units;
+trailing tracking must not cause an ellipsis. Verify clipping separately in browser/native.
+
+#### Implementation Impact
+
+Correct menus, landscape outline/accents/divider, dock bezel bounds, landscape status
+bezel absence, NEW artwork bounds and measured rail label positions. Keep core export
+29 x 29 distinct from visible 13 x 13. Validate child containment and source fidelity
+before regeneration; generated output remains an artifact.
+
+#### Verification Required
+
+Independent Gates A-D, required phone-size matrix, real Settings/Log scrolling and
+existing interactions, native rotation/safe areas/keyboard. A connected emulator is
+available. Final evidence and proposed commit inventory will be appended after execution.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-12-001; DEV-2026-09-13-001
+- Tests: TASK-007 verification pending
+- Source: UI_LAYOUT_AUDIT_2026-09-13.md; TASK-007 user specification
+
+#### Next Steps
+
+Implement, validate canonical sources before generation, test, and present results for review.
+
+#### Deferred Decisions
+
+DEV-2026-09-12-001 explicitly accepted portrait scanner (310,26) despite Figma (315,28).
+This conflict has been presented to the user before changing it; retain that explicit
+exception pending their response. Left-handed coordinates remain accepted YAML semantics.
+No tablet implementation or new dock behavior is authorized.
+
+---
+
+---
+
+### DEV-2026-09-14-002 — User Verification of TASK-007
+
+**Date:** 2026-09-14
+**Time:** 10:41 America/New_York
+**Engineer:** Michael Garcia
+**Type:** OBSERVATION
+**Environment:** Captain's Log React Native / Expo Android development build; compact HUD navigation; Motorola Edge Plus 5G UW (2022)
+
+#### Findings
+
+The HUD insets still appear too large on the physical phone, and the artwork does not appear visually centered within the display.
+
+Initial physical inspection suggested approximately 7.5 mm of clearance at the top, left, and bottom of the screen, with approximately 14 mm on the right while in landscape orientation. In portrait orientation, the same general pattern was observed, but the larger clearance appears at the bottom instead of the right.
+
+A native portrait screenshot was captured and measured to quantify the discrepancy.
+
+Screenshot dimensions:
+
+```text
+919 x 2047 px
+```
+
+Approximate outer HUD bounds:
+
+```text
+left   ≈ 76 px
+right  ≈ 75 px
+top    ≈ 119 px
+bottom ≈ 216 px
+```
+
+This indicates:
+
+```text
+horizontal centering:
+left/right difference ≈ 1 px
+→ effectively centered
+
+vertical centering:
+bottom - top ≈ 97 px
+→ significant upward bias
+```
+
+The portrait HUD is therefore not simply too small. The unused space along the long axis is being distributed asymmetrically.
+
+The same issue appears to rotate with the device: portrait places the excess clearance primarily below the HUD, while landscape appears to place the excess primarily to the right. This suggests that the remaining aspect-ratio space or translation offset is being accumulated on the trailing side of the long axis rather than divided symmetrically.
+
+The fitting logic should therefore be inspected independently from Figma geometry. Figma dimensions may already be correct while the runtime transform is positioning the fitted artboard incorrectly.
+
+The target behavior should distribute unavoidable aspect-ratio remainder symmetrically:
+
+```text
+portrait:
+extra vertical space / 2
+→ top
+→ bottom
+
+landscape:
+extra horizontal space / 2
+→ left
+→ right
+```
+
+The artwork should also scale as large as possible within the valid safe area while maintaining the authorized aspect ratio and preserving the final border-inset policy.
+
+The landscape action dock works functionally, but not visually as intended. When it opens, the individual elements appear to materialize in sequence. The effect is fast, but still perceptible.
+
+The intended behavior is for the complete dock to behave as one assembled unit and slide into view from below. The dock handle should remain pinned to the dock's top rail throughout the transition so that its visual relationship to the dock does not change.
+
+Landscape handedness is also not functioning. After testing the interface in use, the preferred design decision is to leave landscape as a single canonical orientation rather than mirror the interface.
+
+The left-handed option should therefore be disabled while in landscape orientation. It should remain visible but grayed out, and the application should preserve the user's portrait handedness preference so that it is restored when returning to portrait.
+
+This behavior should translate more cleanly into the future tablet interface.
+
+#### Immediate Concerns
+
+The primary issue is the HUD fitting and centering behavior.
+
+The current implementation must be inspected from:
+
+```text
+screen/window dimensions
+→ safe-area rectangle
+→ authorized artboard
+→ scale calculation
+→ aspect-ratio remainder
+→ translation/centering
+→ final rendered bounds
+```
+
+The correction should not introduce arbitrary device-specific offsets.
+
+The objective is to:
+
+```text
+maximize authorized HUD scale
+AND preserve aspect ratio
+AND preserve safe-area requirements
+AND distribute unavoidable excess space symmetrically
+```
+
+The landscape dock transition and landscape handedness behavior should also be corrected before TASK-007 is considered complete.
+
+#### Follow-up Candidates
+
+* Inspect runtime fit and translation calculations against the measured native screenshot.
+* Compare runtime-selected YAML dimensions with the authoritative Figma dimensions.
+* Confirm that long-axis aspect-ratio remainder is divided equally rather than accumulated on one side.
+* Measure the landscape screenshot using the same method as portrait.
+* Animate the landscape dock as one parent assembly rather than revealing child elements individually.
+* Pin the dock handle to the dock's top rail throughout the transition.
+* Disable and gray out left-handed mode while in landscape orientation.
+* Preserve the user's portrait handedness preference while landscape is active.
+
+#### Related Records
+
+* DEVNOTES: DEV-2026-09-14-001
+* Tests: Native visual inspection using Motorola Edge Plus 5G UW (2022)
+* Source: HUD scaling, insets, Settings, landscape dock handle behavior, handedness behavior
+
+### DEV-2026-09-14-003 — TASK-007 native corrective continuation
+
+**Date:** 2026-09-14  
+**Time:** 13:20 America/New_York  
+**Engineer:** Codex  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+User verification DEV-2026-09-14-002 reports approximately 97 physical pixels of
+portrait vertical asymmetry on Motorola, sequential dock appearance, and unavailable
+landscape handedness. TASK-007 remains open; no commit is authorized.
+
+#### Context and Constraints
+
+Figma owns visual geometry/assets; YAML owns semantics. The existing fit equation
+already divides both remainders by two. The reported phone screenshot alone cannot
+identify whether Dimensions, safe-area input, host bounds, or transforms disagree.
+No ADB device is connected at this continuation; physical runtime measurements are pending.
+
+#### Solutions Considered
+
+Instrument legacy window fitting alongside measured host fitting. Use the real host
+rectangle intersected with the provider's safe rectangle, not an assumed equality
+between Dimensions.window and native root layout. Do not add device offsets or change
+correct Figma dimensions. Keep dock assets mounted and animate one assembled parent.
+
+#### Trade-offs
+
+Native measurement is asynchronous; wait for the measured host before exposing its
+geometry. Development diagnostics contain dimensions and layout identity, never entry
+text. They support comparison on the actual phone and do not claim its root cause yet.
+The Figma handle coordinate is the collapsed rest position; YAML now specifies its
+expanded-state attachment above the bezel's top edge. Its width, height and x alignment
+remain Figma-derived. A common parent translation preserves attachment during motion.
+
+#### Final Outcome
+
+Accepted landscape policy: right is canonical, left unavailable, stored portrait
+preference preserved. Disable and dim Left in Settings; returning to portrait restores
+the preference. Dock is preassembled, slides for 240 ms with cubic-out easing, and
+respects reduced motion. The collapsed handle bottom is the reveal clipping boundary.
+
+#### Implementation Impact
+
+Add native fit diagnostics and measured host geometry; declare handedness and dock
+transition semantics in YAML, regenerate only after source validation, and extend tests
+for preference preservation, assembled motion, fixed handle/dock relationship and
+host-versus-window size discrepancies. Existing outer/component Figma dimensions remain unchanged.
+
+#### Verification Required
+
+Gates A-D, regression tests, native before/after logs and screenshot measurements on
+Motorola in both orientations. Prior emulator checks do not close the user's failure.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-14-001; DEV-2026-09-14-002
+- Tests: continuation evidence pending
+- Source: user's TASK-007 continuation and runtime layout files
+
+#### Next Steps
+
+Implement the bounded corrections, collect measured runtime evidence, and report any
+remaining verification limits. Stop before commit and keep TASK-007 open.
+
+#### Deferred Decisions
+
+Exact Motorola centering cause remains unconfirmed until its runtime trace is available.
+Portrait scanner retains the explicit DEV-2026-09-12-001 exception pending user resolution.
+
+### DEV-2026-09-14-004 — TASK-007 corrective implementation and open physical gate
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Engineer:** Codex
+
+**Status:** IMPLEMENTED
+
+**Type:** DECISION / VERIFICATION FOLLOW-UP
+
+#### Problem
+
+DEV-2026-09-14-002 remains the physical acceptance failure. The Motorola's approximate
+97 px vertical bias must be explained by measured runtime inputs, not by changing
+Figma dimensions. This entry records the implementation of DEV-001/-003 and the
+evidence still missing; IMPLEMENTED does not close TASK-007.
+
+#### Context and Constraints
+
+Figma remains visual authority and was accessed read only. YAML remains semantic
+authority. No Motorola is connected. The user authorized continuation while requiring
+TASK-007 stay open and forbidding a commit without explicit authorization.
+
+#### Solutions Considered
+
+Retain the existing symmetric fit formula but replace the assumed window rectangle
+with the measured HUD host intersected with provider safe bounds. Record the old
+window fit alongside the new result for diagnosis. Avoid device offsets and speculative
+changes to correct Figma outer geometry. Preassemble dock assets and translate one
+parent. Declare landscape support explicitly and preserve portrait preferences.
+
+#### Trade-offs
+
+Host/provider/dimension callbacks arrive asynchronously during rotation; traces include
+intermediate handoffs, and only settled samples support current centering acceptance.
+The Motorola root cause is still unknown. Browser host-size regression proves the
+window-to-host assumption unsafe in a differing-host case, but does not prove that
+it caused the user's physical result.
+
+A reproduced web issue required registering onLayout on the font-loading root:
+React Native Web did not attach its observer when the prop was added later to the
+already mounted View. The new regression checks visibility, preventing geometry-only
+assertions from accepting an opacity-zero HUD.
+
+#### Final Outcome
+
+Current implementation uses maximum uniform contain scale, symmetric remainder,
+and an 8-logical-unit border outside the scaled artboard. Canonical geometry/source
+validation precedes generation. YAML distinguishes artwork, parent, export/glow,
+content and interaction bounds.
+
+Landscape dock body and handle share a parent transform. Body assets remain mounted
+and load before expansion. YAML declares 240 ms cubic-out motion and clipping at the
+collapsed handle bottom; reduced motion is immediate. Figma's collapsed handle rest
+position and expanded body dimensions remain unchanged. Expanded handle Y is derived
+from the accepted above-bezel attachment, preserving contact throughout translation.
+
+Landscape YAML supports only canonical Right. Settings shows a dim, disabled Left
+and does not write portrait preference while landscape is active. Native and browser
+round-trips restore portrait Left even after pressing Right in landscape.
+
+#### Implementation Impact
+
+See [TASK-007 report](TASK-007_REPORT_2026-09-14.md) for the complete file/asset/YAML
+inventory, discrepancy table, fitting equations, runtime traces, before/after
+measurements and proposed commit message. No Figma file was modified.
+
+#### Verification Required
+
+Recorded TEST-2026-09-14-001 through -019 preserve intermediate failures and retests.
+Final typecheck/lint, independent authority/parity, HUD contracts and browser regression
+pass. Existing node/attachment smoke tests pass. Native emulator fit and preference/
+dock endpoint checks pass within their stated scope.
+
+Measured emulator screenshot clearances before and after continuation are identical:
+portrait L/R/T/B 58/58/183/96 px; landscape 392/233/180/96 px. Safe-relative portrait
+clearances are L/R 58/58 and T/B 24/24; landscape L/R 233/233 and T/B 24/24.
+The 24 px border inset equals 8 logical units at ratio 3. Steady scale is 1.090442314
+portrait and 0.953846154 landscape. No improvement is claimed where the old emulator
+window and host already agreed. Full traces and screenshot edge measurements are in
+scripts/fixtures/task007-native-fit.json.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003
+- Tests: TEST-2026-09-14-001 through TEST-2026-09-14-019
+- Report: docs/TASK-007_REPORT_2026-09-14.md
+- Source evidence: scripts/fixtures/task007-figma.json; scripts/fixtures/task007-native-fit.json
+
+#### Next Steps
+
+Keep TASK-007 OPEN. Capture the current working-tree Motorola portrait/landscape
+HUD_FIT diagnostics and screenshots, identify the exact erroneous boundary, then
+correct only that boundary if further correction is required. Complete dock motion
+and docked-IME native review. Owner: Codex with connected device supplied by the user/
+maintainer. This is a verification dependency, not a new approval requirement.
+
+The proposed commit message is `TASK-007 fix(ui): reconcile Figma geometry and responsive HUD fitting`.
+No files are staged or committed by this pass. Explicit user authorization is required
+before any commit.
+
+#### Deferred Decisions
+
+Physical Motorola root cause and after-fit acceptance remain blocked by device access.
+The portrait scanner (310,26) versus Figma (315,28) remains the named accepted exception
+from DEV-2026-09-12-001 pending a decision to supersede it. Floating Gboard was observed;
+a docked keyboard shrinking the native window has not been verified. These limits
+remain visible in the report and do not authorize closure.
+
+### DEV-2026-09-14-005 — Supersede whole-artboard fit with full-window layout
+
+**Date:** 2026-09-14
+
+**Time:** 13:50 America/New_York
+
+**Engineer:** Codex
+
+**Status:** ACCEPTED
+
+**Type:** CORRECTIVE DIRECTION
+
+#### Problem
+
+The previous whole-artboard aspect-ratio-preserving fit was an incorrect implementation
+assumption. Treating the 390 x 844 / 844 x 390 Figma frames as runtime aspect-ratio
+constraints caused artificial unused space. Improving its centering does not implement
+the user's intended responsive model.
+
+#### Context and Constraints
+
+The user explicitly supersedes global scaling, whole-HUD letterboxing and centering a
+scaled Figma frame. Figma continues to own fixed component dimensions, placement and
+spacing relationships, assets and orientation composition. YAML continues to own names,
+behavior, anchors/stretch rules, flexible/fixed classification and safe-area behavior.
+
+This supersedes the fitting assumptions and related completion targets in
+DEV-2026-09-14-001, -003 and -004. The independent asset corrections, geometry distinctions,
+assembled dock and landscape handedness policy are not revoked. Earlier uniform-fit
+test results remain historical evidence, not acceptance of the new model.
+
+#### Solutions Considered
+
+Replace the global fit transform with a full-window canvas, fixed/anchored component
+groups and flexible viewport/rail regions. Preserve reference relationships and fixed
+artwork. Extend flexible edge segments rather than distort corner vectors or scale icons.
+Do not add another centering translation or an unspecified intermediate UI.
+
+#### Trade-offs
+
+Reference fixed widths do not fit every smaller window. A 350-unit portrait dock cannot
+fit inside a 320-unit window with an 8-unit border inset. The fixed header/scanner row
+also needs about 390 units to preserve its gaps. Three portrait rail targets require
+465 units before spacing. These require explicit local contraction/overflow policies;
+they do not authorize a return to whole-HUD scaling.
+
+A user question about narrow dock container/spacing contraction is pending. Header
+minimum-width handling and short-rail behavior are explicitly identified in the report.
+No replacement runtime implementation starts until classification/policy is clear.
+
+#### Final Outcome
+
+Accepted target pipeline:
+
+device window -> full-window HUD canvas -> fixed/anchored regions -> flexible regions.
+
+The canvas and background cover the window; the border stays 8 logical units from
+actual window edges. Safe areas constrain necessary interactive/content groups, without
+shifting or letterboxing the complete HUD. Portrait and landscape retain their named
+compositions. Fixed asset dimensions and typography are preserved.
+
+#### Implementation Impact
+
+Pre-code classification tables for every major portrait and landscape region are in
+[Full-window classification](TASK-007_FULL_WINDOW_LAYOUT_2026-09-14.md). Each records
+Figma reference bounds, class, fixed dimensions, anchors, stretch axes and safe needs.
+The previous report is marked historical/superseded. No runtime code has been changed
+for this newly requested model yet.
+
+#### Verification Required
+
+Replace global-scale/letterbox tests with full-window canvas, actual-edge border,
+fixed component size/shape, flexible-space consumption, orientation and no-global-
+transform checks. Then verify both orientations on the physical Motorola. No physical
+acceptance can be inferred from previous emulator measurements of the superseded model.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+- Tests: TEST-2026-09-14-020; TEST-2026-09-14-021
+- Report: docs/TASK-007_FULL_WINDOW_LAYOUT_2026-09-14.md
+- Authority: user's CORRECTIVE DIRECTION - TASK-007
+
+#### Next Steps
+
+Settle the listed narrow/short-window constraints, encode the classifications in canonical
+YAML, replace the runtime model, and execute the replacement tests. Keep TASK-007 OPEN.
+Do not commit without explicit user authorization.
+
+#### Deferred Decisions
+
+Narrow portrait dock/header and insufficient-height rail policy; physical phone access.

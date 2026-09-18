@@ -1,0 +1,659 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+# Reference Figma coordinates are measurement data, not runtime commands.
+layout:
+  id: mobile_portrait
+  orientation: portrait
+  reference_viewport:
+    width: 390
+    height: 844
+  reference_source:
+    file_key: dFwk8LAWauplWqrOKaQplU
+    captured: 2026-09-14
+    usage: reference_only
+  reference_regions:
+    status_header:
+      x: 20
+      y: 28
+      width: 278
+      height: 82
+      figma_node: 2:21
+    scanner:
+      x: 315
+      y: 28
+      width: 60
+      height: 82
+      figma_node: 2:22
+    settings_menu:
+      x: 315
+      y: 127
+      width: 60
+      height: 50
+      figma_node: 88:7
+    title_block:
+      x: 20
+      y: 122
+      width: 278
+      height: 68
+      figma_node: 2:23
+    viewport:
+      x: 20
+      y: 206
+      width: 286
+      height: 500
+      figma_node: 2:24
+    navigation_rail:
+      x: 315
+      y: 206
+      width: 60
+      height: 500
+      figma_node: 2:25
+    action_dock:
+      x: 20
+      y: 724
+      width: 350
+      height: 96
+      figma_node: 2:26
+  reference_chrome:
+    border:
+      x: 8
+      y: 8
+      width: 374
+      height: 828
+      radius: 40
+    notch:
+      x: 135
+      y: 4
+      width: 120
+      height: 8
+    home_indicator:
+      x: 148
+      y: 834
+      width: 94
+      height: 6
+    rail_guide:
+      x: 310
+      y: 112
+      width: 1
+      height: 600
+  handedness:
+    canonical: right
+    supported:
+      - right
+      - left
+    unavailable: []
+    preference: editable
+    preference_scope: this_orientation
+    preference_writable: true
+    active: from_preference_if_supported_else_canonical
+    variants:
+      left:
+        safe_group_overrides:
+          rail:
+            edges:
+              - left
+              - bottom
+        horizontal_overrides:
+          status_header:
+            alignment: right
+            anchors:
+              right:
+                target: window
+                edge: right
+                relation: before
+            buffer:
+              right:
+                min: 8
+                preferred: 20
+                max: 24
+          scanner:
+            alignment: left
+            anchors:
+              left:
+                target: window
+                edge: left
+                relation: after
+            buffer:
+              left:
+                min: 8
+                preferred: 15
+                max: 19
+            constraints:
+              separation_from:
+                target: status_header
+                edge: left
+                relation: before
+                minimum_clearance: 8
+                reference_preferred_clearance: 17
+                surplus: unallocated_between_edge_anchored_controls
+          title_block:
+            alignment: right
+            anchors:
+              right:
+                target: status_header
+                edge: right
+                relation: aligned
+          settings_menu:
+            alignment: left
+            anchors:
+              left:
+                target: window
+                edge: left
+                relation: after
+            buffer:
+              left:
+                min: 8
+                preferred: 15
+                max: 19
+          navigation_rail:
+            alignment: left
+            anchors:
+              left:
+                target: window
+                edge: left
+                relation: after
+            buffer:
+              left:
+                min: 8
+                preferred: 15
+                max: 19
+          viewport:
+            alignment: stretch
+            anchors:
+              left:
+                target: navigation_rail
+                edge: right
+                relation: after
+                gap:
+                  min: 5
+                  preferred: 9
+                  max: 13
+              right:
+                target: window
+                edge: right
+                relation: before
+            buffer:
+              right:
+                min: 8
+                preferred: 20
+                max: 24
+          rail_guide:
+            alignment: left
+            anchors:
+              left:
+                target: navigation_rail
+                edge: right
+                relation: after
+                gap:
+                  min: 6
+                  preferred: 6
+                  max: 6
+  safe_area:
+    canvas: none
+    background: none
+    border: none
+    content: constrain_to_resolved_safe_regions
+    group_policy: family.layout_policy.safe_area
+  safe_groups:
+    header:
+      members:
+        - status_header
+        - scanner
+        - title_block
+        - settings_menu
+      edges:
+        - left
+        - right
+        - top
+      safety_buffer:
+        min: 8
+        preferred: 8
+        max: 8
+      behavior: minimum_inward_displacement
+      preserve_internal_relationships: true
+    rail:
+      members:
+        - navigation_rail
+      edges:
+        - right
+        - bottom
+      safety_buffer:
+        min: 8
+        preferred: 8
+        max: 8
+      behavior: minimum_inward_displacement
+      preserve_internal_relationships: true
+    dock:
+      members:
+        - action_dock
+      edges:
+        - left
+        - right
+        - bottom
+      safety_buffer:
+        min: 8
+        preferred: 8
+        max: 8
+      behavior: minimum_inward_displacement
+      preserve_internal_relationships: true
+    content:
+      members:
+        - viewport
+      edges:
+        - left
+        - right
+        - top
+        - bottom
+      safety_buffer:
+        min: 8
+        preferred: 8
+        max: 8
+      behavior: constrain_flexible_edges
+      preserve_sibling_relationships: true
+  runtime_regions:
+    canvas:
+      alignment:
+        horizontal: stretch
+        vertical: stretch
+      sizing: flexible_both
+      anchors:
+        left:
+          target: window
+          edge: left
+          relation: aligned
+        right:
+          target: window
+          edge: right
+          relation: aligned
+        top:
+          target: window
+          edge: top
+          relation: aligned
+        bottom:
+          target: window
+          edge: bottom
+          relation: aligned
+      safe_area: none
+    background:
+      alignment:
+        horizontal: stretch
+        vertical: stretch
+      sizing: flexible_both
+      anchors:
+        left:
+          target: canvas
+          edge: left
+          relation: aligned
+        right:
+          target: canvas
+          edge: right
+          relation: aligned
+        top:
+          target: canvas
+          edge: top
+          relation: aligned
+        bottom:
+          target: canvas
+          edge: bottom
+          relation: aligned
+      safe_area: none
+      asset: atmosphere-background-grid
+    border:
+      alignment:
+        horizontal: stretch
+        vertical: stretch
+      sizing: flexible_both
+      anchors:
+        left:
+          target: canvas
+          edge: left
+          relation: after
+        right:
+          target: canvas
+          edge: right
+          relation: before
+        top:
+          target: canvas
+          edge: top
+          relation: after
+        bottom:
+          target: canvas
+          edge: bottom
+          relation: before
+      safe_area: none
+      buffer:
+        left:
+          min: 8
+          preferred: 8
+          max: 8
+        right:
+          min: 8
+          preferred: 8
+          max: 8
+        top:
+          min: 8
+          preferred: 8
+          max: 8
+        bottom:
+          min: 8
+          preferred: 8
+          max: 8
+      appearance:
+        radius: 40
+        stroke_width: 1
+        stroke_space: logical
+        scale_radius: false
+        scale_stroke: false
+    status_header:
+      component: status_header
+      alignment:
+        horizontal: left
+        vertical: top
+      sizing: fixed
+      anchors:
+        left:
+          target: window
+          edge: left
+          relation: after
+        top:
+          target: window
+          edge: top
+          relation: after
+      safe_area: header
+      buffer:
+        left:
+          min: 8
+          preferred: 20
+          max: 24
+        top:
+          min: 24
+          preferred: 28
+          max: 32
+    scanner:
+      component: scanner
+      alignment:
+        horizontal: right
+        vertical: top
+      sizing: fixed
+      anchors:
+        right:
+          target: window
+          edge: right
+          relation: before
+        top:
+          target: status_header
+          edge: top
+          relation: aligned
+      safe_area: header
+      buffer:
+        right:
+          min: 8
+          preferred: 15
+          max: 19
+      constraints:
+        separation_from:
+          target: status_header
+          edge: right
+          relation: after
+          minimum_clearance: 8
+          reference_preferred_clearance: 17
+          surplus: unallocated_between_edge_anchored_controls
+    title_block:
+      component: title_block
+      alignment:
+        horizontal: left
+        vertical: top
+      sizing: fixed
+      anchors:
+        left:
+          target: status_header
+          edge: left
+          relation: aligned
+        top:
+          target: status_header
+          edge: bottom
+          relation: after
+          gap:
+            min: 8
+            preferred: 12
+            max: 16
+      safe_area: header
+    settings_menu:
+      component: navigation_rail
+      alignment:
+        horizontal: right
+        vertical: top
+      sizing: fixed
+      anchors:
+        right:
+          target: window
+          edge: right
+          relation: before
+        top:
+          target: scanner
+          edge: bottom
+          relation: after
+          gap:
+            min: 13
+            preferred: 17
+            max: 21
+      safe_area: header
+      part: menu
+      buffer:
+        right:
+          min: 8
+          preferred: 15
+          max: 19
+    navigation_rail:
+      component: navigation_rail
+      alignment:
+        horizontal: right
+        vertical: stretch
+      sizing: flexible_y
+      anchors:
+        right:
+          target: window
+          edge: right
+          relation: before
+        top:
+          target: viewport
+          edge: top
+          relation: aligned
+        bottom:
+          target: viewport
+          edge: bottom
+          relation: aligned
+      safe_area: rail
+      buffer:
+        right:
+          min: 8
+          preferred: 15
+          max: 19
+    viewport:
+      component: viewport
+      alignment:
+        horizontal: stretch
+        vertical: stretch
+      sizing: flexible_both
+      anchors:
+        left:
+          target: status_header
+          edge: left
+          relation: aligned
+        right:
+          target: navigation_rail
+          edge: left
+          relation: before
+          gap:
+            min: 5
+            preferred: 9
+            max: 13
+        top:
+          target: title_block
+          edge: bottom
+          relation: after
+          gap:
+            min: 12
+            preferred: 16
+            max: 20
+        bottom:
+          target: action_dock
+          edge: top
+          relation: before
+          gap:
+            min: 14
+            preferred: 18
+            max: 22
+      safe_area: content
+    action_dock:
+      component: action_dock
+      alignment:
+        horizontal: center
+        vertical: bottom
+      sizing: flexible_x
+      anchors:
+        center_x:
+          target: window
+          edge: center_x
+          relation: aligned
+        bottom:
+          target: window
+          edge: bottom
+          relation: before
+      safe_area: dock
+      buffer:
+        left:
+          min: 8
+          preferred: 20
+          max: 24
+        right:
+          min: 8
+          preferred: 20
+          max: 24
+        bottom:
+          min: 20
+          preferred: 24
+          max: 28
+      width_resolution: prefer_component_width_then_contract_container_to_fit_buffers
+      buffer_usage:
+        left: contraction_clearance
+        right: contraction_clearance
+        bottom: edge_anchor
+    rail_guide:
+      alignment:
+        horizontal: right
+        vertical: stretch
+      sizing: flexible_y
+      anchors:
+        right:
+          target: navigation_rail
+          edge: left
+          relation: before
+          gap:
+            min: 4
+            preferred: 4
+            max: 4
+        top:
+          target: status_header
+          edge: bottom
+          relation: after
+          gap:
+            min: 2
+            preferred: 2
+            max: 2
+        bottom:
+          target: viewport
+          edge: bottom
+          relation: after
+          gap:
+            min: 6
+            preferred: 6
+            max: 6
+      safe_area: none
+      size:
+        width: 1
+    notch:
+      alignment:
+        horizontal: center
+        vertical: top
+      sizing: fixed
+      anchors:
+        center_x:
+          target: window
+          edge: center_x
+          relation: aligned
+        top:
+          target: window
+          edge: top
+          relation: after
+      safe_area: none
+      asset: chrome-top-safe-area-notch
+      size:
+        width: 120
+        height: 8
+      buffer:
+        top:
+          min: 4
+          preferred: 4
+          max: 4
+    home_indicator:
+      alignment:
+        horizontal: center
+        vertical: bottom
+      sizing: fixed
+      anchors:
+        center_x:
+          target: window
+          edge: center_x
+          relation: aligned
+        bottom:
+          target: window
+          edge: bottom
+          relation: before
+      safe_area: none
+      asset: chrome-bottom-home-indicator
+      size:
+        width: 94
+        height: 6
+      buffer:
+        bottom:
+          min: 4
+          preferred: 4
+          max: 4
+  atmosphere:
+    paintedWashAsset: atmosphere-background-grid
+    referenceOnly:
+      - atmosphere-crt-scanlines
+      - viewport-tactical-dot-grid
+  reference_handedness:
+    left:
+      regions:
+        status_header:
+          x: 92
+        scanner:
+          x: 15
+        settings_menu:
+          x: 15
+        title_block:
+          x: 92
+        viewport:
+          x: 84
+        navigation_rail:
+          x: 15
+      chrome:
+        rail_guide:
+          x: 81
+  constraints:
+    minimum_window_width: 362
+    minimum_width_basis: 8 left + 278 header + 8 separation + 60 scanner + 8 right
+    minimum_width_arithmetic: 8 + 278 + 8 + 60 + 8 = 362
+    minimum_width_kind: declared_min_floor
+    minimum_width_note: This is the contraction-floor width from declared token mins, not a preferred-layout
+      failure. Safe obstructions can raise it. Dock declared min 326 + 8 + 8 = 342 is not binding.
+    minimum_window_height: 481
+    minimum_height_basis: declared_mins 24 top + 82 header + 8 title gap + 68 title + 12 viewport top gap + 155
+      one rail target + 2 rail trailing + 14 viewport bottom gap + 96 dock + 20 bottom
+    minimum_height_kind: declared_min_floor
+    vertical_feasibility: Use declared mins, then rail overflow (gaps to 0, then local button scroll). Unsupported
+      only when one complete 155-tall target plus required header/title/dock/safety mins cannot fit.
+    unsatisfied: unsupported_size
+    reference_reconstruction: preferred_without_system_obstructions

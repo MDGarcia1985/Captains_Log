@@ -4,7 +4,7 @@
  * License: SPDX-License-Identifier: MPL-2.0; DEV-2026-09-07-025
  * No production import, account, database, camera, location or network access. */
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native-web';
+import { StyleSheet, useWindowDimensions } from 'react-native-web';
 export const RouterContext = createContext(null);
 export function useRouter() { return useContext(RouterContext).router; }
 export function usePathname() { return useContext(RouterContext).path; }
@@ -14,9 +14,13 @@ export function useSafeAreaInsets() {
   useEffect(() => { globalThis.hudFixture.setInsets = setInsets; }, []);
   return insets;
 }
+export function useSafeAreaFrame() {
+  const window = useWindowDimensions();
+  return { x: 0, y: 0, width: window.width, height: window.height };
+}
 export function StatusBar() { return null; }
-export function Image({ source, contentFit, style }) {
-  return <img alt="" src={typeof source === 'string' ? source : source?.uri} style={{ ...StyleSheet.flatten(style), objectFit: contentFit === 'fill' ? 'fill' : 'contain', pointerEvents: 'none' }} />;
+export function Image({ source, contentFit, style, testID, onLoad }) {
+  return <img data-testid={testID} onLoad={onLoad} alt="" src={typeof source === 'string' ? source : source?.uri} style={{ ...StyleSheet.flatten(style), objectFit: contentFit === 'fill' ? 'fill' : 'contain', pointerEvents: 'none' }} />;
 }
 export function useFonts(fonts) {
   const [ready, setReady] = useState(false);

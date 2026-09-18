@@ -1,0 +1,24 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+component:
+  id: action_dock
+  behavior:
+    default_visibility: visible
+    handle: null
+  sizing: flexible_x
+  size:
+    width:
+      min: 326
+      preferred: 350
+      max: 350
+      max_kind: preferred_cap
+    height: 96
+  placement_owner: orientation
+  bezel_layout:
+    sizing: flexible_x
+    height: 96
+    resize: extend_straight_segments
+    preserve:
+      - corner_geometry
+      - stroke_width
+    scale_controls: false
+  minimum_width_basis: 7 + 4*72 + 3*6 + 13 = 326; only gaps contract.

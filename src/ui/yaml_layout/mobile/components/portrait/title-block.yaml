@@ -1,0 +1,20 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+component:
+  id: title_block
+  title:
+    x: 0
+    y: 0
+    width: 231
+    height: 30
+  subtitle:
+    x: 1
+    y: 37
+  divider:
+    x: 0
+    y: 56
+    width: 278
+    height: 12
+  size:
+    width: 278
+    height: 68
+  sizing: fixed

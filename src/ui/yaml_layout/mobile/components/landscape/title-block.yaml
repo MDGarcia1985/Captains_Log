@@ -1,0 +1,50 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+component:
+  id: title_block
+  title:
+    x: 0
+    y: 3
+    width: 231
+    height: 30
+  subtitle:
+    x: 185
+    y: 30
+  divider:
+    asset: landscape-title-angular-rule
+    alignment:
+      horizontal: stretch
+      vertical: top
+    insets:
+      left: 0
+      right: 40
+      top: 30
+    height: 18
+    resize: extend_trailing_horizontal_segment
+    preserve:
+      - all_prior_vertices
+      - corner_angles
+      - stroke_width
+      - accent_size
+  size:
+    width:
+      min: 365
+      preferred: 391
+      max: null
+    height: 68
+  sizing: flexible_x
+  reference_geometry:
+    divider:
+      asset: landscape-title-angular-rule
+      x: 0
+      y: 30
+      width: 351
+      height: 18
+      last_fixed_vertex_x: 324.4856165541404
+  placement_owner: orientation
+  overflow:
+    text: clip
+    scale_typography: false
+    minimum_width_basis: ceil(324.4856165541404 last fixed divider vertex + 0.5 stroke + 40 trailing allowance) =
+      365; subtitle ends at 299.
+    minimum_width: 365
+    minimum_width_kind: ornament_physical_floor

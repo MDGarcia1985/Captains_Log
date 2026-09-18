@@ -1586,3 +1586,1309 @@ TEST-2026-09-12-004; TEST-2026-09-13-004; TEST-2026-09-13-005
 #### Disposition
 
 Implementation is reviewable with browser evidence; native release acceptance remains pending a connected device and working-tree build. Owner: project maintainer or follow-up verification session.
+
+
+---
+
+The following TASK-007 records were appended at 13:44 America/New_York on 2026-09-14 from this session's executed checks and preserved outputs. Exact earlier execution times were not retained; the time field is the recording time. Failure groups describe intermediate runs explicitly and do not overwrite their later retests.
+
+---
+
+### TEST-2026-09-14-001 — Independent Figma and canonical geometry gate
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T0
+
+**Result:** PASS
+
+#### Scope
+
+Figma-to-YAML/assets authority
+
+#### Files Under Validation
+
+scripts/ui-authority-test.mjs; scripts/ui-geometry-validation.mjs; scripts/fixtures/task007-figma.json; mobile YAML and HUD SVGs
+
+#### Objective
+
+Validate canonical visual geometry before generation.
+
+#### Preconditions
+
+Read-only live Figma node/path/export capture; local dependencies.
+
+#### Procedure
+
+Ran canonical validation and independent authority comparisons before generation.
+
+#### Expected Result
+
+Correct geometry/assets match Figma; invalid content is rejected.
+
+#### Actual Result
+
+Gate A passed with a named scanner exception; the deliberate out-of-bounds content case was rejected.
+
+#### Evidence
+
+node scripts/generate-ui.mjs --validate-only; node scripts/ui-authority-test.mjs; captured Figma fixture.
+
+#### Failures / Observations
+
+Portrait scanner remains (310,26) versus Figma (315,28), explicitly accepted earlier; not counted as exact parity.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+None
+
+#### Disposition
+
+Canonical generation may proceed within the documented exception.
+
+---
+
+### TEST-2026-09-14-002 — Initial geometry merge type validation
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T0
+
+**Result:** FAIL
+
+#### Scope
+
+Generated geometry typing
+
+#### Files Under Validation
+
+src/ui/layout/hudBehavior.ts; src/ui/layout/HudLayoutContext.tsx; HudShell.tsx
+
+#### Objective
+
+Ensure orientation overlays produce valid typed rectangles.
+
+#### Preconditions
+
+Updated canonical/generated geometry.
+
+#### Procedure
+
+Ran npm.cmd run typecheck; reran after replacing intersection merge typing.
+
+#### Expected Result
+
+No TypeScript errors.
+
+#### Actual Result
+
+First run failed because literal shared/overlay intersections became impossible; next run exposed literal coordinate narrowing in layout context.
+
+#### Evidence
+
+TypeScript errors on merged geometry and left-handed layout positions.
+
+#### Failures / Observations
+
+Replaced intersection with recursive merge typing and widened geometry numbers in context.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-001
+
+#### Disposition
+
+Blocked progression until corrective static validation; retest -014.
+
+---
+
+### TEST-2026-09-14-003 — Browser runner sandbox dependency access
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** BLOCKED
+
+#### Scope
+
+Browser harness launch
+
+#### Files Under Validation
+
+scripts/hud-browser-test.mjs; scripts/hud-harness.jsx
+
+#### Objective
+
+Launch the actual AppShell browser harness.
+
+#### Preconditions
+
+esbuild and installed browser available.
+
+#### Procedure
+
+Ran npm.cmd run test:hud:browser under workspace sandbox.
+
+#### Expected Result
+
+Harness bundles and launches.
+
+#### Actual Result
+
+Sandbox denied esbuild/parent-path access before application checks.
+
+#### Evidence
+
+Tool output access denial; approved escalated rerun used afterward.
+
+#### Failures / Observations
+
+Environment restriction, not an application geometry result.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+None
+
+#### Disposition
+
+Resolved by authorized runner escalation; subsequent runtime results recorded separately.
+
+---
+
+### TEST-2026-09-14-004 — Initial browser geometry regression failures
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** FAIL
+
+#### Scope
+
+AppShell geometry and interaction boundary
+
+#### Files Under Validation
+
+scripts/hud-browser-test.mjs; scripts/hud-fixtures.jsx; HudShell.tsx; HudArtwork.tsx
+
+#### Objective
+
+Exercise corrected geometry and primary shell interaction.
+
+#### Preconditions
+
+Bundled actual AppShell with explicit platform/services/router doubles.
+
+#### Procedure
+
+Ran browser suite and corrected each failing assertion before rerunning.
+
+#### Expected Result
+
+Geometry, full heading and menu interaction work.
+
+#### Actual Result
+
+Intermediate runs failed on a duplicate rail test ID, web title ellipsis, an immediate post-rotation assertion, fixture sourceText mismatch, and a transparent rail parent intercepting landscape menu taps.
+
+#### Evidence
+
+Browser assertion output identified each condition. Corrections: unique label test IDs, explicit web clip policy, await settled rotation, valid fixture field, rail pointerEvents box-none.
+
+#### Failures / Observations
+
+Test-harness defects and runtime defects are distinguished above. Failed attempts remain recorded here as the initial integration correction sequence.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-003
+
+#### Disposition
+
+Blocked progression pending full browser retest -005.
+
+---
+
+### TEST-2026-09-14-005 — Original TASK-007 browser integration retest
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T3
+
+**Result:** PASS
+
+#### Scope
+
+Original geometry-authority regression
+
+#### Files Under Validation
+
+scripts/hud-browser-test.mjs; actual AppShell, HUD and route screens
+
+#### Objective
+
+Verify the original geometry changes across phone/buffer sizes.
+
+#### Preconditions
+
+Corrected harness and runtime from -004.
+
+#### Procedure
+
+Ran npm.cmd run test:hud:browser to completion.
+
+#### Expected Result
+
+Required matrix and route/action regressions pass.
+
+#### Actual Result
+
+HUD browser T2 PASS across phone, boundary, tablet, safe-area and unusual aspect-ratio cases, full heading, Log/Settings scroll and thumbnails.
+
+#### Evidence
+
+Local .tmp/hud-qa screenshots, task007-geometry.json and motion-samples.json.
+
+#### Failures / Observations
+
+This earlier pass preceded continuation host measurement and did not assert measured-frame opacity; -013 found that gap and -016 supersedes it for current code.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-004
+
+#### Disposition
+
+Original browser regression passed; native validation still required.
+
+---
+
+### TEST-2026-09-14-006 — Node attachment runner sandbox access
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T1
+
+**Result:** BLOCKED
+
+#### Scope
+
+Node and attachment smoke runner
+
+#### Files Under Validation
+
+scripts/node-smoke.ts; scripts/attachment-smoke.mjs
+
+#### Objective
+
+Run existing service/attachment smoke suite.
+
+#### Preconditions
+
+Installed project dependencies.
+
+#### Procedure
+
+Ran npm.cmd run test:node under sandbox.
+
+#### Expected Result
+
+Both node and attachment phases finish.
+
+#### Actual Result
+
+Sixteen node checks passed; attachment bundling was blocked by esbuild parent-path access.
+
+#### Evidence
+
+Runner output; approved escalated rerun followed.
+
+#### Failures / Observations
+
+No attachment PASS is inferred from the completed node phase.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+None
+
+#### Disposition
+
+Retest entire command with authorized access; -007.
+
+---
+
+### TEST-2026-09-14-007 — Node and attachment regression retest
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T3
+
+**Result:** PASS
+
+#### Scope
+
+Existing service and attachment regressions
+
+#### Files Under Validation
+
+scripts/node-smoke.ts; scripts/attachment-smoke.mjs
+
+#### Objective
+
+Verify existing service and attachment behavior remains intact.
+
+#### Preconditions
+
+Authorized dependency access.
+
+#### Procedure
+
+Ran npm.cmd run test:node with approved escalation.
+
+#### Expected Result
+
+Node and attachment phases pass.
+
+#### Actual Result
+
+Both phases passed, including all 16 node checks and attachment smoke assertions.
+
+#### Evidence
+
+npm.cmd run test:node completed successfully.
+
+#### Failures / Observations
+
+No live cloud, camera or location claim follows from these mocks/smoke tests.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-006
+
+#### Disposition
+
+Existing regression passed.
+
+---
+
+### TEST-2026-09-14-008 — Initial native bundle connection
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** BLOCKED
+
+#### Scope
+
+Android current-working-tree launch
+
+#### Files Under Validation
+
+scripts/hud-native-check.py; Expo Metro runtime
+
+#### Objective
+
+Launch the working-tree native bundle.
+
+#### Preconditions
+
+Installed debug app on Pixel_9_Pro_XL emulator.
+
+#### Procedure
+
+Tried initial launch/reload and inspected bundle error/ANR; corrected Metro transport to port 8081 with LAN binding and adb reverse.
+
+#### Expected Result
+
+Current Metro bundle loads.
+
+#### Actual Result
+
+Initial unable-to-load-script/black-screen/ANR attempts prevented layout verification; standard Metro connection then loaded the app.
+
+#### Evidence
+
+Local .tmp/hud-native initial/reload captures; Expo Metro and adb launch output.
+
+#### Failures / Observations
+
+Transport/launch failure, not a geometry PASS.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-13-006
+
+#### Disposition
+
+Connection resolved; native observations follow in -009.
+
+---
+
+### TEST-2026-09-14-009 — Original native geometry and floating IME checks
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** PARTIAL
+
+#### Scope
+
+Android layout, rotation and keyboard boundary
+
+#### Files Under Validation
+
+HudShell.tsx; useHudViewport.ts; hudBehavior.ts
+
+#### Objective
+
+Observe the current bundle on native Android and distinguish IME resizing from orientation.
+
+#### Preconditions
+
+Pixel_9_Pro_XL, Android 17 API 37, ratio 3; Metro 8081 connected.
+
+#### Procedure
+
+Rotated portrait/landscape, opened dock and empty Capture, inspected title/thumbs, displayed Gboard and read native bounds.
+
+#### Expected Result
+
+Correct layouts and full title; keyboard behavior characterized.
+
+#### Actual Result
+
+Native layouts changed, full NEW RECORD and existing attachment thumbnails displayed; dock endpoints observed. Gboard appeared as floating toolbar/QWERTY and did not reduce window size.
+
+#### Evidence
+
+.tmp/hud-native/landscape.png; portrait-before-keyboard.png; landscape-qwerty-settled.png and corresponding XML/IME dumps.
+
+#### Failures / Observations
+
+Docked keyboard window reduction not exercised. Early screenshots sometimes preceded UI settling; later snapshot helper waits before capture.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-008
+
+#### Disposition
+
+Native evidence partial; no keyboard-resize or physical Motorola acceptance claimed.
+
+---
+
+### TEST-2026-09-14-010 — User physical phone verification failure
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Michael Garcia (user observation); recorded by Codex
+
+**Level:** T2
+
+**Result:** FAIL
+
+#### Scope
+
+Motorola phone fitting and presentation
+
+#### Files Under Validation
+
+Not applicable: user-supplied observation DEV-2026-09-14-002
+
+#### Objective
+
+Record the user's actual device acceptance result.
+
+#### Preconditions
+
+Motorola Edge Plus 5G UW; user screenshot 919 x 2047 px.
+
+#### Procedure
+
+User inspected portrait/landscape fit, dock reveal and handedness; transcribed findings from DEV-002.
+
+#### Expected Result
+
+Centered authorized layout; assembled dock; supported handedness policy.
+
+#### Actual Result
+
+Approximate L/R/T/B clearances 76/75/119/216 px; vertical difference 97 px. User reports excess right-side space after rotation, sequential dock reveal, and landscape handedness failure.
+
+#### Evidence
+
+DEV-2026-09-14-002 and user's continuation request; measurements belong to the user, not an agent ADB capture.
+
+#### Failures / Observations
+
+Safe-area/runtime inputs were not supplied, so exact centering cause cannot be assigned.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-009
+
+#### Disposition
+
+TASK-007 remains open; corrective investigation required.
+
+---
+
+### TEST-2026-09-14-011 — Continuation physical device availability
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** BLOCKED
+
+#### Scope
+
+Motorola diagnostic access
+
+#### Files Under Validation
+
+scripts/hud-native-check.py; useHudFit.ts
+
+#### Objective
+
+Capture actual Motorola fit inputs.
+
+#### Preconditions
+
+Phone connected with USB debugging.
+
+#### Procedure
+
+Checked ADB at continuation; no device was connected. Requested phone connection while continuing independent work; restarted headless emulator for bounded QA.
+
+#### Expected Result
+
+Motorola appears and exposes current runtime diagnostics.
+
+#### Actual Result
+
+Motorola unavailable. Only emulator-5554 became available after emulator restart.
+
+#### Evidence
+
+ADB device list and emulator launch output.
+
+#### Failures / Observations
+
+The emulator is not substituted for the user's phone acceptance.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-010
+
+#### Disposition
+
+Continue authorized diagnostic/dock/handedness work; physical acceptance blocked pending connection.
+
+---
+
+### TEST-2026-09-14-012 — Continuation dock rotation regression
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** FAIL
+
+#### Scope
+
+Assembled dock lifecycle
+
+#### Files Under Validation
+
+src/ui/layout/HudDock.tsx; scripts/hud-browser-test.mjs
+
+#### Objective
+
+Preserve canonical collapsed handle placement on orientation changes.
+
+#### Preconditions
+
+New mounted dock assembly.
+
+#### Procedure
+
+Ran continuation browser suite.
+
+#### Expected Result
+
+Collapsed landscape handle returns to canonical Y=340.
+
+#### Actual Result
+
+Assertion observed an intermediate Y about 272.9 from progress inherited across orientation.
+
+#### Evidence
+
+Browser geometry assertion during rotation.
+
+#### Failures / Observations
+
+Added pre-paint orientation reset in useLayoutEffect; no Figma rectangle change.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-005
+
+#### Disposition
+
+Retest -016 required before accepting assembled transition.
+
+---
+
+### TEST-2026-09-14-013 — Continuation host measurement regression
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** FAIL
+
+#### Scope
+
+Measured host visibility and resizing
+
+#### Files Under Validation
+
+src/ui/layout/useHudFit.ts; HudShell.tsx; scripts/hud-browser-test.mjs
+
+#### Objective
+
+Fit a real 430 x 850 host inside a 430 x 932 browser window.
+
+#### Preconditions
+
+Measured-host hook with loading root initially lacking onLayout.
+
+#### Procedure
+
+Ran continuation suite; added diagnostic output and visibility assertion after initial timeout.
+
+#### Expected Result
+
+Host measurement updates and visible frame fits 430 x 850.
+
+#### Actual Result
+
+Repeated host test failed: actual host was 430 x 850, but measured state remained null and frame opacity 0. Earlier geometry-only assertions had missed invisibility.
+
+#### Evidence
+
+Browser failure diagnostics: host rect versus stale window-fit frame and opacity 0.
+
+#### Failures / Observations
+
+RN Web registered its observer only at root mount; font-loading root reused the View without initial onLayout. Registered ref/onLayout there as well.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-012; TEST-2026-09-14-005
+
+#### Disposition
+
+Blocked acceptance until visibility-aware full retest -016.
+
+---
+
+### TEST-2026-09-14-014 — Final implementation static validation
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T0
+
+**Result:** PASS
+
+#### Scope
+
+Changed TypeScript and JavaScript contracts
+
+#### Files Under Validation
+
+All changed src/ui TypeScript and scripts listed in TASK-007_REPORT_2026-09-14.md
+
+#### Objective
+
+Compile and lint current implementation.
+
+#### Preconditions
+
+Dependencies installed; corrected geometry/context/loading-root code.
+
+#### Procedure
+
+Ran npm.cmd run typecheck and npm.cmd run lint after continuation fixes.
+
+#### Expected Result
+
+No compilation/lint errors.
+
+#### Actual Result
+
+Both commands exited 0 with no reported errors.
+
+#### Evidence
+
+Final typecheck/lint tool output.
+
+#### Failures / Observations
+
+Subsequent changes were documentation, evidence and comment/whitespace cleanup only. Full git diff --check flags intentional Markdown hard breaks in append-only DEVNOTES; code-only check passes.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-002; TEST-2026-09-14-013
+
+#### Disposition
+
+Static gate passed; does not replace runtime acceptance.
+
+---
+
+### TEST-2026-09-14-015 — Final authority parity and HUD contracts
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T1
+
+**Result:** PASS
+
+#### Scope
+
+Canonical-to-generated and geometry contracts
+
+#### Files Under Validation
+
+scripts/generate-ui.mjs; ui-authority-test.mjs; ui-geometry-validation.mjs; hud-smoke.ts; generated UI; hudBehavior.ts
+
+#### Objective
+
+Verify independent authority gates and fitting/dock/handedness contracts.
+
+#### Preconditions
+
+Live Figma snapshot and current canonical YAML.
+
+#### Procedure
+
+Ran npm.cmd run test:hud (generation freshness, independent Gate A/B, HUD contracts).
+
+#### Expected Result
+
+Correct parity; no scale cap; symmetric fit; valid containment; YAML handedness/dock contracts.
+
+#### Actual Result
+
+26 YAML files / 45 SVG assets current; Gate A and B PASS; HUD contracts PASS including host/provider intersection, orientation override/square, keyboard axes and dock attachment.
+
+#### Evidence
+
+Exact runner output: UI specification PASS; Gate A PASS; Gate B PASS; HUD contracts PASS.
+
+#### Failures / Observations
+
+Existing Node MODULE_TYPELESS_PACKAGE_JSON warning remains; scanner exception explicitly reported.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-001; TEST-2026-09-14-014
+
+#### Disposition
+
+Authority and module gates pass with documented exception.
+
+---
+
+### TEST-2026-09-14-016 — Final visibility-aware browser regression
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T3
+
+**Result:** PASS
+
+#### Scope
+
+AppShell geometry, dock and preference integration
+
+#### Files Under Validation
+
+scripts/hud-browser-test.mjs; hud-harness.jsx; hud-fixtures.jsx; AppShell/HudShell/HudDock/SettingsScreen
+
+#### Objective
+
+Verify current corrective implementation across the required matrix.
+
+#### Preconditions
+
+Actual RN Web components, installed browser, platform/service doubles; corrected loading measurement.
+
+#### Procedure
+
+Ran npm.cmd run test:hud:browser to completion after -012/-013 fixes.
+
+#### Expected Result
+
+All geometry, visibility, interaction and preservation assertions pass.
+
+#### Actual Result
+
+Suite passed: actual host-size fitting; 8-unit border; required phones and wider matrix; full title; assembled opening/closing with pinned handle and stable nodes; disabled landscape Left and preserved portrait preference; Log/Settings scrolling, Graph/Search, thumbnails, drafts/actions and reduced motion.
+
+#### Evidence
+
+HUD browser T2 PASS; .tmp/hud-qa/task007-geometry.json, dock-motion-true.json, dock-motion-false.json, motion-samples.json and screenshots.
+
+#### Failures / Observations
+
+Browser doubles do not establish physical-phone safe areas, keyboard resizing or native visual motion quality.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-005; TEST-2026-09-14-012; TEST-2026-09-14-013
+
+#### Disposition
+
+Browser regression passes. Native acceptance remains separate.
+
+---
+
+### TEST-2026-09-14-017 — Native settled fit and screenshot remeasurement
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** PASS
+
+#### Scope
+
+Emulator safe-relative centering
+
+#### Files Under Validation
+
+useHudFit.ts; hudBehavior.ts; scripts/fixtures/task007-native-fit.json
+
+#### Objective
+
+Measure settled emulator border clearances and symmetric remainder in both orientations.
+
+#### Preconditions
+
+Current Metro bundle; Pixel_9_Pro_XL Android 17 API 37; ratio 3.
+
+#### Procedure
+
+Captured screen/window/host/provider/fit traces and screenshots, scanned straight border pixels against #2A5A6E, cross-checked native bounds; compared before/after continuation.
+
+#### Expected Result
+
+Remainder split equally, largest uniform fit, border 8 logical units, only intentional safe asymmetry.
+
+#### Actual Result
+
+Before and after portrait L/R/T/B=58/58/183/96 px; landscape=392/233/180/96. After subtracting measured safe areas portrait L/R=58/58,T/B=24/24; landscape L/R=233/233,T/B=24/24. Scales 1.090442314 and 0.953846154.
+
+#### Evidence
+
+scripts/fixtures/task007-native-fit.json; .tmp/hud-native/continuation-portrait.png, continuation-landscape.png and XML; report contains full table.
+
+#### Failures / Observations
+
+Emulator old/new fits are essentially equal because host equals window. This does not explain or fix-prove Motorola's 97 px difference. Trace includes transient asynchronous rotation states; only settled states accepted.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-009; TEST-2026-09-14-011; TEST-2026-09-14-015
+
+#### Disposition
+
+Emulator centering passes within safe-area tolerance; physical acceptance remains -019.
+
+---
+
+### TEST-2026-09-14-018 — Native handedness round-trip and dock endpoint
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T2
+
+**Result:** PASS
+
+#### Scope
+
+Native YAML semantics and assembled dock endpoint
+
+#### Files Under Validation
+
+HudDock.tsx; AppShell.tsx; SettingsScreen.tsx; primitives.tsx; mobile handedness/transition YAML
+
+#### Objective
+
+Verify native preference preservation and handle-to-dock attachment.
+
+#### Preconditions
+
+Current debug bundle; existing right-handed emulator preference.
+
+#### Procedure
+
+Opened landscape dock, measured endpoints; opened Settings; rotated portrait, selected Left, rotated landscape, pressed Right, rotated portrait; restored original Right and test settings.
+
+#### Expected Result
+
+Left visibly disabled in landscape, saved portrait Left restored, handle touches dock top.
+
+#### Actual Result
+
+Landscape Left native button enabled=false and visibly dim; Active:right. Returning portrait showed Active:left with enabled Left and left-side rail. Expanded handle [1224,811-1445,890] meets dock/bezel top 890 px.
+
+#### Evidence
+
+.tmp/hud-native/continuation-dock-open.png/.xml; continuation-left-pref-landscape.png/.xml; continuation-left-pref-restored.png/.xml.
+
+#### Failures / Observations
+
+This checks native endpoints and preference, not frame-by-frame Motorola animation perception. No archive entries were created or deleted.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-016; TEST-2026-09-14-017
+
+#### Disposition
+
+Native bounded checks pass; physical motion review still required.
+
+---
+
+### TEST-2026-09-14-019 — TASK-007 physical completion gate
+
+**Date:** 2026-09-14
+
+**Time:** 13:44 America/New_York (recorded)
+
+**Tester:** Codex
+
+**Level:** T3
+
+**Result:** BLOCKED
+
+#### Scope
+
+Physical corrective acceptance
+
+#### Files Under Validation
+
+useHudFit.ts; HudDock.tsx; TASK-007 report
+
+#### Objective
+
+Establish Motorola root cause and verify corrected portrait/landscape behavior on that phone.
+
+#### Preconditions
+
+Current working-tree build on connected Motorola; user visual review.
+
+#### Procedure
+
+Prepared geometry diagnostics and report; checked available device context. Required physical after-captures cannot be taken without the phone.
+
+#### Expected Result
+
+Measured phone root cause and after-fit pass, assembled native dock accepted, keyboard/window behavior verified.
+
+#### Actual Result
+
+Exact Motorola centering cause and after-measurements remain unavailable. Docked IME resize verification also remains incomplete.
+
+#### Evidence
+
+DEV-2026-09-14-002; scripts/fixtures/task007-native-fit.json explicitly marks physicalMotorolaVerified=false; full report.
+
+#### Failures / Observations
+
+No closure, no commit, no assertion that emulator PASS clears the user's failure.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-001; DEV-2026-09-14-002; DEV-2026-09-14-003; DEV-2026-09-14-004
+
+#### Related Tests
+
+TEST-2026-09-14-010; TEST-2026-09-14-011; TEST-2026-09-14-017; TEST-2026-09-14-018
+
+#### Disposition
+
+Keep TASK-007 OPEN. Owner: user/maintainer supplies connected phone; Codex collects current traces and completes bounded diagnosis. Commit requires explicit user authorization.
+
+
+---
+
+### TEST-2026-09-14-020 — Full-window pre-code classification inspection
+
+**Date:** 2026-09-14
+
+**Time:** 13:50 America/New_York
+
+**Tester:** Codex
+
+**Level:** T0
+
+**Result:** STATIC_ONLY
+
+#### Scope
+
+TASK-007 full-window replacement model
+
+#### Files Under Validation
+
+docs/TASK-007_FULL_WINDOW_LAYOUT_2026-09-14.md; mobile portrait/landscape YAML; scripts/fixtures/task007-figma.json
+
+#### Objective
+
+Compare major region reference bounds with existing independent Figma capture and state the replacement classifications.
+
+#### Preconditions
+
+User corrective direction supersedes global fitting; Figma reference capture available.
+
+#### Procedure
+
+Read portrait/landscape YAML, the independent Figma fixture and runtime composition; documented tables and identified fixed-width/short-rail conflicts before any replacement code changes.
+
+#### Expected Result
+
+Explicit region classifications expose constraints before implementation.
+
+#### Actual Result
+
+Both orientations have a bounds/class/fixed-dimension/anchor/stretch/safe-area table. Whole-artboard fit is explicitly superseded. Narrow/short-window policy is not yet settled.
+
+#### Evidence
+
+Classification report; DEV-2026-09-14-005; source-file inspection in this session.
+
+#### Failures / Observations
+
+Fixed portrait dock/header and short rails need a declared policy; no global scaling fallback is permitted.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-005; DEV-2026-09-14-002
+
+#### Related Tests
+
+TEST-2026-09-14-015; TEST-2026-09-14-016; TEST-2026-09-14-017; TEST-2026-09-14-019
+
+#### Disposition
+
+Classification is reviewable; do not infer runtime correctness or begin replacement before the listed policy is clear.
+
+### TEST-2026-09-14-021 — Full-window physical acceptance
+
+**Date:** 2026-09-14
+
+**Time:** 13:50 America/New_York
+
+**Tester:** Codex
+
+**Level:** T3
+
+**Result:** NOT_EXECUTED
+
+#### Scope
+
+TASK-007 full-window replacement model
+
+#### Files Under Validation
+
+docs/TASK-007_FULL_WINDOW_LAYOUT_2026-09-14.md; mobile portrait/landscape YAML; scripts/fixtures/task007-figma.json
+
+#### Objective
+
+Verify full-window portrait/landscape rendering on the physical phone under the replacement model.
+
+#### Preconditions
+
+User corrective direction supersedes global fitting; Figma reference capture available.
+
+#### Procedure
+
+Identified required tests; no replacement implementation or connected Motorola is available at this classification stage.
+
+#### Expected Result
+
+Physical phone canvas fills window, fixed controls retain size, flexible regions consume remainder, no global aspect-ratio fit.
+
+#### Actual Result
+
+No new-model native acceptance executed. Earlier uniform-fit PASS entries test the superseded model and cannot satisfy this objective.
+
+#### Evidence
+
+Classification report; DEV-2026-09-14-005; source-file inspection in this session.
+
+#### Failures / Observations
+
+Fixed portrait dock/header and short rails need a declared policy; no global scaling fallback is permitted.
+
+#### Related DEVNOTES
+
+DEV-2026-09-14-005; DEV-2026-09-14-002
+
+#### Related Tests
+
+TEST-2026-09-14-015; TEST-2026-09-14-016; TEST-2026-09-14-017; TEST-2026-09-14-019
+
+#### Disposition
+
+TASK-007 remains OPEN. Settle classification, implement, then capture physical-phone results; no commit.

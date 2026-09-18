@@ -27,6 +27,7 @@ import { colors, fonts } from '@/theme/tokens';
 import { formatTelemetryTime } from '@/utilities/time';
 import { ClippedPanel, CommandButton, TelemetryLabel } from '@/ui/components/primitives';
 import { useChrome } from '@/ui/state/ChromeContext';
+import { useHudLayout } from '@/ui/layout/HudLayoutContext';
 
 /*
  * Purpose: Minimum MVP settings: handedness, backup, permissions, and account.
@@ -37,6 +38,8 @@ import { useChrome } from '@/ui/state/ChromeContext';
 export function SettingsScreen() {
   const services = useRequiredAppServices();
   const chrome = useChrome();
+  const { layout } = useHudLayout();
+  const leftSupported = (layout.handedness.supported as readonly string[]).includes('left');
   const [account, setAccount] = useState<AuthAccount | null>(null);
   const [backup, setBackup] = useState<BackupStatus | null>(null);
   const [snapshots, setSnapshots] = useState<BackupSnapshot[]>([]);
@@ -83,6 +86,8 @@ export function SettingsScreen() {
    * Data Handoff: AppSettings via SettingsService; handedness via ChromeContext.
    */
   async function setHand(handedness: Handedness) {
+    // Landscape is canonical right; it must never rewrite the portrait preference.
+    if (layout.handedness.preference === 'preserve_portrait') return;
     await services.settings.setHandedness(handedness);
     chrome.setHandedness(handedness);
   }
@@ -93,10 +98,10 @@ export function SettingsScreen() {
       <ClippedPanel>
         <Text style={styles.section}>HANDEDNESS</Text>
         <View style={styles.row}>
-          <CommandButton label="Left" onPress={() => void setHand('left')} />
+          <CommandButton label="Left" disabled={!leftSupported} onPress={() => void setHand('left')} />
           <CommandButton label="Right" onPress={() => void setHand('right')} />
         </View>
-        <Text style={styles.value}>Active: {chrome.handedness}</Text>
+        <Text style={styles.value}>Active: {leftSupported ? chrome.handedness : layout.handedness.canonical}</Text>
       </ClippedPanel>
 
       <ClippedPanel>

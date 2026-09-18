@@ -87,6 +87,8 @@ export function CommandButton({
 }) {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
@@ -95,7 +97,7 @@ export function CommandButton({
         pressed && styles.commandPressed,
         disabled && styles.commandDisabled,
       ]}>
-      <Text style={[styles.commandText, dominant && styles.commandTextDominant]}>{label}</Text>
+      <Text style={[styles.commandText, dominant && styles.commandTextDominant, disabled && { color: colors.textDim }]}>{label}</Text>
     </Pressable>
   );
 }

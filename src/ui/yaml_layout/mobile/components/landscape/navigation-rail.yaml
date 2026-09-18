@@ -1,0 +1,101 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+# Reference offsets are retained; runtime button positions come from fixed targets and bounded gaps.
+component:
+  id: navigation_rail
+  button:
+    width: 155
+    height: 55
+  assetBounds:
+    x: 0
+    y: 0
+    width: 155
+    height: 55
+  newAssetBounds:
+    x: 0
+    y: 0
+    width: 154
+    height: 55
+  spacing:
+    mode: bounded_gaps
+    origin: after_orientation_content_reservations
+    distribution: preserve_preferred_gaps_then_distribute_up_to_max
+    gap:
+      min: 0
+      preferred: 15
+      max: 19
+    trailing:
+      min: 0
+      preferred: 0
+      max: 0
+    extra_space: after_last_item
+    extra_space_may_exceed_trailing_max: true
+    trailing_max_role: reference_at_preferred_height
+    gap_max_role: hard_cap_on_inter_item_gaps
+    fewer_items: same_gap_policy
+    preferred_gaps:
+      - 15
+      - 15
+    preferred_gaps_role: per_interval
+    gap_preferred_role: fallback_when_interval_unspecified
+  shape: landscape-rail-button-base
+  newShape: landscape-rail-button-new
+  activeBounds:
+    x: 0
+    y: 0
+    width: 155
+    height: 55
+  label:
+    stacked: false
+    x: 0
+    y: 0
+    width: 155
+  labelBounds:
+    graph:
+      x: 30
+      y: 19
+      width: 96
+      height: 18
+    search:
+      x: 27
+      y: 19
+      width: 101
+      height: 18
+    new:
+      x: 35
+      y: 18
+      width: 85
+      height: 20
+  menu:
+    icon: landscape-menu-three-bars
+    iconBounds:
+      x: 0
+      y: 0
+      width: 77.5
+      height: 27.5
+    size:
+      width: 77.5
+      height: 27.5
+    sizing: fixed
+  reference_geometry:
+    item_offsets:
+      - 43
+      - 113
+      - 183
+  size:
+    width: 155
+    height: flexible
+  sizing: flexible_y
+  overflow:
+    axis: vertical
+    sequence:
+      - contract_gaps_to_min
+      - zero_gaps
+      - local_scroll
+    zero_gaps: gap.min_is_already_0
+    scroll_contents: buttons_only
+    pinned_parts:
+      - menu
+    keep_button_dimensions: true
+    keep_rail_width: true
+    minimum_visible_extent: 55
+    below_minimum: unsupported_size

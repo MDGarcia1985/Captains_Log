@@ -1,0 +1,40 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+component:
+  id: viewport
+  surface: panel
+  border: viewport-clipped-cyan-border
+  effects:
+    - panelInner
+    - panelOuter
+  content:
+    source: active_route
+    policy: symmetric_insets
+    insets:
+      left: 20
+      top: 22
+      right: 20
+      bottom: 22
+    overflow: clip
+    sizing: flexible_both
+    scrolling:
+      axis: vertical
+      owner: active_route
+  referenceOnly:
+    - viewport-tactical-dot-grid
+  classification: STRETCH_BOTH
+  classification_role: non_executable_alias_of_sizing
+  sizing: flexible_both
+  border_behavior:
+    sizing: flexible_both
+    resize: extend_straight_segments
+    preserve:
+      - corner_geometry
+      - stroke_width
+    scale_complete_asset: false
+  containment:
+    enforce_child_bounds: true
+    allow_content_overflow: false
+    decorative_export_overflow: clip_to_panel
+    minimum_content_extent: positive_after_insets
+    preserve_corner_geometry: true
+    corner_collision: unsupported_size

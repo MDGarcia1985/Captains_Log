@@ -1,0 +1,125 @@
+# TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
+# Only internal insets/assets/containment live here; all window/sibling placement is in orientation YAML.
+component:
+  id: viewport
+  border: landscape-viewport-clipped-cyan-border
+  accents:
+    - asset: landscape-viewport-accent-top-left
+      sizing: fixed
+      alignment:
+        horizontal: left
+        vertical: top
+      size:
+        width: 40
+        height: 20
+      insets:
+        left: 0
+        top: 0
+      export_envelope:
+        width: 40
+        height: 20
+        offset_from_shape:
+          x: 0
+          y: 0
+      rounding_tolerance: 0.001
+    - asset: landscape-viewport-accent-top-right
+      sizing: fixed
+      alignment:
+        horizontal: right
+        vertical: top
+      size:
+        width: 41.51565170288086
+        height: 23.543306350708008
+      insets:
+        right: 0
+        top: 1.177
+      export_envelope:
+        width: 41.515625
+        height: 25.325546264648438
+        offset_from_shape:
+          x: 0
+          y: -1.1771653890609741
+      rounding_tolerance: 0.001
+    - asset: landscape-viewport-accent-bottom-left
+      sizing: fixed
+      alignment:
+        horizontal: left
+        vertical: bottom
+      size:
+        width: 41.51565170288086
+        height: 23.543306350708008
+      insets:
+        left: 0
+        bottom: 0
+      export_envelope:
+        width: 41.515655517578125
+        height: 24.14837646484375
+        offset_from_shape:
+          x: 0
+          y: -0.605072021484375
+      rounding_tolerance: 0.001
+    - asset: landscape-viewport-accent-bottom-right
+      sizing: fixed
+      alignment:
+        horizontal: right
+        vertical: bottom
+      size:
+        width: 41.51565170288086
+        height: 23.543306350708008
+      insets:
+        right: 0
+        bottom: 0
+      export_envelope:
+        width: 41.515625
+        height: 23.543304443359375
+        offset_from_shape:
+          x: 0
+          y: 0
+      rounding_tolerance: 0.001
+  reference_geometry:
+    accents:
+      - asset: landscape-viewport-accent-top-left
+        x: 0
+        y: 0
+        width: 40
+        height: 20
+      - asset: landscape-viewport-accent-top-right
+        x: 588.484375
+        y: 1.1771653890609741
+        width: 41.51565170288086
+        height: 23.543306350708008
+      - asset: landscape-viewport-accent-bottom-left
+        x: 0
+        y: 275.4566955566406
+        width: 41.51565170288086
+        height: 23.543306350708008
+      - asset: landscape-viewport-accent-bottom-right
+        x: 588.484375
+        y: 275.4566955566406
+        width: 41.51565170288086
+        height: 23.543306350708008
+    accent_exports:
+      - x: 0
+        y: 0
+        width: 40
+        height: 20
+      - x: 588.484375
+        y: 0
+        width: 41.515625
+        height: 25.325546264648438
+      - x: 0
+        y: 274.85162353515625
+        width: 41.515655517578125
+        height: 24.14837646484375
+      - x: 588.484375
+        y: 275.4566955566406
+        width: 41.515625
+        height: 23.543304443359375
+    content:
+      x: 20
+      y: 22
+      width: 590
+      height: 255
+  classification: STRETCH_BOTH
+  classification_role: non_executable_alias_of_sizing
+  placement_owner: orientation

@@ -1,0 +1,425 @@
+{
+  "captured": "2026-09-14",
+  "device": "Pixel_9_Pro_XL emulator, Android 17 API 37, density 3",
+  "source": "HUD_FIT development console from current Metro working tree; includes asynchronous rotation handoffs before settled host measurement",
+  "physicalMotorolaVerified": false,
+  "traces": [
+    {
+      "layoutId": "mobile_landscape",
+      "screen": {
+        "width": 997.3333333333334,
+        "height": 448,
+        "scale": 3,
+        "fontScale": 1
+      },
+      "window": {
+        "width": 997.3333333333334,
+        "height": 448,
+        "scale": 3,
+        "fontScale": 1
+      },
+      "host": {
+        "x": 0,
+        "y": 0,
+        "width": 448,
+        "height": 997.3333129882812
+      },
+      "provider": {
+        "width": 448,
+        "y": 0,
+        "height": 997.3333129882812,
+        "x": 0
+      },
+      "safeAreaInsets": {
+        "left": 0,
+        "bottom": 24,
+        "right": 0,
+        "top": 53
+      },
+      "effectiveInsets": {
+        "left": 0,
+        "top": 53,
+        "right": 0,
+        "bottom": 24
+      },
+      "usable": {
+        "width": 448,
+        "height": 920.3333129882812
+      },
+      "reference": {
+        "width": 844,
+        "height": 390
+      },
+      "scale": 0.5308056872037915,
+      "fitted": {
+        "width": 448.00000000000006,
+        "height": 207.0142180094787
+      },
+      "remainingX": -5.684341886080802e-14,
+      "remainingY": 713.3190949788026,
+      "translation": {
+        "x": -2.842170943040401e-14,
+        "y": 356.6595474894013
+      },
+      "localBounds": {
+        "scale": 0.5308056872037915,
+        "x": -2.842170943040401e-14,
+        "y": 409.6595474894013,
+        "width": 448.00000000000006,
+        "height": 207.0142180094787
+      },
+      "finalBounds": {
+        "x": -2.842170943040401e-14,
+        "y": 409.6595474894013,
+        "width": 448.00000000000006,
+        "height": 207.0142180094787
+      },
+      "legacyWindowFit": {
+        "scale": 0.9512820512820512,
+        "x": 97.22564102564104,
+        "y": 53,
+        "width": 802.8820512820513,
+        "height": 371
+      }
+    },
+    {
+      "layoutId": "mobile_landscape",
+      "screen": {
+        "width": 997.3333333333334,
+        "height": 448,
+        "scale": 3,
+        "fontScale": 1
+      },
+      "window": {
+        "width": 997.3333333333334,
+        "height": 448,
+        "scale": 3,
+        "fontScale": 1
+      },
+      "host": {
+        "x": 0,
+        "y": 0,
+        "width": 997.3333129882812,
+        "height": 448
+      },
+      "provider": {
+        "width": 997.3333129882812,
+        "y": 0,
+        "height": 448,
+        "x": 0
+      },
+      "safeAreaInsets": {
+        "left": 53,
+        "bottom": 24,
+        "right": 0,
+        "top": 52
+      },
+      "effectiveInsets": {
+        "left": 53,
+        "top": 52,
+        "right": 0,
+        "bottom": 24
+      },
+      "usable": {
+        "width": 944.3333129882812,
+        "height": 372
+      },
+      "reference": {
+        "width": 844,
+        "height": 390
+      },
+      "scale": 0.9538461538461539,
+      "fitted": {
+        "width": 805.0461538461539,
+        "height": 372
+      },
+      "remainingX": 139.2871591421274,
+      "remainingY": 0,
+      "translation": {
+        "x": 69.6435795710637,
+        "y": 0
+      },
+      "localBounds": {
+        "scale": 0.9538461538461539,
+        "x": 122.6435795710637,
+        "y": 52,
+        "width": 805.0461538461539,
+        "height": 372
+      },
+      "finalBounds": {
+        "x": 122.6435795710637,
+        "y": 52,
+        "width": 805.0461538461539,
+        "height": 372
+      },
+      "legacyWindowFit": {
+        "scale": 0.9538461538461539,
+        "x": 122.64358974358976,
+        "y": 52,
+        "width": 805.0461538461539,
+        "height": 372
+      }
+    },
+    {
+      "layoutId": "mobile_portrait",
+      "screen": {
+        "width": 448,
+        "height": 997.3333333333334,
+        "scale": 3,
+        "fontScale": 1
+      },
+      "window": {
+        "width": 448,
+        "height": 997.3333333333334,
+        "scale": 3,
+        "fontScale": 1
+      },
+      "host": {
+        "x": 0,
+        "y": 0,
+        "width": 997.3333129882812,
+        "height": 448
+      },
+      "provider": {
+        "width": 997.3333129882812,
+        "y": 0,
+        "height": 448,
+        "x": 0
+      },
+      "safeAreaInsets": {
+        "left": 53,
+        "bottom": 24,
+        "right": 0,
+        "top": 52
+      },
+      "effectiveInsets": {
+        "left": 53,
+        "top": 52,
+        "right": 0,
+        "bottom": 24
+      },
+      "usable": {
+        "width": 944.3333129882812,
+        "height": 372
+      },
+      "reference": {
+        "width": 390,
+        "height": 844
+      },
+      "scale": 0.44075829383886256,
+      "fitted": {
+        "width": 171.8957345971564,
+        "height": 372
+      },
+      "remainingX": 772.4375783911248,
+      "remainingY": 0,
+      "translation": {
+        "x": 386.2187891955624,
+        "y": 0
+      },
+      "localBounds": {
+        "scale": 0.44075829383886256,
+        "x": 439.2187891955624,
+        "y": 52,
+        "width": 171.8957345971564,
+        "height": 372
+      },
+      "finalBounds": {
+        "x": 439.2187891955624,
+        "y": 52,
+        "width": 171.8957345971564,
+        "height": 372
+      },
+      "legacyWindowFit": {
+        "scale": 1.0128205128205128,
+        "x": 53,
+        "y": 85.25641025641028,
+        "width": 395,
+        "height": 854.8205128205128
+      }
+    },
+    {
+      "layoutId": "mobile_portrait",
+      "screen": {
+        "width": 448,
+        "height": 997.3333333333334,
+        "scale": 3,
+        "fontScale": 1
+      },
+      "window": {
+        "width": 448,
+        "height": 997.3333333333334,
+        "scale": 3,
+        "fontScale": 1
+      },
+      "host": {
+        "x": 0,
+        "y": 0,
+        "width": 448,
+        "height": 997.3333129882812
+      },
+      "provider": {
+        "width": 448,
+        "y": 0,
+        "height": 997.3333129882812,
+        "x": 0
+      },
+      "safeAreaInsets": {
+        "left": 0,
+        "bottom": 24,
+        "right": 0,
+        "top": 53
+      },
+      "effectiveInsets": {
+        "left": 0,
+        "top": 53,
+        "right": 0,
+        "bottom": 24
+      },
+      "usable": {
+        "width": 448,
+        "height": 920.3333129882812
+      },
+      "reference": {
+        "width": 390,
+        "height": 844
+      },
+      "scale": 1.090442313967158,
+      "fitted": {
+        "width": 425.2725024471916,
+        "height": 920.3333129882814
+      },
+      "remainingX": 22.727497552808416,
+      "remainingY": -1.1368683772161603e-13,
+      "translation": {
+        "x": 11.363748776404208,
+        "y": -5.684341886080802e-14
+      },
+      "localBounds": {
+        "scale": 1.090442313967158,
+        "x": 11.363748776404208,
+        "y": 52.99999999999994,
+        "width": 425.2725024471916,
+        "height": 920.3333129882814
+      },
+      "finalBounds": {
+        "x": 11.363748776404208,
+        "y": 52.99999999999994,
+        "width": 425.2725024471916,
+        "height": 920.3333129882814
+      },
+      "legacyWindowFit": {
+        "scale": 1.0904423380726698,
+        "x": 11.363744075829402,
+        "y": 53.00000000000006,
+        "width": 425.2725118483412,
+        "height": 920.3333333333333
+      }
+    }
+  ],
+  "screenshotMeasurements": {
+    "method": "Border RGB #2A5A6E +/-3/channel at quarter/center straight segments, edge ROI from native bounds; inclusive pixels. Some prior keyboard pixels obscure edges.",
+    "captures": [
+      {
+        "capture": "portrait-before-keyboard",
+        "screenshot": [
+          1344,
+          2992
+        ],
+        "nativeBorderBounds": [
+          58,
+          183,
+          1286,
+          2896
+        ],
+        "pixelEdgeExtents": [
+          58,
+          183,
+          1285,
+          2895
+        ],
+        "clearancesLTRB": [
+          58,
+          183,
+          58,
+          96
+        ]
+      },
+      {
+        "capture": "landscape",
+        "screenshot": [
+          2992,
+          1344
+        ],
+        "nativeBorderBounds": [
+          392,
+          180,
+          2759,
+          1248
+        ],
+        "pixelEdgeExtents": [
+          392,
+          180,
+          2758,
+          1247
+        ],
+        "clearancesLTRB": [
+          392,
+          180,
+          233,
+          96
+        ]
+      },
+      {
+        "capture": "continuation-portrait",
+        "screenshot": [
+          1344,
+          2992
+        ],
+        "nativeBorderBounds": [
+          58,
+          183,
+          1286,
+          2896
+        ],
+        "pixelEdgeExtents": [
+          58,
+          183,
+          1285,
+          2895
+        ],
+        "clearancesLTRB": [
+          58,
+          183,
+          58,
+          96
+        ]
+      },
+      {
+        "capture": "continuation-landscape",
+        "screenshot": [
+          2992,
+          1344
+        ],
+        "nativeBorderBounds": [
+          392,
+          180,
+          2759,
+          1248
+        ],
+        "pixelEdgeExtents": [
+          392,
+          180,
+          2758,
+          1247
+        ],
+        "clearancesLTRB": [
+          392,
+          180,
+          233,
+          96
+        ]
+      }
+    ]
+  }
+}

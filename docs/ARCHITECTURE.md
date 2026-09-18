@@ -66,6 +66,14 @@ Google Drive is backup storage only. Derived entities and relationships are rege
 
 ## Responsive Shell
 
+> **TASK-007 corrective direction (DEV-2026-09-14-005):** the uniform-artboard fit
+> described below is the current transitional implementation, now superseded as the
+> intended model. The required replacement uses a full-window canvas, an 8-unit border
+> at actual window edges, fixed/anchored controls and flexible content regions.
+> Reference frame aspect ratios must not constrain runtime layout. Implementation
+> awaits the explicit narrow/short-window policies in
+> [the region classification](TASK-007_FULL_WINDOW_LAYOUT_2026-09-14.md).
+
 `AppShell` selects the generated mobile portrait or landscape YAML once and shares
 that layout and its capabilities with the HUD and route screens. Width thresholds
 never replace this shell with another UI. Tablet YAML remains unsupported; larger
@@ -73,21 +81,38 @@ viewports use the corresponding mobile composition until a tablet design exists.
 
 Native orientation follows `Dimensions.get('screen')`, subscribed to dimension
 changes, so an Android keyboard shrinking the window cannot select landscape.
-Web orientation follows window axes. Available window dimensions and safe-area
-insets determine fitting separately from orientation selection.
+Web orientation follows window axes. The measured HUD host is intersected with the
+safe-area provider rectangle in window coordinates to determine fitting separately
+from orientation selection. Insets already consumed by a parent are not applied twice.
+The loading root also registers measurement, so React Native Web observes it at mount.
+Development-only `HUD_FIT` traces record the entire coordinate handoff and the legacy
+window-based result for comparison on a connected phone; they contain no entry content.
 
-The artboard retains its YAML coordinates at scale 1 whenever it fits. Smaller
-windows shrink it uniformly. Unused space becomes centered background padding on
-all sides; artboard regions are neither rearranged nor independently resized to fit
-the window. Portrait handedness offsets are declared in portrait YAML. Landscape
-handedness remains unchanged until designed.
+The authorized artboard scales uniformly up or down to contain it in the usable safe
+area. Aspect mismatch creates centered letterboxing only on the unfilled axis. The
+outer border is drawn outside the artboard transform, 8 logical units inside the
+fitted frame; there is no additional artboard margin. YAML declares the override,
+square (default landscape), orientation-source and fitting policies. Parent regions,
+artwork, export/glow envelopes, content rectangles and interaction targets remain
+distinct. Portrait handedness offsets are declared in portrait YAML. Landscape YAML
+supports only canonical right-handed geometry. Settings shows a disabled, dim Left
+option and does not write the portrait preference; rotation back restores that preference.
+
+Landscape dock assets remain mounted and finish loading before expansion. One parent
+translation moves the dock and its attached handle together, using YAML's 240 ms
+cubic-out transition (immediate with reduced motion). Figma defines the expanded dock
+and collapsed handle rectangles; YAML attaches the expanded handle above the bezel.
+The collapsed handle bottom defines the reveal clip. Geometry and preference regression
+checks cover both directions and rotation during the dock's lifecycle.
 
 Screen capabilities in `mobile.yaml` determine shell commands, entity navigation,
 autofocus, and return-home behavior after capture. Rotation keeps the same shell and
 route subtree mounted, preserving drafts. `scripts/hud-browser-test.mjs` mounts
 `AppShell` and verifies geometry, old breakpoint boundaries, buffers, safe areas,
-state preservation, and navigation. See DEV-2026-09-13-001 and
-TEST-2026-09-13-001 through TEST-2026-09-13-006 for evidence and native test limits.
+state preservation, and navigation. TASK-007 authority checks compare an independent
+live Figma snapshot to canonical YAML/assets before comparing YAML to generated data.
+The generator rejects content outside its panel before writing output. Figma owns
+appearance; YAML owns meaning. See DEV-2026-09-14-001 and subsequent TASK-007 test records.
 
 ## Authentication
 
