@@ -1,17 +1,16 @@
 /*
  * File: HudLayoutContext.tsx
- * Purpose: Provide the active mobile orientation specification to HUD layers.
+ * Purpose: Provide the active mobile orientation specification and resolved HUD regions.
  * Author: Codex; Contact: michael@mandedesign.studio
  * License: SPDX-License-Identifier: MPL-2.0
- * Related Decisions: DEV-2026-09-12-001
+ * Related Decisions: DEV-2026-09-12-001; DEV-2026-09-14-005
  */
 import { createContext, useContext, type ReactNode } from 'react';
 import { uiSpec } from '@/ui/generated/uiSpec';
-import type { HudOrientation } from '@/ui/layout/hudBehavior';
+import type { HudHand, HudOrientation } from '@/ui/ts_layout/hudBehavior';
+import type { Rect, ResolveResult } from '@/ui/ts_layout/resolveHudLayout';
 
-// Handedness overlays replace numeric coordinates while retaining layout identity.
-type NumericGeometry<T> = T extends number ? number : T extends object ? { [K in keyof T]: NumericGeometry<T[K]> } : T;
-type MobileLayout = NumericGeometry<typeof uiSpec.layouts.mobile.portrait | typeof uiSpec.layouts.mobile.landscape>;
+type MobileLayout = typeof uiSpec.layouts.mobile.portrait | typeof uiSpec.layouts.mobile.landscape;
 
 export interface HudLayoutValue {
   orientation: HudOrientation;
@@ -19,6 +18,11 @@ export interface HudLayoutValue {
   width: number;
   height: number;
   capabilities: typeof uiSpec.layouts.mobile.capabilities;
+  handedness: HudHand;
+  regions: Record<string, Rect>;
+  overflow: ResolveResult['overflow'];
+  expandedDock: ResolveResult['expandedDock'];
+  resolveStatus: ResolveResult['status'] | 'pending';
 }
 
 const HudLayoutContext = createContext<HudLayoutValue | null>(null);
@@ -29,9 +33,9 @@ export function HudLayoutProvider({ value, children }: { value: HudLayoutValue; 
 
 /* Purpose: Read the orientation-selected layout from AppShell.
  * Design: Fail closed if artwork is rendered outside the shell.
- * Workflow: Scanner and title layers. 
- * Data Handoff: Active layout. 
- * */
+ * Workflow: Scanner, title, dock, and route screens.
+ * Data Handoff: Active YAML layout plus resolved window regions.
+ */
 export function useHudLayout() {
   const value = useContext(HudLayoutContext);
   if (!value) throw new Error('HudLayoutProvider is required');

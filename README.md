@@ -8,7 +8,7 @@ Read these before changing product behavior or architecture:
 
 - [`docs/captains-log.yaml`](docs/captains-log.yaml) — product and behavior specification
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — implemented system architecture
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — MVP implementation order and scope
+- [`docs/planning/ROADMAP.md`](docs/planning/ROADMAP.md) — MVP implementation order and scope
 - [`docs/DEVNOTES.md`](docs/DEVNOTES.md) — engineering decisions
 - [`docs/TEST_LOG.md`](docs/TEST_LOG.md) — verification record
 - [`docs/DEVNOTES_STANDARDS.md`](docs/DEVNOTES_STANDARDS.md), [`docs/ANNOTATION_STANDARDS.md`](docs/ANNOTATION_STANDARDS.md), [`docs/TEST_LOG_STANDARDS.md`](docs/TEST_LOG_STANDARDS.md) — documentation standards
@@ -40,6 +40,9 @@ Google sign-in and Drive backup need the OAuth client ID for the **current platf
 npx tsc --noEmit
 npx expo lint
 node --experimental-strip-types scripts/node-smoke.ts
+npm run test:ui-yaml
+npm run test:hud-resolve
+npm run test:hud
 ```
 
 Record results in `docs/TEST_LOG.md` per `docs/TEST_LOG_STANDARDS.md`.

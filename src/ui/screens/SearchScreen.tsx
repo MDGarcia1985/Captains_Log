@@ -18,7 +18,7 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { useHudLayout } from '@/ui/layout/HudLayoutContext';
+import { useHudLayout } from '@/ui/ts_layout/HudLayoutContext';
 import type { Entity, SearchHit } from '@/models/types';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';

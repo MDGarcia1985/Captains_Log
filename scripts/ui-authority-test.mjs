@@ -1,19 +1,25 @@
-/* File: ui-authority-test.mjs
+/*
+ * File: ui-authority-test.mjs
  * Purpose: Independently compare captured Figma to YAML/assets (A), then generated parity (B).
  * Author: Codex; Contact: michael@mandedesign.studio; SPDX-License-Identifier: MPL-2.0
- * Decision: TASK-007 / DEV-2026-09-14-001. Never derive the Figma oracle from generated data. */
+ * Decision: TASK-007 / DEV-2026-09-14-005. Never derive the Figma oracle from generated data.
+ */
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { parse } from 'yaml';
 import { validateChildBounds } from './ui-geometry-validation.mjs';
+
 const source = JSON.parse(fs.readFileSync('scripts/fixtures/task007-figma.json', 'utf8'));
-const base = 'src/ui/layouts/mobile/';
-const read = path => parse(fs.readFileSync(base + path, 'utf8'));
+const base = 'src/ui/yaml_layout/mobile/';
+const read = relative => parse(fs.readFileSync(base + relative, 'utf8'));
 const family = read('mobile.yaml').family;
-const shared = Object.fromEntries(Object.entries(family.components.shared).map(([id, path]) => [id, read(path).component]));
+const shared = Object.fromEntries(Object.entries(family.components.shared).map(([id, yamlPath]) => [id, read(yamlPath).component]));
 function merge(a, b) {
+  if (b === undefined) return a;
+  if (Array.isArray(b) || b === null || typeof b !== 'object') return b;
+  if (a === null || typeof a !== 'object' || Array.isArray(a)) return { ...b };
   const out = { ...a };
-  for (const [k, v] of Object.entries(b)) out[k] = v && typeof v === 'object' && !Array.isArray(v) ? merge(a?.[k], v) : v;
+  for (const [k, v] of Object.entries(b)) out[k] = merge(a?.[k], v);
   return out;
 }
 function close(actual, expected, label) {
@@ -22,7 +28,6 @@ function close(actual, expected, label) {
 }
 const rect = b => [b.x, b.y, b.width, b.height];
 function svg(asset) { return fs.readFileSync(`assets/hud/${asset}.svg`, 'utf8'); }
-// Normalize the M/L/H/V/Z subset used by audited paths to absolute vertices.
 function vertices(d) {
   const tokens = d.match(/[MLHVZ]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi); const points = []; let x = 0, y = 0;
   while (tokens.length) {
@@ -39,24 +44,24 @@ function pathMatches(asset, node, index = 0) {
   const paths = [...svg(asset).matchAll(/<path\b[^>]*\bd="([^"]+)"/g)];
   close(vertices(paths[index][1]), vertices(node.paths[0].data), `${asset} path ${node.id}`);
 }
+
 const layouts = {}, overlays = {};
 for (const o of ['portrait', 'landscape']) {
   const nodes = Object.fromEntries(source[o].map(n => [n.id, n]));
   const layout = layouts[o] = read(`${o}.yaml`).layout;
-  overlays[o] = Object.fromEntries(Object.entries(family.components[o]).map(([id, path]) => [id, read(path).component]));
+  overlays[o] = Object.fromEntries(Object.entries(family.components[o]).map(([id, yamlPath]) => [id, read(yamlPath).component]));
   const c = merge(shared, overlays[o]);
   close([layout.reference_viewport.width, layout.reference_viewport.height], source[o][0].b.slice(2), `${o} artboard`);
-  for (const [id, region] of Object.entries(layout.regions)) {
-    const n = source[o].find(n => n.name === id);
+  for (const [id, region] of Object.entries(layout.reference_regions)) {
+    const n = source[o].find(node => node.name === id);
     assert(n, `Missing independently captured Figma node for ${id}`);
-    if (o === 'portrait' && id === 'scanner' && region.x === 310 && region.y === 26) {
-      assert.equal(region.visual_exception, 'DEV-2026-09-12-001', 'Scanner exception must be explicit');
-      close(rect(region), [310, 26, 60, 82], 'accepted scanner exception');
-    } else close(rect(region), n.b, `${o}.${id}`);
+    close(rect(region), n.b, `${o}.${id}`);
   }
-  close(rect(layout.chrome.border), nodes[o === 'portrait' ? '2:27' : '96:115'].b, `${o} reference border`);
+  if (o === 'portrait') close(rect(layout.reference_regions.scanner), [315, 28, 60, 82], 'figma scanner');
+  close(rect(layout.reference_chrome.border), nodes[o === 'portrait' ? '2:27' : '96:115'].b, `${o} reference border`);
   close(rect(c.title_block.title), nodes[o === 'portrait' ? '3:28' : '96:41'].local, `${o} heading box`);
-  close(rect(c.action_dock.bezelBounds), o === 'portrait' ? [0, 0, 350, 96] : nodes['96:83'].local, `${o} dock bezel`);
+  const bezel = c.action_dock.reference_geometry?.bezel_bounds ?? { x: 0, y: 0, width: c.action_dock.bezel_layout.width, height: c.action_dock.bezel_layout.height };
+  close([bezel.x ?? 0, bezel.y ?? 0, bezel.width, bezel.height], o === 'portrait' ? [0, 0, 350, 96] : nodes['96:83'].local, `${o} dock bezel`);
   assert.equal(c.status_header.bezelVisible, o === 'portrait');
   if (o === 'landscape') assert(!nodes['96:10'].children.includes('96:11'), 'Landscape status bezel reappeared in Figma');
   const menuId = o === 'portrait' ? '88:7' : '96:121';
@@ -79,12 +84,14 @@ for (const o of ['portrait', 'landscape']) {
     pathMatches(c.title_block.divider.asset, nodes['96:45'], 1);
     assert(svg(c.title_block.divider.asset).includes('translate(0 3)'));
     assert(svg(c.title_block.divider.asset).includes('translate(0 15)'));
-    ['96:54', '96:56', '96:58', '96:60'].forEach((id, i) => {
-      const n = nodes[id], panel = layout.regions.viewport;
-      close(rect(c.viewport.accents[i]), [n.b[0] - panel.x, n.b[1] - panel.y, ...n.b.slice(2)], `visible accent ${id}`);
-      close(rect(c.viewport.accentExports[i]), [n.render[0] - panel.x, n.render[1] - panel.y, ...n.render.slice(2)], `render accent ${id}`);
-      pathMatches(c.viewport.accents[i].asset, n);
+    const panel = layout.reference_regions.viewport;
+    c.viewport.reference_geometry.accents.forEach((accent, i) => {
+      const id = ['96:54', '96:56', '96:58', '96:60'][i];
+      const n = nodes[id];
+      close(rect(accent), [n.b[0] - panel.x, n.b[1] - panel.y, ...n.b.slice(2)], `visible accent ${id}`);
+      pathMatches(accent.asset, n);
     });
+    assert.equal(c.action_dock.expanded_assembly.height, 123.5);
   }
 }
 close(rect(shared.scanner.core.visibleBounds), source.portrait.find(n => n.id === '3:18').local, 'core geometry');
@@ -93,12 +100,14 @@ close(rect(shared.scanner.core.exportBounds), [core.render[0] - scanner.b[0], co
 assert.throws(() => validateChildBounds({ width: 630, height: 299 }, { x: 20, y: 22, width: 630, height: 299 }, 'invalid content'), /outside parent/);
 validateChildBounds({ width: 630, height: 299 }, { x: 20, y: 22, width: 590, height: 255 }, 'valid content');
 validateChildBounds({ width: 13, height: 13 }, { x: -8, y: -8, width: 29, height: 29, overflow: 'export' }, 'explicit glow');
-console.log('Gate A PASS: independent live Figma snapshot vs canonical YAML and corrected SVG paths; explicit scanner exception; invalid containment rejected.');
+console.log('Gate A PASS: independent live Figma snapshot vs canonical YAML; Figma scanner 315,28; schema 3 reference_regions.');
 if (process.argv.includes('--generated')) {
   const { uiSpec } = await import('../src/ui/generated/uiSpec.ts');
   assert.deepEqual(uiSpec.components, shared);
   assert.deepEqual(uiSpec.orientationComponents, overlays);
   for (const o of ['portrait', 'landscape']) assert.deepEqual(uiSpec.layouts.mobile[o], layouts[o]);
-  for (const key of ['selection', 'fitting', 'capabilities', 'orientations']) assert.deepEqual(uiSpec.layouts.mobile[key], family[key]);
-  console.log('Gate B PASS: independently parsed YAML components, layouts, selection, fitting, capabilities equal generated values.');
+  assert.equal(uiSpec.layouts.mobile.schema_version, 3);
+  assert.equal(uiSpec.layouts.mobile.fitting, undefined);
+  for (const key of ['selection', 'capabilities', 'orientations']) assert.deepEqual(uiSpec.layouts.mobile[key], family[key]);
+  console.log('Gate B PASS: independently parsed YAML equals generated schema 3 values.');
 }

@@ -8,6 +8,7 @@
 export const SCANNER_ROTATION_MS = 10_000;
 export type HudView = 'home' | 'capture' | 'search' | 'graph' | 'settings' | 'detail';
 export type HudOrientation = 'portrait' | 'landscape';
+export type HudHand = 'left' | 'right';
 export const hudRoutes = { new: '/capture', search: '/search', graph: '/graph', settings: '/settings', home: '/' } as const;
 /* Purpose: Choose HUD context. Home and /log are the same chronological log.
  * Design: Pure route mapping. /log is retained as an alias, not a rail destination.
@@ -31,14 +32,29 @@ type Size = { width: number; height: number };
 type Insets = { top: number; right: number; bottom: number; left: number };
 type Rect = Size & { x: number; y: number };
 
-// Intersect the actual HUD host with the provider's safe rectangle in window coordinates.
-export function hudUsableInsets(host: Rect, provider: Rect, insets: Insets): Insets {
+// Intersect in PROVIDER-LOCAL coordinates. measureInWindow() and useSafeAreaFrame()
+// do not share an origin on Android: RN can subtract status-bar/cutout offsets.
+// Require the host's parent-layout origin explicitly; never infer it from window x/y.
+// AppShell's host is a direct native child of the root SafeAreaProvider.
+export function hudUsableInsets(host: Size, provider: Size, insets: Insets, hostOrigin: { x: number; y: number }): Insets {
   return {
-    left: Math.max(0, provider.x + insets.left - host.x),
-    top: Math.max(0, provider.y + insets.top - host.y),
-    right: Math.max(0, host.x + host.width - (provider.x + provider.width - insets.right)),
-    bottom: Math.max(0, host.y + host.height - (provider.y + provider.height - insets.bottom)),
+    left: Math.min(host.width, Math.max(0, insets.left - hostOrigin.x)),
+    top: Math.min(host.height, Math.max(0, insets.top - hostOrigin.y)),
+    right: Math.min(host.width, Math.max(0, hostOrigin.x + host.width - (provider.width - insets.right))),
+    bottom: Math.min(host.height, Math.max(0, hostOrigin.y + host.height - (provider.height - insets.bottom))),
   };
+}
+
+// Dimensions and onLayout arrive independently during rotation. A newly selected
+// orientation must wait for matching host axes. Native adjustResize may shorten a
+// portrait host past square; accept that only at the current screen's width.
+export function hudHostMatchesOrientation(host: Size | null, orientation: HudOrientation, nativeScreen?: Size): boolean {
+  if (!host || host.width <= 0 || host.height <= 0) return false;
+  if (host.width === host.height || (host.width > host.height ? 'landscape' : 'portrait') === orientation) return true;
+  return !!nativeScreen
+    && (nativeScreen.width > nativeScreen.height ? 'landscape' : 'portrait') === orientation
+    && Math.abs(host.width - nativeScreen.width) < 1
+    && host.height < nativeScreen.height;
 }
 
 // Figma gives expanded dock and collapsed handle rectangles; YAML attaches the handle above the bezel.

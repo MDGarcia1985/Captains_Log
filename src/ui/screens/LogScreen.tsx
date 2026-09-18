@@ -18,7 +18,7 @@ import { useCallback, useState } from 'react';
 import { SectionList, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
-import { useHudLayout } from '@/ui/layout/HudLayoutContext';
+import { useHudLayout } from '@/ui/ts_layout/HudLayoutContext';
 import type { Attachment, Entity, LogEntry } from '@/models/types';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';

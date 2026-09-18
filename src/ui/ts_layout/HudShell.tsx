@@ -1,39 +1,83 @@
 /*
  * File: HudShell.tsx
- * Purpose: YAML mobile HUD for all viewport sizes with live route content and contextual actions.
+ * Purpose: YAML mobile HUD for the actual window using resolved regions, not global scale.
  * Author: Codex; Contact: michael@mandedesign.studio
  * License: SPDX-License-Identifier: MPL-2.0
- * Decisions: DEV-2026-09-07-025; DEV-2026-09-11-001; DEV-2026-09-12-001
+ * Decisions: DEV-2026-09-07-025; DEV-2026-09-11-001; DEV-2026-09-12-001; DEV-2026-09-14-005
  */
-import { useEffect, useState, type ReactNode } from 'react';
-import { AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { AppState, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import { usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { requestExport } from '@/services/exportService';
 import { uiSpec } from '@/ui/generated/uiSpec';
-import { Art, box, hudColors as c, HudTitle, Scanner, typeStyle } from '@/ui/layout/HudArtwork';
-import { backupIsSynced, hudBorderBounds, hudRoutes, hudView, mergeHudComponent } from '@/ui/layout/hudBehavior';
-import { useHudFit } from '@/ui/layout/useHudFit';
-import { HudDock } from '@/ui/layout/HudDock';
-import { useHudLayout } from '@/ui/layout/HudLayoutContext';
+import { Art, box, hudColors as c, HudTitle, Scanner, typeStyle } from '@/ui/ts_layout/HudArtwork';
+import { backupIsSynced, hudRoutes, hudView, mergeHudComponent } from '@/ui/ts_layout/hudBehavior';
+import { HudDock } from '@/ui/ts_layout/HudDock';
+import { HudLayoutProvider, useHudLayout } from '@/ui/ts_layout/HudLayoutContext';
+import { useHudResolve } from '@/ui/ts_layout/useHudResolve';
 import { useHud, type AttachmentAction, type HudCommand } from '@/ui/state/HudCommands';
+import type { Rect } from '@/ui/ts_layout/resolveHudLayout';
 
 const titles = { home: 'HOME', capture: 'NEW RECORD', search: 'SEARCH', graph: 'GRAPH', settings: 'SETTINGS', detail: 'RECORD' };
 
+type Accent = {
+  asset: string;
+  alignment?: { horizontal: string; vertical: string };
+  size?: { width: number; height: number };
+  insets?: { left?: number; right?: number; top?: number; bottom?: number };
+  export_envelope?: { width: number; height: number; offset_from_shape?: { x: number; y: number } };
+  width?: number;
+  height?: number;
+  x?: number;
+  y?: number;
+};
+
+function accentBox(accent: Accent, viewport: Rect): Rect {
+  const width = accent.size?.width ?? accent.width ?? 0;
+  const height = accent.size?.height ?? accent.height ?? 0;
+  const x = accent.alignment?.horizontal === 'right'
+    ? viewport.width - width - (accent.insets?.right ?? 0)
+    : (accent.insets?.left ?? accent.x ?? 0);
+  const y = accent.alignment?.vertical === 'bottom'
+    ? viewport.height - height - (accent.insets?.bottom ?? 0)
+    : (accent.insets?.top ?? accent.y ?? 0);
+  const envelope = accent.export_envelope;
+  if (!envelope) return { x, y, width, height };
+  return {
+    x: x + (envelope.offset_from_shape?.x ?? 0),
+    y: y + (envelope.offset_from_shape?.y ?? 0),
+    width: envelope.width,
+    height: envelope.height,
+  };
+}
+
+function railButtonTops(count: number, buttonHeight: number, spacing: { gap?: { min?: number; preferred?: number }; preferred_gaps?: readonly number[] }, overflow: boolean, reserved: number) {
+  const fallback = overflow ? spacing.gap?.min ?? 0 : spacing.gap?.preferred ?? 0;
+  const tops: number[] = [];
+  let y = reserved;
+  for (let index = 0; index < count; index += 1) {
+    tops.push(y);
+    y += buttonHeight + (index < count - 1 ? (overflow ? fallback : spacing.preferred_gaps?.[index] ?? fallback) : 0);
+  }
+  return tops;
+}
+
 /* Purpose: Preserve individual native text/asset layers and wire existing capabilities.
- * Design: Select the canonical portrait or landscape specification; route content owns scrolling.
+ * Design: Full-window canvas; YAML resolver places fixed controls and flexible regions.
  * Workflow: Persistent shell for every viewport.
  * Data Handoff: Focus-scoped commands/services.
- * */
+ */
 export function HudShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const services = useRequiredAppServices();
   const hud = useHud();
-  const { orientation, layout } = useHudLayout();
-  const { ref: hostRef, onLayout, fit, ready } = useHudFit();
+  const parent = useHudLayout();
+  const { orientation, layout } = parent;
+  const { ref: hostRef, onLayout, resolved, ready } = useHudResolve();
   const overlay = uiSpec.orientationComponents[orientation];
   const rail = mergeHudComponent(uiSpec.components.navigation_rail, overlay.navigation_rail);
   const viewport = mergeHudComponent(uiSpec.components.viewport, overlay.viewport);
@@ -51,9 +95,17 @@ export function HudShell({ children }: { children: ReactNode }) {
   if (dockUi.orientation !== orientation) setDockUi({ orientation, expanded: false });
   const dockExpanded = dockUi.expanded;
   const activeView = hudView(pathname);
-  const artboard = layout.reference_viewport;
   const available = hud.current?.scope === activeView ? hud.current : null;
   const busy = available?.busy ?? false;
+  const regions = resolved.regions;
+  const canvas = regions.canvas ?? { x: 0, y: 0, width: parent.width, height: parent.height };
+  const layoutValue = useMemo(() => ({
+    ...parent,
+    regions,
+    overflow: resolved.overflow,
+    expandedDock: resolved.expandedDock,
+    resolveStatus: resolved.status,
+  }), [parent, regions, resolved.overflow, resolved.expandedDock, resolved.status]);
 
   useEffect(() => {
     let alive = true;
@@ -103,91 +155,111 @@ export function HudShell({ children }: { children: ReactNode }) {
 
   const actions = rail.contexts[activeView];
   const button = rail.button;
-  const offsets = 'item_offsets' in rail.spacing ? rail.spacing.item_offsets : undefined;
-  const gap = offsets ? 0 : (layout.regions.navigation_rail.height - actions.length * button.height) / (actions.length + 1);
-  const decoration = layout.chrome;
-  const notch = 'notch' in decoration ? decoration.notch : null;
-  const homeIndicator = 'home_indicator' in decoration ? decoration.home_indicator : null;
-  const handleRegion = 'action_dock_handle' in layout.regions ? layout.regions.action_dock_handle : null;
+  const railRect = regions.navigation_rail ?? { x: 0, y: 0, width: 0, height: 0 };
+  const viewportRect = regions.viewport ?? { x: 0, y: 0, width: 0, height: 0 };
+  const handleRegion = regions.action_dock_handle;
+  const reservation = ((layout.runtime_regions.navigation_rail as { content_reservations?: Array<{ region: string; gap?: { min?: number; preferred?: number } }> }).content_reservations ?? [])
+    .reduce((sum, item) => {
+      const member = regions[item.region];
+      const gap = resolved.overflow.navigation_rail === 'scroll' ? item.gap?.min ?? 0 : item.gap?.preferred ?? item.gap?.min ?? 0;
+      return sum + (member?.height ?? 0) + gap;
+    }, 0);
+  const tops = railButtonTops(actions.length, button.height, rail.spacing, resolved.overflow.navigation_rail === 'scroll', reservation);
   const menuIcon = rail.menu.iconBounds;
   const stacked = rail.label.stacked;
-  // The content rectangle stays canonical; its scrolling host clears the overlay handle.
-  const contentHeight = viewport.content.overlay_clearance === 'action_dock_handle' && handleRegion
-    ? Math.min(viewport.content.height, handleRegion.y - layout.regions.viewport.y - viewport.content.y)
-    : viewport.content.height;
+  const contentInsets = viewport.content.insets;
+  const contentBox = {
+    x: contentInsets.left,
+    y: contentInsets.top,
+    width: Math.max(0, viewportRect.width - contentInsets.left - contentInsets.right),
+    height: Math.max(0, viewportRect.height - contentInsets.top - contentInsets.bottom),
+  };
+  const contentHeight = handleRegion
+    ? Math.min(contentBox.height, Math.max(0, handleRegion.y - viewportRect.y - contentBox.y))
+    : contentBox.height;
+  const border = regions.border ?? { x: 8, y: 8, width: Math.max(0, canvas.width - 16), height: Math.max(0, canvas.height - 16) };
+  const borderRadius = (layout.runtime_regions.border as { appearance?: { radius?: number } }).appearance?.radius ?? 40;
+  const wash = layout.atmosphere.paintedWashAsset;
+  const buttons = actions.map((id, index) => {
+    const isNew = id === 'new';
+    const isCommand = !['new', 'search', 'graph', 'settings', 'home', 'back'].includes(id);
+    const disabled = busy || (isCommand && !available?.commands[id as HudCommand]);
+    const top = tops[index];
+    const typeKey = stacked ? (id.length >= 6 ? 'railSearch' : id.length === 5 ? 'railGraph' : 'rail') : (id === 'new' ? 'rail' : 'railGraph');
+    const labelBounds = id in rail.labelBounds ? rail.labelBounds[id as keyof typeof rail.labelBounds]
+      : { x: rail.label.x, y: rail.label.y, width: rail.label.width, height: button.height };
+    return <Pressable key={id} accessibilityRole="button" accessibilityLabel={id.toUpperCase()} accessibilityState={{ disabled }}
+      disabled={disabled} onPress={() => navigate(id)} style={[box({ x: 0, y: top, width: button.width, height: button.height }), { opacity: disabled ? 0.45 : 1 }]}>
+      {({ pressed }) => {
+        const showActive = pressed && orientation === 'portrait';
+        return <>
+          <Art name={showActive ? isNew ? rail.newActiveShape : rail.activeShape : isNew ? rail.newShape : rail.shape}
+            bounds={showActive ? rail.activeBounds : isNew ? rail.newAssetBounds : rail.assetBounds} />
+          <View testID={`hud-rail-label-${id}`} pointerEvents="none" style={[box(labelBounds), styles.railLabel]}>
+            <Text accessible={false} style={[styles.railText, { width: labelBounds.width }, typeStyle(typeKey),
+              { color: isNew ? c.orange : pressed ? c.borderStrong : c.textMuted }]}>{stacked ? id.toUpperCase().split('').join('\n') : id.toUpperCase()}</Text>
+          </View>
+        </>;
+      }}
+    </Pressable>;
+  });
 
   return <View ref={hostRef} onLayout={onLayout} testID="hud-buffer" style={styles.root}>
-    <StatusBar style="light" />
-    <View testID="hud-artboard-frame" style={[box(fit), { opacity: ready ? 1 : 0 }]}>
-      <View testID="mobile-hud" nativeID={orientation} style={{ width: artboard.width, height: artboard.height, transform: [{ scale: fit.scale }], transformOrigin: 'top left', backgroundColor: c.background }}>
-        <Art name={layout.atmosphere.paintedWashAsset} bounds={{ x: 0, y: 0, width: artboard.width, height: artboard.height }} />
-        {notch ? <Art name="chrome-top-safe-area-notch" bounds={notch} /> : null}
-        {homeIndicator ? <Art name="chrome-bottom-home-indicator" bounds={homeIndicator} /> : null}
-        <View pointerEvents="none" style={[box(decoration.rail_guide), { backgroundColor: c.cyan, opacity: uiSpec.theme.opacity.railGuide }]} />
-        <View testID="status-header" style={box(layout.regions.status_header)} accessibilityLabel={`Backup: ${synced ? 'synced' : 'local only'}. ${detail}`}>
-          {status.bezelVisible ? <Art name={status.bezel} bounds={status.bezelBounds} /> : null}
-          <Art name={status.icon.asset} bounds={status.icon} />
-          <Text style={[styles.absolute, { left: status.label.x, top: status.label.y, color: c.cyan }, typeStyle('status')]}>{status.label.text}</Text>
-          <Text testID="backup-status" style={[styles.absolute, { left: status.value.x, top: status.value.y, color: c.text }, typeStyle('status')]}>{synced ? status.states.synced : status.states.local_only}</Text>
-          <View style={[box(status.indicator), { borderRadius: 4, backgroundColor: c.cyan }]} />
-          <View style={[box(status.divider), { backgroundColor: c.border }]} />
-        </View>
-        <Scanner />
-        <HudTitle title={titles[activeView]} />
-        <Pressable accessibilityRole="button" accessibilityLabel="Settings and more options" disabled={busy} onPress={() => setMenu('settings')}
-          style={box(layout.regions.settings_menu)} hitSlop={{ top: 1, bottom: 3, left: 0, right: 0 }}>
-          <Art name={rail.menu.icon} bounds={menuIcon} />
-        </Pressable>
-        <View testID="hud-viewport" style={[box(layout.regions.viewport), { backgroundColor: c.panel,
-          boxShadow: '0px 0px 14px rgba(61,222,229,0.16), inset 0px 2px 8px rgba(0,0,0,0.65)' }]}>
-          <Art name={viewport.border} bounds={{ x: 0, y: 0, width: layout.regions.viewport.width, height: layout.regions.viewport.height }} />
-          {viewport.accents.map((accent, index) => <Art key={accent.asset} name={accent.asset}
-            bounds={'accentExports' in viewport ? viewport.accentExports[index] : accent} />)}
-          <View testID="hud-content" style={[box(viewport.content), { overflow: 'hidden' }]}>
-            <View testID="hud-scroll-host" style={{ height: contentHeight }}>{children}</View>
+    <HudLayoutProvider value={layoutValue}>
+      <StatusBar style="light" />
+      <View testID="hud-artboard-frame" style={[box(canvas), { opacity: ready ? 1 : 0 }]}>
+        <View testID="mobile-hud" nativeID={orientation} style={{ width: canvas.width, height: canvas.height, backgroundColor: c.background }}>
+          <Art name={wash} bounds={{ x: 0, y: 0, width: canvas.width, height: canvas.height }} />
+          {regions.notch ? <Art name="chrome-top-safe-area-notch" bounds={regions.notch} /> : null}
+          {regions.home_indicator ? <Art name="chrome-bottom-home-indicator" bounds={regions.home_indicator} /> : null}
+          {regions.rail_guide ? <View pointerEvents="none" style={[box(regions.rail_guide), { backgroundColor: c.cyan, opacity: uiSpec.theme.opacity.railGuide }]} /> : null}
+          <View testID="status-header" style={box(regions.status_header ?? { x: 0, y: 0, width: 0, height: 0 })} accessibilityLabel={`Backup: ${synced ? 'synced' : 'local only'}. ${detail}`}>
+            {status.bezelVisible ? <Art name={status.bezel} bounds={status.bezelBounds} /> : null}
+            <Art name={status.icon.asset} bounds={status.icon} />
+            <Text style={[styles.absolute, { left: status.label.x, top: status.label.y, color: c.cyan }, typeStyle('status')]}>{status.label.text}</Text>
+            <Text testID="backup-status" style={[styles.absolute, { left: status.value.x, top: status.value.y, color: c.text }, typeStyle('status')]}>{synced ? status.states.synced : status.states.local_only}</Text>
+            <View style={[box(status.indicator), { borderRadius: 4, backgroundColor: c.cyan }]} />
+            <View style={[box(status.divider), { backgroundColor: c.border }]} />
           </View>
+          <Scanner />
+          <HudTitle title={titles[activeView]} />
+          <Pressable accessibilityRole="button" accessibilityLabel="Settings and more options" disabled={busy} onPress={() => setMenu('settings')}
+            style={box(regions.settings_menu ?? { x: 0, y: 0, width: 0, height: 0 })} hitSlop={{ top: 1, bottom: 3, left: 0, right: 0 }}>
+            <Art name={rail.menu.icon} bounds={menuIcon} />
+          </Pressable>
+          <View testID="hud-viewport" style={[box(viewportRect), { backgroundColor: c.panel,
+            boxShadow: '0px 0px 14px rgba(61,222,229,0.16), inset 0px 2px 8px rgba(0,0,0,0.65)' }]}>
+            <Art name={viewport.border} bounds={{ x: 0, y: 0, width: viewportRect.width, height: viewportRect.height }} />
+            {viewport.accents.map(accent => <Art key={accent.asset} name={accent.asset} bounds={accentBox(accent, viewportRect)} />)}
+            <View testID="hud-content" style={[box(contentBox), { overflow: 'hidden' }]}>
+              <View testID="hud-scroll-host" style={{ height: contentHeight }}>{children}</View>
+            </View>
+          </View>
+          <View testID={`rail-${activeView}`} pointerEvents="box-none" style={box(railRect)}>
+            {resolved.overflow.navigation_rail === 'scroll'
+              ? <ScrollView testID="hud-rail-scroll" style={{ flex: 1 }} contentContainerStyle={{ height: (tops.at(-1) ?? 0) + button.height }} nestedScrollEnabled>{buttons}</ScrollView>
+              : buttons}
+          </View>
+          <HudDock expanded={dockExpanded} busy={busy}
+            toggle={() => setDockUi(current => ({ ...current, expanded: !current.expanded }))}
+            add={() => setMenu('add')} attachment={attachment} exportNotice={() => setNotice(requestExport().message)} />
+          <View testID="hud-outer-border" pointerEvents="none" style={[box(border),
+            { borderWidth: 1, borderColor: c.borderStrong, borderRadius }]} />
+          {resolved.status === 'unsupported_size' ? <View testID="hud-unsupported" pointerEvents="none" style={styles.unsupported}>
+            <Text style={styles.notice}>This window is below the HUD minimum.</Text>
+          </View> : null}
         </View>
-        <View testID={`rail-${activeView}`} pointerEvents="box-none" style={box(layout.regions.navigation_rail)}>
-          {actions.map((id, index) => {
-            const isNew = id === 'new';
-            const isCommand = !['new', 'search', 'graph', 'settings', 'home', 'back'].includes(id);
-            const disabled = busy || (isCommand && !available?.commands[id as HudCommand]);
-            const top = offsets ? offsets[index] : gap + index * (button.height + gap);
-            const typeKey = stacked ? (id.length >= 6 ? 'railSearch' : id.length === 5 ? 'railGraph' : 'rail') : (id === 'new' ? 'rail' : 'railGraph');
-            const labelBounds = id in rail.labelBounds ? rail.labelBounds[id as keyof typeof rail.labelBounds]
-              : { x: rail.label.x, y: rail.label.y, width: rail.label.width, height: button.height };
-            return <Pressable key={id} accessibilityRole="button" accessibilityLabel={id.toUpperCase()} accessibilityState={{ disabled }}
-              disabled={disabled} onPress={() => navigate(id)} style={[box({ x: 0, y: top, width: button.width, height: button.height }), { opacity: disabled ? 0.45 : 1 }]}>
-              {({ pressed }) => {
-                const showActive = pressed && orientation === 'portrait';
-                return <>
-                  <Art name={showActive ? isNew ? rail.newActiveShape : rail.activeShape : isNew ? rail.newShape : rail.shape}
-                    bounds={showActive ? rail.activeBounds : isNew ? rail.newAssetBounds : rail.assetBounds} />
-                  <View testID={`hud-rail-label-${id}`} pointerEvents="none" style={[box(labelBounds), styles.railLabel]}>
-                    <Text accessible={false} style={[styles.railText, { width: labelBounds.width }, typeStyle(typeKey),
-                      { color: isNew ? c.orange : pressed ? c.borderStrong : c.textMuted }]}>{stacked ? id.toUpperCase().split('').join('\n') : id.toUpperCase()}</Text>
-                  </View>
-                </>;
-              }}
-            </Pressable>;
-          })}
-        </View>
-        <HudDock expanded={dockExpanded} busy={busy}
-          toggle={() => setDockUi(current => ({ ...current, expanded: !current.expanded }))}
-          add={() => setMenu('add')} attachment={attachment} exportNotice={() => setNotice(requestExport().message)} />
       </View>
-      <View testID="hud-outer-border" pointerEvents="none" style={[box(hudBorderBounds(fit, uiSpec.layouts.mobile.fitting.border_inset)),
-        { borderWidth: 1, borderColor: c.borderStrong, borderRadius: decoration.border.radius * fit.scale }]} />
-    </View>
-    <Modal visible={menu !== null || notice !== null} transparent animationType="fade" onRequestClose={() => { setMenu(null); setNotice(null); }}>
-      <View style={styles.scrim}><View accessibilityViewIsModal style={styles.modal}>
-        <Text accessibilityRole="header" style={[styles.notice, typeStyle('subtitle')]}>{notice ? 'EXPORT / NOTICE' : menu === 'add' ? 'ADD ATTACHMENT' : 'OPTIONS'}</Text>
-        {notice ? <Text style={styles.notice}>{notice}</Text> : menu === 'add' ?
-          <Pressable accessibilityRole="button" onPress={() => attachment('gallery')} style={styles.option}><Text style={styles.notice}>Gallery</Text></Pressable> :
-          <Pressable accessibilityRole="button" onPress={() => { setMenu(null); router.push('/settings'); }} style={styles.option}><Text style={styles.notice}>Settings</Text></Pressable>}
-        <Pressable accessibilityRole="button" onPress={() => { setMenu(null); setNotice(null); }} style={styles.option}><Text style={[styles.notice, { color: c.cyan }]}>Close</Text></Pressable>
-      </View></View>
-    </Modal>
+      <Modal visible={menu !== null || notice !== null} transparent animationType="fade" onRequestClose={() => { setMenu(null); setNotice(null); }}>
+        <View style={styles.scrim}><View accessibilityViewIsModal style={styles.modal}>
+          <Text accessibilityRole="header" style={[styles.notice, typeStyle('subtitle')]}>{notice ? 'EXPORT / NOTICE' : menu === 'add' ? 'ADD ATTACHMENT' : 'OPTIONS'}</Text>
+          {notice ? <Text style={styles.notice}>{notice}</Text> : menu === 'add' ?
+            <Pressable accessibilityRole="button" onPress={() => attachment('gallery')} style={styles.option}><Text style={styles.notice}>Gallery</Text></Pressable> :
+            <Pressable accessibilityRole="button" onPress={() => { setMenu(null); router.push('/settings'); }} style={styles.option}><Text style={styles.notice}>Settings</Text></Pressable>}
+          <Pressable accessibilityRole="button" onPress={() => { setMenu(null); setNotice(null); }} style={styles.option}><Text style={[styles.notice, { color: c.cyan }]}>Close</Text></Pressable>
+        </View></View>
+      </Modal>
+    </HudLayoutProvider>
   </View>;
 }
 
@@ -201,4 +273,5 @@ const styles = StyleSheet.create({
   modal: { backgroundColor: c.panel, borderColor: c.cyan, borderWidth: 1, padding: 20, gap: 16 },
   option: { minHeight: 44, justifyContent: 'center', borderTopColor: c.borderStrong, borderTopWidth: 1 },
   notice: { color: c.text, fontFamily: 'ShareTechMono', fontSize: 16, lineHeight: 22 },
+  unsupported: { position: 'absolute', left: 20, right: 20, bottom: 20, opacity: 0.9 },
 });

@@ -6,7 +6,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import { Dimensions, Platform, useWindowDimensions } from 'react-native';
-import { selectHudOrientation } from '@/ui/layout/hudBehavior';
+import { selectHudOrientation } from '@/ui/ts_layout/hudBehavior';
 import { uiSpec } from '@/ui/generated/uiSpec';
 
 function subscribe(onChange: () => void) {

@@ -27,7 +27,7 @@ import { colors, fonts } from '@/theme/tokens';
 import { formatTelemetryTime } from '@/utilities/time';
 import { ClippedPanel, CommandButton, TelemetryLabel } from '@/ui/components/primitives';
 import { useChrome } from '@/ui/state/ChromeContext';
-import { useHudLayout } from '@/ui/layout/HudLayoutContext';
+import { useHudLayout } from '@/ui/ts_layout/HudLayoutContext';
 
 /*
  * Purpose: Minimum MVP settings: handedness, backup, permissions, and account.

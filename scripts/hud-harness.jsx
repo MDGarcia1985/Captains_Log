@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native-web';
 import { RouterContext } from './hud-fixtures';
-import { AppShell } from '../src/ui/layout/AppShell';
+import { AppShell } from '../src/ui/ts_layout/AppShell';
 import { CaptureScreen } from '../src/ui/screens/CaptureScreen';
 import { SearchScreen } from '../src/ui/screens/SearchScreen';
 import { GraphScreen } from '../src/ui/screens/GraphScreen';
@@ -15,6 +15,7 @@ import { SettingsScreen } from '../src/ui/screens/SettingsScreen';
 import { HudCommandsProvider } from '../src/ui/state/HudCommands';
 import { ChromeProvider, useChrome } from '../src/ui/state/ChromeContext';
 import { SelectionProvider } from '../src/ui/state/SelectionContext';
+import { CoordinateProbe } from './hud-coordinate-probe';
 
 const fixture = globalThis.hudFixture = { calls: [], entries: [], entities: [], failSave: false, pendingSave: null, holdSave: false, handedness: null };
 fixture.services = {
@@ -57,4 +58,5 @@ function Harness() {
   const screen = path === '/capture' ? <CaptureScreen /> : path === '/search' ? <SearchScreen /> : path === '/graph' ? <GraphScreen /> : path === '/settings' ? <SettingsScreen /> : path.startsWith('/entity/') ? <View /> : <LogScreen />;
   return <RouterContext.Provider value={{ path, router }}><HudCommandsProvider><AppShell><View key={path} style={{ flex: 1 }}>{screen}</View></AppShell></HudCommandsProvider></RouterContext.Provider>;
 }
-createRoot(document.getElementById('root')).render(<ChromeProvider><SelectionProvider><Harness /></SelectionProvider></ChromeProvider>);
+createRoot(document.getElementById('root')).render(location.search.includes('coordinateProbe')
+  ? <CoordinateProbe /> : <ChromeProvider><SelectionProvider><Harness /></SelectionProvider></ChromeProvider>);

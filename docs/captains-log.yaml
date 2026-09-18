@@ -58,7 +58,7 @@ documentation:
 
   project_files:
     product_spec: docs/captains-log.yaml
-    roadmap: docs/ROADMAP.md
+    roadmap: docs/planning/ROADMAP.md
     architecture: docs/ARCHITECTURE.md
     development_log: docs/DEVNOTES.md
     test_log: docs/TEST_LOG.md

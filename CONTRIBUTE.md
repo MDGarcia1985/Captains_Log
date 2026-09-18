@@ -8,7 +8,7 @@ Read the project references relevant to your change:
 
 - [`docs/captains-log.yaml`](docs/captains-log.yaml) defines product behavior.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) describes the implemented architecture.
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) defines current scope and implementation order.
+- [`docs/planning/ROADMAP.md`](docs/planning/ROADMAP.md) defines current scope and implementation order.
 - [`docs/DEVNOTES.md`](docs/DEVNOTES.md) records engineering decisions.
 - [`docs/ANNOTATION_STANDARDS.md`](docs/ANNOTATION_STANDARDS.md) defines source documentation requirements.
 - [`docs/TEST_LOG_STANDARDS.md`](docs/TEST_LOG_STANDARDS.md) defines verification and evidence requirements.

@@ -10,8 +10,8 @@ import { AccessibilityInfo, Animated, AppState, Easing, Platform, Text, View, ty
 import { Image } from 'expo-image';
 import { hudAssets, type HudAsset } from '@/ui/generated/hudAssets';
 import { uiSpec } from '@/ui/generated/uiSpec';
-import { mergeHudComponent, rotationEnd, SCANNER_ROTATION_MS } from '@/ui/layout/hudBehavior';
-import { useHudLayout } from '@/ui/layout/HudLayoutContext';
+import { mergeHudComponent, rotationEnd, SCANNER_ROTATION_MS } from '@/ui/ts_layout/hudBehavior';
+import { useHudLayout } from '@/ui/ts_layout/HudLayoutContext';
 
 export const hudColors = uiSpec.theme.colors;
 export type Bounds = { x: number; y: number; width: number; height: number };
@@ -38,7 +38,7 @@ export function Art({ name, bounds, onLoad }: { name: HudAsset; bounds: Bounds; 
  * Design: One clock; two 60x60 wrappers. Stop in background/reduced motion/unmount.
  * Workflow: Shell lifetime. Data Handoff: Opposite signed rotation transforms only. */
 export function Scanner() {
-  const { layout } = useHudLayout();
+  const { regions } = useHudLayout();
   const scanner = uiSpec.components.scanner;
   const [phase] = useState(() => new Animated.Value(0));
   const [reduced, setReduced] = useState(true);
@@ -61,7 +61,7 @@ export function Scanner() {
     return () => loop.stop();
   }, [phase, reduced, active]);
   const rotate = (direction: 'clockwise' | 'counterclockwise') => phase.interpolate({ inputRange: [0, 1], outputRange: ['0deg', rotationEnd(direction)] });
-  return <View testID="hud-scanner" style={box(layout.regions.scanner)} pointerEvents="none" accessible accessibilityLabel="Scanner indicator">
+  return <View testID="hud-scanner" style={box(regions.scanner ?? { x: 0, y: 0, width: 0, height: 0 })} pointerEvents="none" accessible accessibilityLabel="Scanner indicator">
     <Art name={scanner.ring.asset} bounds={scanner.ring} />
     <Animated.View testID="scanner-outer-pivot" style={[box(scanner.rotationBounds), { transform: [{ rotate: rotate(scanner.outer.direction) }] }]}>
       {scanner.outer.assets.map(name => <Art key={name} name={name} bounds={{ x: 0, y: 0, width: scanner.rotationBounds.width, height: scanner.rotationBounds.height }} />)}
@@ -77,15 +77,24 @@ export function Scanner() {
  * Design: Figma typography and glow; copy is runtime-owned.
  * Workflow: Active route change. Data Handoff: Accessible page heading. */
 export function HudTitle({ title }: { title: string }) {
-  const { orientation, layout } = useHudLayout();
+  const { orientation, regions } = useHudLayout();
   const c = mergeHudComponent(uiSpec.components.title_block, uiSpec.orientationComponents[orientation].title_block);
-  // RN Web ignores ellipsizeMode; translate the same YAML policy into its CSS equivalent.
+  const titleRect = regions.title_block ?? { x: 0, y: 0, width: 0, height: 0 };
+  const dividerInsets = 'insets' in c.divider ? c.divider.insets : undefined;
+  const divider = 'width' in c.divider && typeof c.divider.width === 'number'
+    ? c.divider
+    : {
+      x: dividerInsets?.left ?? 0,
+      y: ('y' in c.divider && typeof c.divider.y === 'number') ? c.divider.y : (dividerInsets?.top ?? 30),
+      width: titleRect.width - (dividerInsets?.left ?? 0) - (dividerInsets?.right ?? 0),
+      height: c.divider.height ?? 12,
+    };
   const webEllipsis = Platform.OS === 'web' ? { textOverflow: c.title.ellipsize, overflow: 'visible' as const } : {};
-  return <View testID="hud-title" style={box(layout.regions.title_block)}>
+  return <View testID="hud-title" style={box(titleRect)}>
     <Text testID="hud-heading" accessibilityRole="header" numberOfLines={1} ellipsizeMode={c.title.ellipsize} style={[box(c.title), typeStyle('heading'), webEllipsis, {
       color: hudColors.cyan, textShadowColor: 'rgba(61,222,229,0.55)', textShadowRadius: 8, textShadowOffset: { width: 0, height: 0 },
     }]}>{title}</Text>
     <Text style={[{ position: 'absolute', left: c.subtitle.x, top: c.subtitle.y, color: hudColors.textMuted }, typeStyle('subtitle')]}>{c.subtitle.text}</Text>
-    <Art name={c.divider.asset} bounds={c.divider} />
+    <Art name={c.divider.asset} bounds={divider} />
   </View>;
 }

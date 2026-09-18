@@ -2892,3 +2892,296 @@ TEST-2026-09-14-015; TEST-2026-09-14-016; TEST-2026-09-14-017; TEST-2026-09-14-0
 #### Disposition
 
 TASK-007 remains OPEN. Settle classification, implement, then capture physical-phone results; no commit.
+
+---
+
+### TEST-2026-09-18-001 — TASK-007 TypeScript validation
+
+**Date:** 2026-09-18  
+**Time:** 12:10 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T0  
+**Result:** PASS
+
+#### Scope
+
+Schema 3 resolver and full-window HUD TypeScript contracts.
+
+#### Files Under Validation
+
+src/ui/ts_layout/resolveHudLayout.ts; useHudResolve.ts; HudShell.tsx; AppShell.tsx; HudDock.tsx; HudArtwork.tsx; HudLayoutContext.tsx; hudBehavior.ts; src/ui/generated/uiSpec.ts
+
+#### Objective
+
+Verify the modified HUD runtime compiles against generated schema 3 types.
+
+#### Preconditions
+
+Generated `uiSpec.ts` is schema_version 3 with `runtime_regions` and no fitting policy.
+
+#### Procedure
+
+1. Run `npx tsc --noEmit`.
+
+#### Expected Result
+
+No TypeScript errors.
+
+#### Actual Result
+
+Command exited 0 with no diagnostics.
+
+#### Evidence
+
+`npx tsc --noEmit` (exit 0)
+
+#### Failures / Observations
+
+None.
+
+#### Related DEVNOTES
+
+DEV-2026-09-18-001; DEV-2026-09-14-005
+
+#### Related Tests
+
+None.
+
+#### Disposition
+
+Static type validation complete for the schema 3 runtime.
+
+---
+
+### TEST-2026-09-18-002 — TASK-007 YAML, authority, and resolver smoke
+
+**Date:** 2026-09-18  
+**Time:** 12:12 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T1  
+**Result:** PASS
+
+#### Scope
+
+Schema 3 contract, generation freshness, Figma authority, and pure region resolver.
+
+#### Files Under Validation
+
+scripts/ui-yaml-contract.mjs; scripts/generate-ui.mjs; scripts/ui-authority-test.mjs; scripts/hud-resolve-smoke.ts; scripts/hud-smoke.ts; src/ui/yaml_layout/; src/ui/ts_layout/resolveHudLayout.ts
+
+#### Objective
+
+Verify deprecated layout paths are absent from active sources, schema 3 generation matches YAML/Figma, and the resolver reconstructs Figma scanner 315,28 without global scale.
+
+#### Preconditions
+
+Canonical YAML under `src/ui/yaml_layout/`; live Figma snapshot fixture present.
+
+#### Procedure
+
+1. `node scripts/ui-yaml-contract.mjs`
+2. `npx tsx scripts/hud-resolve-smoke.ts`
+3. `npx tsx scripts/hud-smoke.ts`
+
+#### Expected Result
+
+YAML contract PASS; resolver PASS at portrait 390×844 / landscape 844×390, mins 362/775, left-hand scanner x=15, no reference_regions poisoning; HUD contracts PASS including Gate A/B.
+
+#### Actual Result
+
+YAML schema 3 contract PASS. Resolver PASS: full-window regions, Figma scanner, mins, handedness, safe-area, no global scale. UI specification PASS; Gate A PASS; Gate B PASS; HUD contracts PASS.
+
+#### Evidence
+
+Exact runner output from `npx tsx scripts/hud-smoke.ts`: YAML schema 3 contract PASS; UI specification PASS; Gate A PASS; Gate B PASS; HUD resolver PASS; HUD contracts PASS.
+
+#### Failures / Observations
+
+Existing Node MODULE_TYPELESS_PACKAGE_JSON warning on generated `uiSpec.ts` remains.
+
+#### Related DEVNOTES
+
+DEV-2026-09-18-001; DEV-2026-09-14-005
+
+#### Related Tests
+
+TEST-2026-09-18-001
+
+#### Disposition
+
+Module-level schema 3 and resolver gates pass. TASK-007 remains OPEN pending physical verification.
+
+---
+
+### TEST-2026-09-18-003 — TASK-007 full-window browser integration
+
+**Date:** 2026-09-18  
+**Time:** 12:15 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T2  
+**Result:** PASS
+
+#### Scope
+
+AppShell/HudShell rendered geometry and interactions after removing global artboard fit.
+
+#### Files Under Validation
+
+scripts/hud-browser-test.mjs; scripts/hud-harness.jsx; src/ui/ts_layout/HudShell.tsx; AppShell.tsx; HudDock.tsx; HudArtwork.tsx; useHudResolve.ts
+
+#### Objective
+
+Verify the production HUD fills the window, keeps Figma scanner size, places reference-size regions without scale/letterbox, and preserves route/dock/handedness behavior.
+
+#### Preconditions
+
+Playwright/Chromium available; harness aliases Expo modules to `scripts/hud-fixtures.jsx`.
+
+#### Procedure
+
+1. Run `npx --yes tsx scripts/hud-browser-test.mjs`.
+
+#### Expected Result
+
+Canvas fills host; transform is identity; portrait scanner remains 60×82; reference 390×844 reconstructs Figma regions including scanner 315,28; left-handed NEW at x=15; landscape dock parent/bezel distinction retained; drafts survive rotation.
+
+#### Actual Result
+
+Command exited 0. Runner: HUD browser T2 PASS: AppShell rotation, full-window YAML regions, no global scale, mounted draft preservation, landscape commit, entity routes, menu/dock/actions, handedness, scanner motion, reduced motion.
+
+#### Evidence
+
+`npx --yes tsx scripts/hud-browser-test.mjs` (exit 0); screenshots under `.tmp/hud-qa/`.
+
+#### Failures / Observations
+
+Browser T2 is not physical Motorola verification.
+
+#### Related DEVNOTES
+
+DEV-2026-09-18-001; DEV-2026-09-14-005
+
+#### Related Tests
+
+TEST-2026-09-18-002; TEST-2026-09-14-016
+
+#### Disposition
+
+Web integration of the replacement model passes. TASK-007 remains OPEN.
+
+---
+
+### TEST-2026-09-18-004 — TASK-007 physical Motorola verification
+
+**Date:** 2026-09-18  
+**Time:** 12:16 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T3  
+**Result:** NOT_EXECUTED
+
+#### Scope
+
+Physical portrait and landscape acceptance of the full-window HUD on the Motorola phone.
+
+#### Files Under Validation
+
+src/ui/ts_layout/HudShell.tsx; resolveHudLayout.ts; useHudResolve.ts; installed Android build
+
+#### Objective
+
+Verify on the connected Motorola that the canvas fills the window, the border is 8 from actual edges, fixed controls keep Figma sizes, flexible regions absorb remainder, and no global scale/letterbox is applied.
+
+#### Preconditions
+
+Replacement runtime implemented; `adb devices` must list the Motorola.
+
+#### Procedure
+
+1. Ran `adb devices -l`.
+2. Stopped: no device attached. Did not install or launch a native build.
+
+#### Expected Result
+
+Physical phone measurements for both orientations, including actual window size and resolved regions.
+
+#### Actual Result
+
+ADB daemon started; device list empty. No native package was installed or measured.
+
+#### Evidence
+
+`adb devices -l` output: `List of devices attached` followed by no entries.
+
+#### Failures / Observations
+
+TASK-007 cannot close without this physical gate. Browser T2 PASS does not substitute.
+
+#### Related DEVNOTES
+
+DEV-2026-09-18-001; DEV-2026-09-14-005
+
+#### Related Tests
+
+TEST-2026-09-18-003; TEST-2026-09-14-021
+
+#### Disposition
+
+NOT_EXECUTED because no Motorola was connected. TASK-007 remains OPEN. No commit.
+
+---
+
+### TEST-2026-09-18-005 — TASK-007 coordinate-space and rotation regressions
+
+**Date:** 2026-09-18
+
+**Tester:** Codex
+
+**Level:** T0 / T1 / T2
+
+**Result:** PASS (physical-device follow-up NOT_EXECUTED)
+
+#### Scope
+
+Correct the supplied physical `HUD_RESOLVE` double-counting trace using one
+provider-local coordinate space. Preserve the rotation guard and reference geometry.
+Investigation: [coordinate-space findings](planning/TASK-007_COORDINATE_INVESTIGATION_2026-09-18.md).
+
+#### Procedure and Actual Result
+
+- `npm.cmd run typecheck` — PASS.
+- `npm.cmd run test:hud` — PASS: YAML contract, unchanged generated specification,
+  independent Figma fixture authority, pure resolver and HUD behavior regressions.
+- `npm.cmd run test:hud:browser -- --coordinates-only` — PASS: production hook
+  with separately delivered layout/window measurements and exact trace values.
+- `npm.cmd run test:hud:browser` — PASS: full browser integration, mounted capture
+  draft identity across rotation, both orientations, safe areas, dock and menus.
+- `npm.cmd run lint` — exit 0; two existing array-type warnings remain in
+  `HudShell.tsx` and `resolveHudLayout.ts`; no lint errors.
+
+#### Regression Evidence
+
+1. Window host y = -66.0513 and safe top = 66.0513 resolve to top obstruction
+   66.0513, not 132.1026. Existing safety buffer places the portrait header at 74.0513.
+2. Window host x = -66.0513 and safe left = 66.0513 resolve to left obstruction
+   66.0513; landscape top -24.2051 likewise produces 24.2051 once. Right/bottom
+   obstructions remain present instead of being canceled by the origin mismatch.
+3. Portrait to landscape with a stale portrait host returns `pending`, without
+   resolving the new layout against old axes. Fresh host layout becomes ready.
+4. Landscape to portrait follows the same rule. A delayed earlier window callback
+   cannot replace the new canvas. Pure tests also cover reversed event order,
+   provider origin shifts, real parent-local padding, and native keyboard shortening.
+
+#### Failures Resolved During Verification
+
+Early pure assertions were corrected for floating-point tolerance and the actual
+safe rectangle. The new pending state exposed a dock orientation handoff: treating
+its temporarily missing handle as open started a collapse animation before matching
+host geometry arrived. `HudDock` now waits for resolved geometry before consuming
+the orientation change; the complete browser suite passes. Reference geometry was
+not changed to address the failure.
+
+#### Disposition
+
+Automated correction verified. No physical-device run or installation was performed
+in this investigation; fresh portrait/landscape `HUD_RESOLVE` traces from the corrected
+bundle remain the acceptance follow-up. TASK-007 stays OPEN. No commit.

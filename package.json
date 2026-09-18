@@ -60,8 +60,10 @@
     "test:node": "tsx scripts/node-smoke.ts && node scripts/attachment-smoke.mjs",
     "ui:generate": "node scripts/generate-ui.mjs",
     "ui:check": "node scripts/generate-ui.mjs --check",
-    "test:hud": "node --experimental-strip-types scripts/hud-smoke.ts",
-    "test:hud:browser": "node scripts/hud-browser-test.mjs"
+    "test:hud": "tsx scripts/hud-smoke.ts",
+    "test:hud:browser": "node scripts/hud-browser-test.mjs",
+    "test:ui-yaml": "node scripts/ui-yaml-contract.mjs",
+    "test:hud-resolve": "tsx scripts/hud-resolve-smoke.ts"
   },
   "private": true
 }

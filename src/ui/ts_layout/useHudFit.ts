@@ -14,14 +14,15 @@ export function useHudFit() {
   const insets = useSafeAreaInsets();
   const ref = useRef<View>(null);
   const [host, setHost] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [hostInProvider, setHostInProvider] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const onLayout = useCallback((event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    ref.current?.measureInWindow((x, y) => {
+    setHostInProvider({ ...event.nativeEvent.layout });
+    ref.current?.measureInWindow((x, y, width, height) => {
       setHost(old => old?.x === x && old?.y === y && old?.width === width && old?.height === height ? old : { x, y, width, height });
     });
   }, []);
-  const bounds = host ?? { x: 0, y: 0, width, height };
-  const effectiveInsets = hudUsableInsets(bounds, provider, insets);
+  const bounds = hostInProvider ?? { x: 0, y: 0, width, height };
+  const effectiveInsets = hudUsableInsets(bounds, provider, insets, bounds);
   const fit = fitHudArtboard(bounds, layout.reference_viewport, effectiveInsets);
   // Both old and corrected inputs are recorded in the same trace for phone diagnosis.
   const diagnostic = JSON.stringify({

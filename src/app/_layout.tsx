@@ -20,7 +20,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '@/global.css';
 
 import { AppServicesProvider } from '@/services/AppServicesProvider';
-import { AppShell } from '@/ui/layout/AppShell';
+import { AppShell } from '@/ui/ts_layout/AppShell';
 import { AuthGate } from '@/ui/screens/AuthGate';
 import { ChromeProvider } from '@/ui/state/ChromeContext';
 import { SelectionProvider } from '@/ui/state/SelectionContext';

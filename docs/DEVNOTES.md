@@ -3143,3 +3143,83 @@ Do not commit without explicit user authorization.
 #### Deferred Decisions
 
 Narrow portrait dock/header and insufficient-height rail policy; physical phone access.
+
+---
+
+### DEV-2026-09-18-001 — TASK-007 schema 3 resolver and full-window runtime
+
+**Date:** 2026-09-18  
+**Time:** 12:20 America/New_York  
+**Engineer:** Cursor Grok 4.6 agent  
+**Status:** IMPLEMENTED  
+**Type:** DECISION
+
+#### Problem
+
+DEV-2026-09-14-005 accepted a full-window HUD and superseded whole-artboard scale/letterbox, but generator, tests, and HudShell still expected artboard fitting and deprecated layout directories. Canonical paths are `src/ui/ts_layout/` and `src/ui/yaml_layout/`. Planning documents belong under `docs/planning/`.
+
+#### Context and Constraints
+
+User-authorized sequence: path hygiene, YAML contract validator, schema 3 generator, pure resolver with smoke tests, runtime wiring, harness migration, documentation, physical Motorola verification. Hard stops: do not wire HudShell while resolver tests are red; do not regenerate from non-schema-3 YAML; do not close TASK-007 without physical-device verification; do not commit without explicit authorization. Do not restore `src/ui/layout/` or `src/ui/layouts/`.
+
+#### Solutions Considered
+
+A parallel compatibility tree under the deprecated directories was rejected. Runtime continues to consume generated `uiSpec.ts` after schema 3 generation rather than parsing YAML in the app. Global scale was not retained as a fallback below minimum windows.
+
+#### Trade-offs
+
+Portrait windows below 362×481 and landscape windows below 775×206 report `unsupported_size` instead of inventing a layout. Short rails scroll locally after gaps reach min. Portrait dock width may contract between preferred 350 and min 326 using declared gaps; icons stay fixed. Flexible SVG edge extension is still approximate where a 9-slice is not implemented: corner accents are repositioned at resolved bounds, and the dock bezel keeps its Figma 350×96 envelope.
+
+#### Final Outcome
+
+Schema 3 YAML is executable. `resolveHudLayout` places regions from the actual window. HudShell fills the window with no global transform. Authority gates, resolver smoke, HUD contracts, and browser T2 pass. No Motorola was attached, so TASK-007 remains OPEN.
+
+#### Implementation Impact
+
+`src/ui/ts_layout/resolveHudLayout.ts`, `useHudResolve.ts`, `HudShell.tsx`, `AppShell.tsx`, `HudDock.tsx`, `HudArtwork.tsx`, `HudLayoutContext.tsx`, `hudBehavior.ts`; `scripts/ui-yaml-contract.mjs`, `generate-ui.mjs`, `ui-authority-test.mjs`, `hud-resolve-smoke.ts`, `hud-smoke.ts`, `hud-browser-test.mjs`; `docs/ARCHITECTURE.md`; `docs/planning/` for roadmap and TASK-007 planning files; `README.md`; `CONTRIBUTE.md`; `docs/captains-log.yaml`.
+
+#### Verification Required
+
+T0 typecheck; T1 YAML contract, generator/authority, resolver smoke, HUD contracts; T2 browser harness; T3 physical Motorola portrait and landscape. Do not treat browser PASS as physical completion.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-14-005; DEV-2026-09-14-001; DEV-2026-09-14-003; DEV-2026-09-14-004
+- Tests: TEST-2026-09-18-001; TEST-2026-09-18-002; TEST-2026-09-18-003; TEST-2026-09-18-004
+- Source: `src/ui/ts_layout/`; `src/ui/yaml_layout/`; `scripts/ui-yaml-contract.mjs`; `scripts/hud-resolve-smoke.ts`
+
+#### Next Steps
+
+Run portrait and landscape verification on the physical Motorola when it is attached. Keep TASK-007 OPEN. Do not commit without explicit user authorization.
+
+#### Deferred Decisions
+
+Physical Motorola acceptance; tablet YAML; true 9-slice extension of flexible bezels and title rules.
+
+---
+
+### DEV-2026-09-18-002 — TASK-007 provider-local obstruction coordinates
+
+**Date:** 2026-09-18
+
+**Engineer:** Codex
+
+**Status:** IMPLEMENTED; physical acceptance pending
+
+**Type:** CORRECTION
+
+The physical trace showed safe top/left added to matching negative window host
+origins. Installed RN Android Fabric measurement and safe-area-context use different
+origins in the relevant viewport-offset branch. The HUD now intersects its parent-local
+`onLayout` bounds with provider-local safe edges. `measureInWindow` is diagnostic
+only, with complete callback rectangles and stale-callback suppression. No YAML,
+generated reference geometry, or Figma fixture was changed.
+
+New orientation resolution waits for matching host/provider axes. HudDock defers
+its orientation transition until that resolution is ready. Pure and production-hook
+browser tests cover the supplied negative offsets and both stale-host rotations;
+the full HUD browser suite, typecheck, and authority gates pass.
+
+See [the source investigation](planning/TASK-007_COORDINATE_INVESTIGATION_2026-09-18.md)
+and TEST-2026-09-18-005. TASK-007 remains OPEN pending physical verification of the
+corrected bundle.

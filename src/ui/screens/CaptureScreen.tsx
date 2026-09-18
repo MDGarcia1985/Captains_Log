@@ -28,14 +28,14 @@ import {
   View,
 } from 'react-native';
 
-import { useHudLayout } from '@/ui/layout/HudLayoutContext';
+import { useHudLayout } from '@/ui/ts_layout/HudLayoutContext';
 import type { CapturedImage, GeoLocation } from '@/models/types';
 import { useRequiredAppServices } from '@/services/AppServicesProvider';
 import { colors, fonts } from '@/theme/tokens';
 import { CommandButton, TelemetryLabel } from '@/ui/components/primitives';
 import { useChrome } from '@/ui/state/ChromeContext';
 import { useHudRegistration, usePendingAttachment, type AttachmentAction } from '@/ui/state/HudCommands';
-import { typeStyle } from '@/ui/layout/HudArtwork';
+import { typeStyle } from '@/ui/ts_layout/HudArtwork';
 
 /*
  * Purpose: Fast local capture of text, optional photos, and optional location.

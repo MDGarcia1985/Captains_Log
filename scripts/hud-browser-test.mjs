@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import { parse } from 'yaml';
+import { checkHudCoordinates } from './hud-coordinate-browser-check.mjs';
 const require = createRequire(import.meta.url);
 const playwrightPath = process.env.HUD_PLAYWRIGHT || 'playwright';
 const { chromium } = require(playwrightPath);
@@ -18,7 +19,7 @@ const output = path.resolve('.tmp/hud-qa');
 fs.mkdirSync(output, { recursive: true });
 const fixture = path.resolve('scripts/hud-fixtures.jsx');
 const layouts = Object.fromEntries(['portrait', 'landscape'].map(orientation => [orientation,
-  parse(fs.readFileSync(`src/ui/layouts/mobile/${orientation}.yaml`, 'utf8')).layout,
+  parse(fs.readFileSync(`src/ui/yaml_layout/mobile/${orientation}.yaml`, 'utf8')).layout,
 ]));
 const figma = JSON.parse(fs.readFileSync('scripts/fixtures/task007-figma.json', 'utf8'));
 const geometryResults = [];
@@ -46,6 +47,12 @@ try {
   browser = await chromium.launch({ headless: true, ...(process.env.HUD_BROWSER
     ? { executablePath: process.env.HUD_BROWSER }
     : fs.existsSync(chromium.executablePath()) ? {} : { channel: 'chrome' }) });
+  await checkHudCoordinates(browser, `http://127.0.0.1:${server.address().port}`);
+  if (process.argv.includes('--coordinates-only')) {
+    await browser.close();
+    server.close();
+    process.exit(0);
+  }
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const errors = [];
   page.on('pageerror', e => { errors.push(e.message); console.error('Browser error:', e.message); });
@@ -53,75 +60,99 @@ try {
   const button = name => page.getByRole('button', { name, exact: true });
   async function checkGeometry(size, { leftHanded = false, dockVisible = false, hostSize = size, insets = { top: 0, right: 0, bottom: 0, left: 0 } } = {}) {
     await page.setViewportSize(size);
-    const orientation = size.width >= size.height ? 'landscape' : 'portrait';
+    const orientation = hostSize.width >= hostSize.height ? 'landscape' : 'portrait';
     const layout = layouts[orientation];
     const art = layout.reference_viewport;
-    const scale = Math.min((hostSize.width - insets.left - insets.right) / art.width, (hostSize.height - insets.top - insets.bottom) / art.height);
-    const origin = { x: insets.left + (hostSize.width - insets.left - insets.right - art.width * scale) / 2,
-      y: insets.top + (hostSize.height - insets.top - insets.bottom - art.height * scale) / 2 };
-    await page.waitForFunction(({ orientation, origin, width }) => {
+    await page.waitForFunction(({ orientation, host }) => {
       const hud = document.querySelector('[data-testid="mobile-hud"]');
       const rect = hud?.getBoundingClientRect();
       const frame = document.querySelector('[data-testid="hud-artboard-frame"]');
-      return frame && getComputedStyle(frame).opacity === '1' && hud?.id === orientation && Math.abs(rect.x - origin.x) < 0.2 && Math.abs(rect.y - origin.y) < 0.2 && Math.abs(rect.width - width) < 0.2;
-    }, { orientation, origin, width: art.width * scale }).catch(async error => {
-      console.error('Fit failure geometry', await page.evaluate(() => ['root', 'hud-buffer', 'hud-artboard-frame', 'mobile-hud'].map(id => {
+      const transform = hud ? getComputedStyle(hud).transform : '';
+      const unscaled = transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)';
+      return frame && getComputedStyle(frame).opacity === '1' && hud?.id === orientation && unscaled
+        && Math.abs(rect.x) < 1 && Math.abs(rect.y) < 1
+        && Math.abs(rect.width - host.width) < 1 && Math.abs(rect.height - host.height) < 1;
+    }, { orientation, host: hostSize }).catch(async error => {
+      console.error('Full-window geometry failure', await page.evaluate(() => ['root', 'hud-buffer', 'hud-artboard-frame', 'mobile-hud'].map(id => {
         const el = document.getElementById(id) || document.querySelector(`[data-testid="${id}"]`);
-        return { id, rect: el?.getBoundingClientRect().toJSON(), style: el?.getAttribute('style') };
+        return { id, rect: el?.getBoundingClientRect().toJSON(), style: el?.getAttribute('style'), transform: el ? getComputedStyle(el).transform : null };
       })));
       throw error;
     });
-    const regions = { ...layout.regions };
-    if (leftHanded && layout.left_handed) {
-      for (const [key, override] of Object.entries(layout.left_handed.regions)) regions[key] = { ...regions[key], ...override };
-    }
-    const targets = [
-      [page.getByTestId('hud-viewport'), regions.viewport],
-      [page.getByTestId('status-header'), regions.status_header],
-      [page.getByTestId('hud-title'), regions.title_block],
-      [page.getByTestId('hud-scanner'), regions.scanner],
-      [page.locator('[data-testid^="rail-"]'), regions.navigation_rail],
-      [button('Settings and more options'), regions.settings_menu],
-    ];
-    if (orientation === 'portrait' || dockVisible) targets.push([page.getByTestId('action-dock'), regions.action_dock]);
-    if (orientation === 'landscape') targets.push([button('Action dock handle'), { ...regions.action_dock_handle,
-      y: dockVisible ? regions.action_dock.y - regions.action_dock_handle.height : regions.action_dock_handle.y }]);
-    for (const [target, region] of targets) {
-      const actual = await target.boundingBox();
-      const expected = { x: origin.x + region.x * scale, y: origin.y + region.y * scale, width: region.width * scale, height: region.height * scale };
-      for (const key of ['x', 'y', 'width', 'height']) assert(Math.abs(actual[key] - expected[key]) < 0.2, `${orientation} ${await target.getAttribute('data-testid')} ${key}: ${actual[key]} != ${expected[key]}`);
-    }
+    const scannerBox = await page.getByTestId('hud-scanner').boundingBox();
+    assert(Math.abs(scannerBox.width - 60) < 0.5, `${orientation} scanner width ${scannerBox.width}`);
+    assert(Math.abs(scannerBox.height - 82) < 0.5, `${orientation} scanner height ${scannerBox.height}`);
     const border = await page.getByTestId('hud-outer-border').boundingBox();
-    for (const [key, value] of Object.entries({ x: origin.x + 8, y: origin.y + 8, width: art.width * scale - 16, height: art.height * scale - 16 }))
-      assert(Math.abs(border[key] - value) < 0.2, `${size.width}x${size.height} phone border ${key}`);
-    assert.equal(await page.getByTestId('mobile-hud').getByTestId('hud-outer-border').count(), 0, 'Border is inside scaled artboard');
-    const node = id => figma[orientation].find(n => n.id === id);
-    const checkAsset = async (testId, parent, bounds) => {
-      const actual = await page.getByTestId(testId).boundingBox();
-      const values = [origin.x + (parent.x + bounds[0]) * scale, origin.y + (parent.y + bounds[1]) * scale, bounds[2] * scale, bounds[3] * scale];
-      ['x', 'y', 'width', 'height'].forEach((k, i) => assert(Math.abs(actual[k] - values[i]) < 0.2, `${testId}.${k}`));
-    };
-    const menu = node(orientation === 'portrait' ? '88:7' : '96:121');
-    await checkAsset(`art-${orientation === 'portrait' ? '' : 'landscape-'}menu-three-bars`, regions.settings_menu, [0, 0, ...menu.b.slice(2)]);
-    assert.equal(await page.getByTestId('art-status-angular-bezel').count(), orientation === 'portrait' ? 1 : 0);
-    await checkAsset('hud-heading', regions.title_block, node(orientation === 'portrait' ? '3:28' : '96:41').local);
-    const heading = page.getByTestId('hud-heading');
-    assert.equal(await heading.evaluate(el => getComputedStyle(el).textOverflow), 'clip');
-    if (await heading.textContent() === 'NEW RECORD') {
-      assert(await heading.evaluate((el, scale) => {
-        const range = document.createRange(); range.selectNodeContents(el);
-        return range.getBoundingClientRect().right - 4.32 * scale <= el.getBoundingClientRect().right + 0.2;
-      }, scale), 'NEW RECORD glyphs clipped');
-    }
-    if (orientation === 'landscape') {
-      await checkAsset('art-landscape-viewport-clipped-cyan-border', regions.viewport, node('96:51').local);
-      await checkAsset('art-landscape-title-angular-rule', regions.title_block, node('96:43').local);
-      if (await button('NEW').count()) await checkAsset('art-landscape-rail-button-new', { x: regions.navigation_rail.x, y: regions.navigation_rail.y + 183 }, node('96:63').local);
+    assert(Math.abs(border.x - 8) < 0.5, `${size.width}x${size.height} phone border x`);
+    assert(Math.abs(border.y - 8) < 0.5, `${size.width}x${size.height} phone border y`);
+    assert(Math.abs(border.width - (hostSize.width - 16)) < 0.5, `${size.width}x${size.height} phone border width`);
+    assert(Math.abs(border.height - (hostSize.height - 16)) < 0.5, `${size.width}x${size.height} phone border height`);
+    assert.equal(await page.getByTestId('mobile-hud').getByTestId('hud-outer-border').count(), 1, 'Border is a full-window canvas region');
+    const referenceSize = hostSize.width === art.width && hostSize.height === art.height
+      && insets.top === 0 && insets.right === 0 && insets.bottom === 0 && insets.left === 0;
+    if (referenceSize) {
+      const regions = { ...layout.reference_regions };
+      if (leftHanded && layout.reference_handedness?.left?.regions) {
+        for (const [key, override] of Object.entries(layout.reference_handedness.left.regions)) {
+          regions[key] = { ...regions[key], ...override };
+        }
+      }
+      const targets = [
+        [page.getByTestId('hud-viewport'), regions.viewport],
+        [page.getByTestId('status-header'), regions.status_header],
+        [page.getByTestId('hud-title'), regions.title_block],
+        [page.getByTestId('hud-scanner'), regions.scanner],
+        [page.locator('[data-testid^="rail-"]'), regions.navigation_rail],
+        [button('Settings and more options'), regions.settings_menu],
+      ];
+      if (orientation === 'portrait' || dockVisible) targets.push([page.getByTestId('action-dock'), regions.action_dock]);
+      if (orientation === 'landscape') targets.push([button('Action dock handle'), { ...regions.action_dock_handle,
+        y: dockVisible ? regions.action_dock.y - regions.action_dock_handle.height : regions.action_dock_handle.y }]);
+      for (const [target, region] of targets) {
+        const actual = await target.boundingBox();
+        for (const key of ['x', 'y', 'width', 'height']) {
+          if (region[key] === undefined) continue;
+          if (Math.abs(actual[key] - region[key]) >= 0.6) console.error('Geometry mismatch context', await page.evaluate(() =>
+            ['hud-buffer', 'dock-reveal', 'dock-assembly', 'action-dock'].map(id => {
+              const el = document.querySelector(`[data-testid="${id}"]`);
+              return { id, rect: el?.getBoundingClientRect().toJSON(), style: el?.getAttribute('style'), parent: el?.parentElement.getBoundingClientRect().toJSON() };
+            })));
+          assert(Math.abs(actual[key] - region[key]) < 0.6, `${orientation} ${await target.getAttribute('data-testid')} ${key}: ${actual[key]} != ${region[key]}`);
+        }
+      }
+      const node = id => figma[orientation].find(n => n.id === id);
+      const checkAsset = async (testId, parent, bounds) => {
+        const actual = await page.getByTestId(testId).boundingBox();
+        const values = [parent.x + bounds[0], parent.y + bounds[1], bounds[2], bounds[3]];
+        ['x', 'y', 'width', 'height'].forEach((k, i) => assert(Math.abs(actual[k] - values[i]) < 0.6, `${testId}.${k}`));
+      };
+      const menu = node(orientation === 'portrait' ? '88:7' : '96:121');
+      await checkAsset(`art-${orientation === 'portrait' ? '' : 'landscape-'}menu-three-bars`, regions.settings_menu, [0, 0, ...menu.b.slice(2)]);
+      assert.equal(await page.getByTestId('art-status-angular-bezel').count(), orientation === 'portrait' ? 1 : 0);
+      await checkAsset('hud-heading', regions.title_block, node(orientation === 'portrait' ? '3:28' : '96:41').local);
+      const heading = page.getByTestId('hud-heading');
+      assert.equal(await heading.evaluate(el => getComputedStyle(el).textOverflow), 'clip');
+      if (await heading.textContent() === 'NEW RECORD') {
+        assert(await heading.evaluate(el => {
+          const range = document.createRange(); range.selectNodeContents(el);
+          return range.getBoundingClientRect().right - 4.32 <= el.getBoundingClientRect().right + 0.2;
+        }), 'NEW RECORD glyphs clipped');
+      }
+      if (orientation === 'landscape') {
+        await checkAsset('art-landscape-viewport-clipped-cyan-border', regions.viewport, node('96:51').local);
+        await checkAsset('art-landscape-title-angular-rule', regions.title_block, [0, 30, regions.title_block.width - 40, 18]);
+        if (await button('NEW').count()) await checkAsset('art-landscape-rail-button-new', { x: regions.navigation_rail.x, y: regions.navigation_rail.y + 183 }, node('96:63').local);
+      }
+    } else if (insets.top || insets.left) {
+      const header = await page.getByTestId('status-header').boundingBox();
+      const scanner = await page.getByTestId('hud-scanner').boundingBox();
+      assert(header.y >= insets.top + 8 - 0.5, `header must clear top obstruction ${header.y}`);
+      assert(scanner.y >= insets.top + 8 - 0.5, `scanner must clear top obstruction ${scanner.y}`);
     }
     const content = await page.getByTestId('hud-content').boundingBox();
     const panel = await page.getByTestId('hud-viewport').boundingBox();
     assert(content.x >= panel.x && content.y >= panel.y && content.x + content.width <= panel.x + panel.width + 0.2 && content.y + content.height <= panel.y + panel.height + 0.2);
-    geometryResults.push({ ...size, orientation, scale, origin, border, content, insets });
+    geometryResults.push({ ...size, orientation, scale: 1, origin: { x: 0, y: 0 }, border, content, insets, hostSize });
     assert.equal(await page.getByText('LOCAL ARCHIVE', { exact: true }).count(), 0);
     assert.equal(await button('LOG').count(), 0);
   }
@@ -205,7 +236,7 @@ try {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   for (const [inner, outer] of samples) {
-    assert(Math.abs(inner.x - 340) < 0.1 && Math.abs(inner.y - 64) < 0.1);
+    assert(Math.abs(inner.x - 345) < 0.1 && Math.abs(inner.y - 66) < 0.1);
     assert(Math.abs(outer.x - inner.x) < 0.1 && Math.abs(outer.y - inner.y) < 0.1);
     assert(Math.abs(inner.angle + outer.angle) < 0.05);
   }
@@ -365,7 +396,7 @@ try {
   assert.deepEqual(errors, []);
   fs.writeFileSync(path.join(output, 'motion-samples.json'), JSON.stringify(samples, null, 2));
   fs.writeFileSync(path.join(output, 'task007-geometry.json'), JSON.stringify(geometryResults, null, 2));
-  console.log('HUD browser T2 PASS: AppShell rotation, YAML geometry, breakpoint/tablet buffers, safe areas, mounted draft preservation, landscape commit, entity routes, menu/dock/actions, handedness, scanner motion, reduced motion.');
+  console.log('HUD browser T2 PASS: AppShell rotation, full-window YAML regions, no global scale, mounted draft preservation, landscape commit, entity routes, menu/dock/actions, handedness, scanner motion, reduced motion.');
 } finally {
   if (browser) await browser.close();
   server.close();

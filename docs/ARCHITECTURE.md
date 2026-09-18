@@ -66,53 +66,59 @@ Google Drive is backup storage only. Derived entities and relationships are rege
 
 ## Responsive Shell
 
-> **TASK-007 corrective direction (DEV-2026-09-14-005):** the uniform-artboard fit
-> described below is the current transitional implementation, now superseded as the
-> intended model. The required replacement uses a full-window canvas, an 8-unit border
-> at actual window edges, fixed/anchored controls and flexible content regions.
-> Reference frame aspect ratios must not constrain runtime layout. Implementation
-> awaits the explicit narrow/short-window policies in
-> [the region classification](TASK-007_FULL_WINDOW_LAYOUT_2026-09-14.md).
+TASK-007 implements a full-window HUD. Canonical TypeScript lives in
+`src/ui/ts_layout/`. Canonical YAML lives in `src/ui/yaml_layout/`. The former
+layout runtime and YAML trees are retired; do not recreate them. Planning, migration,
+audit and roadmap notes live under `docs/planning/`.
 
 `AppShell` selects the generated mobile portrait or landscape YAML once and shares
-that layout and its capabilities with the HUD and route screens. Width thresholds
-never replace this shell with another UI. Tablet YAML remains unsupported; larger
-viewports use the corresponding mobile composition until a tablet design exists.
+that layout, handedness, and capabilities with the HUD and route screens. Width
+thresholds never replace this shell with another UI. Tablet YAML remains unsupported;
+larger viewports use the corresponding mobile composition until a tablet design exists.
 
 Native orientation follows `Dimensions.get('screen')`, subscribed to dimension
 changes, so an Android keyboard shrinking the window cannot select landscape.
-Web orientation follows window axes. The measured HUD host is intersected with the
-safe-area provider rectangle in window coordinates to determine fitting separately
-from orientation selection. Insets already consumed by a parent are not applied twice.
-The loading root also registers measurement, so React Native Web observes it at mount.
-Development-only `HUD_FIT` traces record the entire coordinate handoff and the legacy
-window-based result for comparison on a connected phone; they contain no entry content.
+Web orientation follows window axes. The HUD host's `onLayout` rectangle is
+intersected with the provider-local safe rectangle to obtain per-edge obstruction
+insets. The host is a direct native child of the root `SafeAreaProvider`; intervening
+context/auth components introduce no native view. `measureInWindow()` is diagnostic
+only: Android's React Native viewport origin can already subtract system-bar/cutout
+offsets, unlike the provider's root-relative frame. Mixing those origins doubles
+obstructions. Rotation remains pending until host and provider match the selected
+orientation; the native keyboard height exception retains screen-based selection.
+Those insets
+constrain named safe groups during region resolution; they do not translate or
+letterbox the canvas. Development-only `HUD_RESOLVE` traces record host, insets,
+status, provider-local host bounds and key rectangles; they contain no entry content.
 
-The authorized artboard scales uniformly up or down to contain it in the usable safe
-area. Aspect mismatch creates centered letterboxing only on the unfilled axis. The
-outer border is drawn outside the artboard transform, 8 logical units inside the
-fitted frame; there is no additional artboard margin. YAML declares the override,
-square (default landscape), orientation-source and fitting policies. Parent regions,
-artwork, export/glow envelopes, content rectangles and interaction targets remain
-distinct. Portrait handedness offsets are declared in portrait YAML. Landscape YAML
-supports only canonical right-handed geometry. Settings shows a disabled, dim Left
-option and does not write the portrait preference; rotation back restores that preference.
+`resolveHudLayout` consumes schema 3 `runtime_regions` plus merged components.
+It ignores `reference_regions` for placement. There is no global uniform scale and
+no artboard aspect lock. The canvas and background cover the actual window. The
+outer border stays 8 logical units from actual window edges. Fixed controls keep
+Figma sizes. Flexible viewport and rail regions absorb remaining space. Gaps
+interpolate between declared min and preferred tokens. Portrait minimum window is
+362 × 481; landscape minimum is 775 × 206. Below those floors the resolver reports
+`unsupported_size` instead of inventing a layout or scaling the HUD. Short rails
+scroll locally after gaps reach min. Portrait left-handed geometry is a horizontal
+override of the same regions; landscape remains canonical right, with Left visible
+and disabled in Settings.
 
 Landscape dock assets remain mounted and finish loading before expansion. One parent
 translation moves the dock and its attached handle together, using YAML's 240 ms
-cubic-out transition (immediate with reduced motion). Figma defines the expanded dock
-and collapsed handle rectangles; YAML attaches the expanded handle above the bezel.
-The collapsed handle bottom defines the reveal clip. Geometry and preference regression
-checks cover both directions and rotation during the dock's lifecycle.
+cubic-out transition (immediate with reduced motion). The collapsed parent envelope
+is 363.262 × 115.277; the visible bezel stays 350 × 96; the handle stays 77.5 × 27.5;
+canonical expanded height is 123.5 without stretching internal artwork.
 
 Screen capabilities in `mobile.yaml` determine shell commands, entity navigation,
 autofocus, and return-home behavior after capture. Rotation keeps the same shell and
 route subtree mounted, preserving drafts. `scripts/hud-browser-test.mjs` mounts
-`AppShell` and verifies geometry, old breakpoint boundaries, buffers, safe areas,
-state preservation, and navigation. TASK-007 authority checks compare an independent
-live Figma snapshot to canonical YAML/assets before comparing YAML to generated data.
-The generator rejects content outside its panel before writing output. Figma owns
-appearance; YAML owns meaning. See DEV-2026-09-14-001 and subsequent TASK-007 test records.
+`AppShell` and verifies full-window bounds, Figma scanner 315,28 at the portrait
+reference, no global transform, state preservation, and navigation. TASK-007
+authority checks compare an independent live Figma snapshot to canonical YAML/assets
+before comparing YAML to generated data. Figma owns appearance; YAML owns meaning;
+generated code and runtime implement both. See DEV-2026-09-14-005, DEV-2026-09-18-001,
+and [the region classification](planning/TASK-007_FULL_WINDOW_LAYOUT_2026-09-14.md).
+TASK-007 stays OPEN until physical Motorola verification.
 
 ## Authentication
 
