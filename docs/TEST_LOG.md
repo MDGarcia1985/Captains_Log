@@ -3185,3 +3185,513 @@ not changed to address the failure.
 Automated correction verified. No physical-device run or installation was performed
 in this investigation; fresh portrait/landscape `HUD_RESOLVE` traces from the corrected
 bundle remain the acceptance follow-up. TASK-007 stays OPEN. No commit.
+
+---
+
+### TEST-2026-09-20-001 — Account identity YAML contract and schema audit
+
+**Date:** 2026-09-20  
+**Time:** 21:50 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T0 / T1  
+**Result:** PASS
+
+#### Scope
+
+Authoritative account-identity YAML (P00): parse the contract and check schema versions against the repository.
+
+#### Files Under Validation
+
+- docs/ACCOUNT_IDENTITY.yaml
+- scripts/account-identity-yaml-smoke.ts
+- src/adapters/sqlite/schema.ts
+- src/adapters/sqlite/database.ts
+- src/adapters/sqlite/migrations.ts
+- src/ui/ui.yaml
+- src/ui/yaml_layout/mobile/mobile.yaml
+- package.json
+
+#### Objective
+
+Confirm the YAML parses, SQLite remains version 2, HUD layout generator is schema 3, D1–D12 are APPROVED, and P01 is the next implementation phase.
+
+#### Preconditions
+
+Project dependencies installed, including `yaml` and `tsx`.
+
+#### Procedure
+
+1. Run `npx tsx scripts/account-identity-yaml-smoke.ts`.
+2. Run `npm run test:node`.
+
+#### Expected Result
+
+YAML smoke passes. Combined node smoke still passes extraction, attachment, and schema v2 checks.
+
+#### Actual Result
+
+First YAML parse failed: `YAMLParseError` at `services.AuthService` because mapping keys (`lifetime`) were mixed into a sequence. After converting service entries to maps with `responsibilities` lists, both commands passed.
+
+#### Evidence
+
+- `npx tsx scripts/account-identity-yaml-smoke.ts` → `PASS account-identity-yaml-smoke` / `assertions=44`
+- `npm run test:node` → `PASS node-smoke` / `assertions=16`; `PASS TASK-005 attachment copy ordering, URI preservation, and failure fallback`; `PASS account-identity-yaml-smoke` / `assertions=44`
+
+#### Failures / Observations
+
+The initial indent error was in the contract document, not in SQLite. No device tests were run; none are required for P00.
+
+#### Related DEVNOTES
+
+DEV-2026-09-20-002, DEV-2026-09-20-003
+
+#### Related Tests
+
+None.
+
+#### Disposition
+
+P00 documentation contract is verified. Implementation may proceed to P01 identity TypeScript contracts. Native Google, encryption, and authority deployment remain out of scope.
+
+---
+
+---
+
+### TEST-2026-09-21-002 — Record approved Signal-inspired cryptographic decisions
+
+**Date:** 2026-09-21  
+**Time:** 21:45 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T0 / T1  
+**Result:** PASS
+
+#### Scope
+
+Authoritative account-identity YAML after D31/D33/D36 approval and D34/D35 approved direction.
+
+#### Files Under Validation
+
+- docs/ACCOUNT_IDENTITY.yaml
+- scripts/account-identity-yaml-smoke.ts
+- src/adapters/sqlite/schema.ts
+- package.json
+
+#### Objective
+
+Confirm the YAML parses, D31/D33/D36 are APPROVED, D34/D35 are APPROVED_DIRECTION, D38 exists as remaining sharing specification, session-token invariants I25–I30 exist, grant TTLs match 300/3600/120, and the 256-bit / 64-hex recovery secret is recorded. P01 remains blocked.
+
+#### Preconditions
+
+Project dependencies installed, including `yaml` and `tsx`.
+
+#### Procedure
+
+1. Run `npx tsx scripts/account-identity-yaml-smoke.ts`.
+2. Run `npm run test:node`.
+
+#### Expected Result
+
+YAML smoke passes. Combined node smoke still passes extraction, attachment, and schema v2 checks. D13, D14, D32, D37, and D38 remain PROPOSED_REVIEW. Implementation has not started.
+
+#### Actual Result
+
+Both commands passed. YAML smoke reported 81 assertions.
+
+#### Evidence
+
+- `npx tsx scripts/account-identity-yaml-smoke.ts` → `PASS account-identity-yaml-smoke` / `assertions=81`
+- `npm run test:node` → `PASS node-smoke` / `assertions=16`; attachment smoke PASS; `PASS account-identity-yaml-smoke` / `assertions=81`
+
+#### Failures / Observations
+
+No device tests were run; none are required for this documentation update. P01 remains blocked on remaining proposed-review items.
+
+#### Related DEVNOTES
+
+DEV-2026-09-21-002
+
+#### Related Tests
+
+TEST-2026-09-20-001
+
+#### Disposition
+
+Accepted cryptographic direction is recorded in the contract. Do not start P01.
+
+---
+
+---
+
+### TEST-2026-09-21-003 — Layered archive key hierarchy contract
+
+**Date:** 2026-09-21  
+**Time:** 22:00 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T0 / T1  
+**Result:** PASS
+
+#### Scope
+
+Authoritative account-identity YAML after D15/D28 approval and D33/D34 hierarchy clarification.
+
+#### Files Under Validation
+
+- docs/ACCOUNT_IDENTITY.yaml
+- scripts/account-identity-yaml-smoke.ts
+
+#### Objective
+
+Confirm the YAML parses, D15/D28 are APPROVED, Recovery Secret is 256-bit / 64 hex, Recovery KEK HKDF info is `captains-log/recovery-kek/v1`, sqlite domain is `captains-log/sqlite/v1`, AES-GCM nonce reuse is forbidden, and plaintext migration does not claim physical erasure. P04/P14/P19/P20/P24 remain unimplemented.
+
+#### Preconditions
+
+Project dependencies installed, including `yaml` and `tsx`.
+
+#### Procedure
+
+1. Run `npx tsx scripts/account-identity-yaml-smoke.ts`.
+2. Run `npm run test:node`.
+
+#### Expected Result
+
+YAML smoke passes with D15/D28 APPROVED and the new hierarchy assertions. Combined node smoke still passes extraction, attachment, and schema v2 checks.
+
+#### Actual Result
+
+Both commands passed. YAML smoke reported 102 assertions.
+
+#### Evidence
+
+- `npx tsx scripts/account-identity-yaml-smoke.ts` → `PASS account-identity-yaml-smoke` / `assertions=102`
+- `npm run test:node` → `PASS node-smoke` / `assertions=16`; attachment smoke PASS; `PASS account-identity-yaml-smoke` / `assertions=102`
+
+#### Failures / Observations
+
+No device tests were run; none are required for this documentation update. P01, P04, P14, P19, P20, and P24 remain unimplemented.
+
+#### Related DEVNOTES
+
+DEV-2026-09-21-003
+
+#### Related Tests
+
+TEST-2026-09-21-002
+
+#### Disposition
+
+Layered key hierarchy is recorded in the contract. Do not start P01, P04, P14, P19, P20, or P24.
+
+---
+
+---
+
+### TEST-2026-09-22-001 — D32/D38 corrections and P04 beta gate
+
+**Date:** 2026-09-22  
+**Time:** 21:45 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T0 / T1  
+**Result:** PASS
+
+#### Scope
+
+Authoritative account-identity YAML after restoring D38 as human-readable User ID, approving D32 local-versus-WebAuthn, moving sharing leftovers to D34-A through D34-D, and requiring P04 before P29.
+
+#### Files Under Validation
+
+- docs/ACCOUNT_IDENTITY.yaml
+- scripts/account-identity-yaml-smoke.ts
+
+#### Objective
+
+Confirm D32 and D38 are APPROVED, D34-A through D34-D are PROPOSED_REVIEW, P29 lists P04, local archive unlock is not WebAuthn, and user_id is distinct from account_uuid.
+
+#### Preconditions
+
+Project dependencies installed, including `yaml` and `tsx`.
+
+#### Procedure
+
+1. Run `npx tsx scripts/account-identity-yaml-smoke.ts`.
+2. Run `npm run test:node`.
+
+#### Expected Result
+
+YAML smoke passes. Combined node smoke still passes extraction, attachment, and schema v2 checks. Implementation has not started.
+
+#### Actual Result
+
+Both commands passed. YAML smoke reported 119 assertions.
+
+#### Evidence
+
+- `npx tsx scripts/account-identity-yaml-smoke.ts` → `PASS account-identity-yaml-smoke` / `assertions=119`
+- `npm run test:node` → `PASS node-smoke` / `assertions=16`; attachment smoke PASS; `PASS account-identity-yaml-smoke` / `assertions=119`
+
+#### Failures / Observations
+
+No device tests were run. P01, P04, P14, P19, P20, and P24 remain unimplemented.
+
+#### Related DEVNOTES
+
+DEV-2026-09-22-001
+
+#### Related Tests
+
+TEST-2026-09-21-003
+
+#### Disposition
+
+Corrections are recorded in the contract. Do not start blocked phases.
+
+---
+
+### TEST-2026-09-28-001 — Approve remaining architecture and release P01 hold
+
+**Date:** 2026-09-28  
+**Time:** 16:10 America/New_York  
+**Tester:** Cursor Grok 4.6 agent  
+**Level:** T0 / T1  
+**Result:** PASS
+
+#### Scope
+
+Authoritative account-identity YAML after approving D13, D14, D16, D24, D29, D30, D34, D34-A through D34-D, and D37; adding repository-boundary and AWS placeholder contracts; and releasing the P01 architecture hold.
+
+#### Files Under Validation
+
+- docs/ACCOUNT_IDENTITY.yaml
+- docs/aws.example.yaml
+- scripts/account-identity-yaml-smoke.ts
+
+#### Objective
+
+Confirm the YAML parses, newly approved decisions are APPROVED, D35 remains APPROVED_DIRECTION, P01 is unblocked, remaining sharing specification is empty, authority hosting is ECS Fargate, repository-boundary names match, the AWS example uses placeholders only, P29 still requires P04, and P08/P10 remain operator-blocked.
+
+#### Preconditions
+
+Project dependencies installed, including `yaml` and `tsx`.
+
+#### Procedure
+
+1. Run `npx tsx scripts/account-identity-yaml-smoke.ts`.
+2. Run `npm run test:node`.
+
+#### Expected Result
+
+YAML smoke passes. Combined node smoke still passes extraction, attachment, and schema v2 checks. P01 implementation has not started.
+
+#### Actual Result
+
+Both commands passed. YAML smoke reported 144 assertions.
+
+#### Evidence
+
+- `npx tsx scripts/account-identity-yaml-smoke.ts` → `PASS account-identity-yaml-smoke` / `assertions=144`
+- `npm run test:node` → `PASS node-smoke` / `assertions=16`; attachment smoke PASS; `PASS account-identity-yaml-smoke` / `assertions=144`
+
+#### Failures / Observations
+
+No device tests were run. P01, P04, P05, P14, P19, P20, and P24 remain unimplemented.
+
+#### Related DEVNOTES
+
+DEV-2026-09-28-001
+
+#### Related Tests
+
+TEST-2026-09-22-001
+
+#### Disposition
+
+Architecture hold released in the contract. Do not start later phases in this pass.
+
+---
+
+### TEST-2026-10-28-001 — Landscape dock bezel sync
+
+**Date:** 2026-10-28  
+**Time:** 15:21 America/New_York  
+**Tester:** Cursor Grok 4.7 agent  
+**Level:** T2  
+**Result:** PASS
+
+#### Scope
+
+Live Figma landscape dock pushed into schema 3 YAML, generated spec, resolver, and rendered HUD.
+
+#### Files Under Validation
+
+`src/ui/yaml_layout/mobile/landscape.yaml`; `src/ui/yaml_layout/mobile/components/landscape/action-dock.yaml`; `src/ui/generated/uiSpec.ts`; `src/ui/ts_layout/HudDock.tsx`; `src/ui/ts_layout/HudShell.tsx`; `src/ui/ts_layout/hudBehavior.ts`; `scripts/fixtures/task007-figma.json`; `scripts/generate-ui.mjs`; `scripts/hud-smoke.ts`; `scripts/hud-browser-test.mjs`
+
+#### Objective
+
+Confirm the rebuilt landscape dock is the 350×96 bezel at the reference window, the handle overlaps it by 2.5 while expanded, collapse still parks the handle, and viewport content remains clickable after collapse.
+
+#### Preconditions
+
+Figma file `dFwk8LAWauplWqrOKaQplU` read live. Portrait frame geometry was unchanged. Playwright/Chromium available.
+
+#### Procedure
+
+1. `node scripts/generate-ui.mjs`
+2. `npx tsc --noEmit`
+3. `npx tsx scripts/hud-smoke.ts`
+4. `node scripts/hud-browser-test.mjs`
+
+#### Expected Result
+
+Generator and authority gates pass. Resolver places the landscape dock at (163, 276, 350, 96) and the collapsed handle at y=340. Browser harness passes expand, collapse, and later entity clicks.
+
+#### Actual Result
+
+All four commands passed. An intermediate build that started the dock expanded failed the browser harness because the dock intercepted clicks on search and graph rows. That default was reverted before the passing run.
+
+#### Evidence
+
+- `node scripts/generate-ui.mjs` → Gate A PASS; UI specification PASS
+- `npx tsc --noEmit` → exit 0
+- `npx tsx scripts/hud-smoke.ts` → YAML schema 3 contract PASS; Gate A PASS; Gate B PASS; HUD resolver PASS; HUD contracts PASS
+- `node scripts/hud-browser-test.mjs` → HUD browser T2 PASS
+
+#### Failures / Observations
+
+Open-by-default covered landscape viewport rows. Resting state stays collapsed. Existing MODULE_TYPELESS_PACKAGE_JSON warning on generated `uiSpec.ts` remains. No physical device was attached.
+
+#### Related DEVNOTES
+
+DEV-2026-10-28-001
+
+#### Related Tests
+
+TEST-2026-09-18-002; TEST-2026-09-18-003
+
+#### Disposition
+
+YAML, generated spec, and browser HUD accept the new landscape bezel. TASK-007 stays OPEN until physical Motorola verification.
+
+---
+
+### TEST-2026-10-28-002 — Dock captions hidden
+
+**Date:** 2026-10-28  
+**Time:** 15:45 America/New_York  
+**Tester:** Cursor Grok 4.7 agent  
+**Level:** T2  
+**Result:** PASS
+
+#### Scope
+
+Visible dock captions removed after confirming both Figma docks have no text layers.
+
+#### Files Under Validation
+
+`src/ui/yaml_layout/mobile/components/shared/action-dock.yaml`; `src/ui/generated/uiSpec.ts`; `src/ui/ts_layout/HudDock.tsx`; `scripts/hud-smoke.ts`; `scripts/hud-browser-test.mjs`
+
+#### Objective
+
+Confirm the spec marks dock labels not visible, the HUD does not paint them, and ADD, CAMERA, LOCATION, and EXPORT remain the accessible button names.
+
+#### Preconditions
+
+Live Figma read of portrait dock `2:26` and landscape dock `96:82` returned no text nodes.
+
+#### Procedure
+
+1. `node scripts/generate-ui.mjs`
+2. `npx tsc --noEmit`
+3. `npx tsx scripts/hud-smoke.ts`
+4. `node scripts/hud-browser-test.mjs`
+
+#### Expected Result
+
+Typecheck and HUD smoke pass with `label.visible` false. Browser harness still operates the dock buttons by accessible name.
+
+#### Actual Result
+
+All four commands passed. The first typecheck failed on an unrelated comparison of dock visibility with `"expanded"`; that comparison was removed and typecheck then passed.
+
+#### Evidence
+
+- `npx tsc --noEmit` → exit 0
+- `npx tsx scripts/hud-smoke.ts` → HUD contracts PASS, including `label.visible` false
+- `node scripts/hud-browser-test.mjs` → HUD browser T2 PASS
+
+#### Failures / Observations
+
+No physical device was attached. Caption removal is static and browser-verified only.
+
+#### Related DEVNOTES
+
+DEV-2026-10-28-002
+
+#### Related Tests
+
+TEST-2026-10-28-001
+
+#### Disposition
+
+Visible dock captions match Figma. Accessible names are unchanged.
+
+---
+
+### TEST-2026-10-28-003 — Dock icon centering
+
+**Date:** 2026-10-28  
+**Time:** 15:50 America/New_York  
+**Tester:** Cursor Grok 4.7 agent  
+**Level:** T1  
+**Result:** PASS
+
+#### Scope
+
+Shared dock plate and icon offsets after the Figma plates moved to the vertical center of the bezel.
+
+#### Files Under Validation
+
+`src/ui/yaml_layout/mobile/components/shared/action-dock.yaml`; `src/ui/generated/uiSpec.ts`; `scripts/hud-smoke.ts`
+
+#### Objective
+
+Confirm the generated dock places the plate at y=17 and the icon at x=20, y=32.
+
+#### Preconditions
+
+Live Figma measurement of portrait `2:26` and landscape `96:82`: plate y=17, icon local (20, 15), both 32×32 inside a 72×62 plate.
+
+#### Procedure
+
+1. `node scripts/generate-ui.mjs`
+2. `npx tsx scripts/hud-smoke.ts`
+
+#### Expected Result
+
+Generator PASS. HUD contracts PASS with plate y=17 and icon x=20, y=32.
+
+#### Actual Result
+
+Both commands passed.
+
+#### Evidence
+
+`npx tsx scripts/hud-smoke.ts` → HUD contracts PASS.
+
+#### Failures / Observations
+
+No browser pixel measurement of the icon images was added. The rendered bounds come directly from these spec fields.
+
+#### Related DEVNOTES
+
+DEV-2026-10-28-003
+
+#### Related Tests
+
+TEST-2026-10-28-002
+
+#### Disposition
+
+Dock icons match the centered Figma plates in the generated spec.
+
+---
+
+

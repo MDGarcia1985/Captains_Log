@@ -22,6 +22,9 @@ const layouts = Object.fromEntries(['portrait', 'landscape'].map(orientation => 
   parse(fs.readFileSync(`src/ui/yaml_layout/mobile/${orientation}.yaml`, 'utf8')).layout,
 ]));
 const figma = JSON.parse(fs.readFileSync('scripts/fixtures/task007-figma.json', 'utf8'));
+const landscapeDock = parse(fs.readFileSync('src/ui/yaml_layout/mobile/components/landscape/action-dock.yaml', 'utf8')).component;
+const dockStartsOpen = landscapeDock.behavior.default_visibility !== 'collapsed';
+const dockOverlap = landscapeDock.expanded_assembly.overlap_with_bezel;
 const geometryResults = [];
 await build({
   entryPoints: ['scripts/hud-harness.jsx'], outfile: path.join(output, 'harness.js'), bundle: true,
@@ -105,9 +108,15 @@ try {
         [page.locator('[data-testid^="rail-"]'), regions.navigation_rail],
         [button('Settings and more options'), regions.settings_menu],
       ];
-      if (orientation === 'portrait' || dockVisible) targets.push([page.getByTestId('action-dock'), regions.action_dock]);
-      if (orientation === 'landscape') targets.push([button('Action dock handle'), { ...regions.action_dock_handle,
-        y: dockVisible ? regions.action_dock.y - regions.action_dock_handle.height : regions.action_dock_handle.y }]);
+      const dockOpen = orientation === 'landscape' && (dockVisible || dockStartsOpen);
+      if (orientation === 'portrait' || dockOpen) targets.push([page.getByTestId('action-dock'), regions.action_dock]);
+      if (orientation === 'landscape') {
+        const handle = regions.action_dock_handle;
+        const collapsedGap = layout.runtime_regions.action_dock_handle.anchors.bottom.gap.preferred;
+        const collapsedY = regions.action_dock.y + regions.action_dock.height - collapsedGap - handle.height;
+        const expandedY = regions.action_dock.y - handle.height + dockOverlap;
+        targets.push([button('Action dock handle'), { ...handle, y: dockOpen ? expandedY : collapsedY }]);
+      }
       for (const [target, region] of targets) {
         const actual = await target.boundingBox();
         for (const key of ['x', 'y', 'width', 'height']) {
@@ -278,17 +287,16 @@ try {
     await page.waitForFunction(() => globalThis.dockMotionDone);
     const samples = await page.evaluate(() => globalThis.dockMotionSamples);
     assert(new Set(samples.map(s => Math.round(s.y))).size > 2, 'Dock did not slide');
-    assert(samples.every(s => s.attached && Math.abs(s.y - s.handleBottom) < 0.2), 'Dock remounted, artwork incomplete, or handle detached');
+    assert(samples.every(s => s.attached && Math.abs(s.handleBottom - s.y - dockOverlap) < 0.2), 'Dock remounted, artwork incomplete, or handle detached');
     fs.writeFileSync(path.join(output, `dock-motion-${await button('Action dock handle').getAttribute('aria-expanded')}.json`), JSON.stringify(samples, null, 2));
   }
   await checkDockTransition();
   await button('ADD').waitFor();
   await page.screenshot({ path: path.join(output, 'landscape-expanded.png') });
   await checkGeometry({ width: 844, height: 390 }, { dockVisible: true });
-  // Figma separates the 363.262 x 115.277 parent from the 350 x 96 bezel.
   const dockBox = await page.getByTestId('action-dock').boundingBox();
   const bezelBox = await page.getByTestId('action-dock').locator('img').first().boundingBox();
-  assert(Math.abs(dockBox.width - 363.262) < 0.2);
+  assert(Math.abs(dockBox.width - 350) < 0.2);
   assert.equal(bezelBox.width, 350); assert.equal(bezelBox.height, 96);
   await checkDockTransition();
   await page.waitForFunction(() => document.querySelector('[data-testid="action-dock"]')?.getAttribute('aria-hidden') === 'true');

@@ -1,5 +1,5 @@
 # TASK-007 relational YAML proposal; generator/runtime migration intentionally deferred.
-# Collapsed parent, bezel, handle, and expanded assembly are distinct. Internal artwork stays native size.
+# The Figma frame is the bezel. The handle hangs above it and overlaps the top by 2.5.
 component:
   id: action_dock
   behavior:
@@ -17,9 +17,9 @@ component:
   sizing: fixed
   placement_owner: orientation
   collapsed_parent:
-    role: collapsed_envelope
-    width: 363.262
-    height: 115.277
+    role: visible_bezel
+    width: 350
+    height: 96
     sizing: fixed
   bezel:
     role: visible_bezel
@@ -37,32 +37,34 @@ component:
     contain_in: viewport
     include_handle: true
     handle_anchor: above_bezel_top
-    overlap_with_bezel: 0
-    height: 123.5
+    overlap_with_bezel: 2.5
+    height: 121
     height_canonical: true
-    height_basis: handle 27.5 + bezel 96
-    width: 363.262
-    width_role: collapsed_parent_width
+    height_basis: handle 27.5 + bezel 96 - overlap 2.5
+    width: 350
+    width_role: bezel_width
     scale_internal_artwork: false
-  size_role: collapsed_parent_envelope
+  size_role: visible_bezel
   size:
-    width: 363.262
-    height: 115.277
+    width: 350
+    height: 96
   reference_geometry:
     parent_bounds:
       x: 0
       y: 0
-      width: 363.2619323730469
-      height: 115.27710723876953
+      width: 350
+      height: 96
     bezel_bounds:
       x: 0
       y: 0
       width: 350
       height: 96
     handle_bounds:
+      x: 136
+      y: -25
       width: 77.5
       height: 27.5
-    expanded_assembly_height: 123.5
+    expanded_assembly_height: 121
   bezel_layout:
     sizing: fixed
     width: 350
@@ -78,13 +80,13 @@ component:
   spacing:
     axis: horizontal
     leading:
-      min: 7
-      preferred: 7
-      max: 7
+      min: 10
+      preferred: 10
+      max: 10
     trailing:
-      min: 26.262
-      preferred: 26.262
-      max: 26.262
+      min: 10
+      preferred: 10
+      max: 10
     gap:
       min: 14
       preferred: 14

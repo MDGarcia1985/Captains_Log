@@ -4,7 +4,7 @@ Append-only engineering journal. Follow `DEVNOTES_STANDARDS.md`.
 
 ---
 
-### Greenfield Expo MVP bootstrap
+### DEV-2026-08-20-001 — Greenfield Expo MVP bootstrap
 
 **Date:** 2026-08-20  
 **Time:** 15:20 America/New_York  
@@ -52,7 +52,7 @@ Proceed with the modular Expo implementation described in `ARCHITECTURE.md`. Pro
 
 ---
 
-### First vertical slice implemented
+### DEV-2026-08-20-002 — First vertical slice implemented
 
 **Date:** 2026-08-20  
 **Time:** 16:10 America/New_York  
@@ -89,7 +89,7 @@ A runnable Expo SDK 57 Captain's Log prototype exists. Remaining MVP gaps are Go
 
 ---
 
-### Function header format mandated
+### DEV-2026-08-20-003 — Function header format mandated
 
 **Date:** 2026-08-20  
 **Time:** 20:30 America/New_York  
@@ -1182,7 +1182,7 @@ None.
 
 ---
 
-### DEV-2026-08-22-020 — Initial Android emulator findings
+### DEV-2026-08-22-001 — Initial Android emulator findings
 
 **Date:** 2026-08-22
 **Time:** 20:13 America/New_York 
@@ -1225,7 +1225,7 @@ None.
 
 ---
 
-### DEV-2026-08-24-021 — Add code-structure constraints to master YAML
+### DEV-2026-08-24-001 — Add code-structure constraints to master YAML
 
 **Date:** 2026-08-24
 **Time:** 11:07 EDT
@@ -1316,7 +1316,7 @@ Perform T0 validation of the modified YAML:
 #### Related Records
 
 - `docs/DEVNOTES.md`
-- DEV-2026-08-22-020 — Initial Android emulator findings
+- DEV-2026-08-22-001 — Initial Android emulator findings
 - Tests: Pending
 - Source: `docs/captains-log.yaml`
 
@@ -1336,7 +1336,7 @@ None.
 
 ---
 
-### DEV-2026-08-31-022 — Declarative UI Specification Architecture
+### DEV-2026-08-31-001 — Declarative UI Specification Architecture
 
 **Date:** 2026-08-31
 **Time:** 21:24 EDT
@@ -1602,7 +1602,7 @@ These should be resolved as the Figma design and implementation architecture mat
 
 ---
 
-### DEV-2026-09-07-023 — Portable Export and Long-Term Data Ownership
+### DEV-2026-09-07-001 — Portable Export and Long-Term Data Ownership
 
 **Date:** 2026-09-07
 **Time:** 13:06 EDT
@@ -1797,7 +1797,7 @@ No validation result is asserted by this observation.
 
 ---
 
-### DEV-2026-09-07-024 — Proposed Figma and YAML UI Harmonization Plan
+### DEV-2026-09-07-002 — Proposed Figma and YAML UI Harmonization Plan
 
 **Date:** 2026-09-07
 
@@ -1821,7 +1821,7 @@ application capabilities.
 
 #### Context and Constraints
 
-DEV-2026-08-31-022 establishes YAML as the canonical declarative UI specification,
+DEV-2026-08-31-001 establishes YAML as the canonical declarative UI specification,
 Figma as the visual reference, and TypeScript/React Native as the owners of executable
 behavior and rendering. The actual new specifications reside under `src/ui/`.
 
@@ -1835,7 +1835,7 @@ The current Figma file is `dFwk8LAWauplWqrOKaQplU`, page `0:1`, HUD frame `2:20`
 Live default/hidden assets, style/token values and scanner keyframes were inspected.
 The current file has four rail buttons and Camera/Gallery/Location/Add in its dock;
 the draft YAML includes additional Settings/Export visual placements. Settings is an
-existing application destination; DEV-2026-09-07-023 recognizes portable export while
+existing application destination; DEV-2026-09-07-001 recognizes portable export while
 leaving its dock placement undecided.
 
 #### Solutions Considered
@@ -1911,7 +1911,7 @@ under the repository standard. No test-log entry is added by this analysis-only 
 
 #### Related Records
 
-- DEVNOTES: DEV-2026-08-22-020, DEV-2026-08-31-022, DEV-2026-09-07-023
+- DEVNOTES: DEV-2026-08-22-001, DEV-2026-08-31-001, DEV-2026-09-07-001
 - Tests: Pending
 - Source: `docs/UI_HARMONIZATION_PLAN.md`, the ten specification paths above,
   `src/ui/layout/NavigationRail.tsx`, `src/ui/layout/AppShell.tsx`,
@@ -1936,7 +1936,7 @@ the evidence and specific decisions required.
 
 ---
 
-### DEV-2026-09-07-025 — Approved Mobile HUD Implementation
+### DEV-2026-09-07-003 — Approved Mobile HUD Implementation
 
 **Date:** 2026-09-07
 
@@ -1950,7 +1950,7 @@ the evidence and specific decisions required.
 
 #### Problem
 
-DEV-024 proposed harmonization only. The user now approves execution, including
+DEV-2026-09-07-002 proposed harmonization only. The user now approves execution, including
 React Native behavior, and resolves Q1–Q8 through explicit instructions A1–A8.
 
 #### Context and Constraints
@@ -1978,7 +1978,7 @@ explicit changes below. Preserve larger-screen workflows and historical records.
   hand-maintained visual specification. Keep geometry in assets, not YAML.
 - A7: Do not render the unpainted grid/scanline reference layers.
 - A8: Execute the prior plan where consistent with A1–A7. Runtime implementation
-  is now explicitly in scope, superseding DEV-024's analysis-only restriction.
+  is now explicitly in scope, superseding DEV-2026-09-07-002's analysis-only restriction.
 
 #### Rationale
 
@@ -1997,7 +1997,7 @@ unexecuted device checks honestly; they remain release gates, not implied PASS.
 
 #### Related Records
 
-DEV-2026-08-31-022, DEV-2026-09-07-023, DEV-2026-09-07-024;
+DEV-2026-08-31-001, DEV-2026-09-07-001, DEV-2026-09-07-002;
 docs/UI_HARMONIZATION_PLAN.md. Tests will be appended after execution.
 
 #### Deferred Decisions
@@ -2010,7 +2010,7 @@ until a subsequent decision defines its contract.
 
 ---
 
-### DEV-2026-09-08-026 — Android HUD Bundle Failure from Missing Font Assets
+### DEV-2026-09-08-001 — Android HUD Bundle Failure from Missing Font Assets
 
 **Date:** 2026-09-08
 **Time:** 13:32 ET
@@ -2060,7 +2060,7 @@ until a subsequent decision defines its contract.
 
 #### Related Records
 
-- DEVNOTES: DEV-2026-09-07-025
+- DEVNOTES: DEV-2026-09-07-003
 - Tests: TEST-2026-09-07-002; TEST-2026-09-07-004; Android verification Pending
 - Source: `src/ui/layout/HudShell.tsx`; `src/ui/HudArtwork.tsx`; `scripts/prepare-hud-fonts.py`; `assets/fonts/`; `typography.yaml`; generated `uiSpec.ts`; commit `7ee54f2`
 
@@ -2068,7 +2068,7 @@ until a subsequent decision defines its contract.
 
 ---
 
-### DEV-2026-09-08-027 — Nested VirtualizedList Runtime Warning
+### DEV-2026-09-08-002 — Nested VirtualizedList Runtime Warning
 
 **Date:** 2026-09-08
 **Time:** 14:42 ET
@@ -2112,7 +2112,7 @@ until a subsequent decision defines its contract.
 
 ---
 
-### DEV-2026-09-08-028 — Attachment Thumbnail Render Failure
+### DEV-2026-09-08-003 — Attachment Thumbnail Render Failure
 
 **Date:** 2026-09-08
 **Time:** 14:42 ET
@@ -2164,7 +2164,7 @@ until a subsequent decision defines its contract.
 
 ---
 
-### DEV-2026-09-08-029 — HUD Viewport Regression After Figma Asset Integration
+### DEV-2026-09-08-004 — HUD Viewport Regression After Figma Asset Integration
 
 **Date:** 2026-09-08  
 **Time:** 14:51 ET  
@@ -2221,7 +2221,7 @@ until a subsequent decision defines its contract.
 
 ---
 
-### DEV-2026-09-10-030 — Reproduction of Existing Android UI and Attachment Defects
+### DEV-2026-09-10-001 — Reproduction of Existing Android UI and Attachment Defects
 
 **Date:** 2026-09-10
 **Time:** 14:12 ET
@@ -2266,7 +2266,7 @@ until a subsequent decision defines its contract.
 
 ---
 
-### DEV-2026-09-10-031 — Dock Context and Redundant Log Navigation
+### DEV-2026-09-10-002 — Dock Context and Redundant Log Navigation
 
 **Date:** 2026-09-10
 **Time:** 14:12 ET
@@ -2311,7 +2311,9 @@ until a subsequent decision defines its contract.
 
 ---
 
-### DEV-2026-09-11-032 — Restore compact HUD viewport scroll ownership
+---
+
+### DEV-2026-09-11-001 — Restore compact HUD viewport scroll ownership
 
 **Date:** 2026-09-11  
 **Time:** 10:45 America/New_York  
@@ -2321,7 +2323,7 @@ until a subsequent decision defines its contract.
 
 #### Problem
 
-The compact HudShell places the route stack inside a vertical plain ScrollView. LogScreen's vertical SectionList therefore has a same-orientation plain-scroll ancestor, producing the warning observed in DEV-2026-09-08-027 and reproduced in DEV-2026-09-10-030. The clipped viewport View does not remove the scroll ancestor.
+The compact HudShell places the route stack inside a vertical plain ScrollView. LogScreen's vertical SectionList therefore has a same-orientation plain-scroll ancestor, producing the warning observed in DEV-2026-09-08-002 and reproduced in DEV-2026-09-10-001. The clipped viewport View does not remove the scroll ancestor.
 
 #### Context and Constraints
 
@@ -2340,7 +2342,7 @@ Screen content retains its own scrolling while HUD chrome remains fixed. Height-
 
 #### Final Outcome
 
-Supersedes the width-only/outer-overflow scrolling aspect of DEV-2026-09-07-025, not its accepted artwork or navigation. Use a non-scrolling compact shell; Search and Settings retain their own ScrollViews, Graph retains its non-scrolling layout, and Capture retains its multiline input and keyboard handling. No duplicated stable scroll-ownership algorithm was found and no consolidation is warranted. Verification pending.
+Supersedes the width-only/outer-overflow scrolling aspect of DEV-2026-09-07-003, not its accepted artwork or navigation. Use a non-scrolling compact shell; Search and Settings retain their own ScrollViews, Graph retains its non-scrolling layout, and Capture retains its multiline input and keyboard handling. No duplicated stable scroll-ownership algorithm was found and no consolidation is warranted. Verification pending.
 
 #### Implementation Impact
 
@@ -2352,7 +2354,7 @@ T0 typecheck, targeted lint and ui:check; existing node/HUD tests; Android runti
 
 #### Related Records
 
-- DEVNOTES: DEV-2026-09-07-025; DEV-2026-09-08-027; DEV-2026-09-08-029; DEV-2026-09-10-030
+- DEVNOTES: DEV-2026-09-07-003; DEV-2026-09-08-002; DEV-2026-09-08-004; DEV-2026-09-10-001
 - Tests: Pending
 - Source: src/ui/layout/HudShell.tsx; src/ui/layout/mobile.yaml; src/ui/screens/LogScreen.tsx; src/app/_layout.tsx
 
@@ -2368,7 +2370,7 @@ useSelectEntity and attachmentDisplayUri remain future candidates outside this u
 
 ---
 
-### DEV-2026-09-11-033 — UI Observations after fixes implemented under DEV-2026-09-11-032
+### DEV-2026-09-11-002 — UI Observations after fixes implemented under DEV-2026-09-11-001
 
 **Date:** 2026-09-11
 **Time:** 13:01 ET
@@ -2378,9 +2380,9 @@ useSelectEntity and attachmentDisplayUri remain future candidates outside this u
 
 #### Findings
 
-- The nested `VirtualizedList` runtime warning documented under DEV-2026-09-08-027 was not reproduced during this test.
+- The nested `VirtualizedList` runtime warning documented under DEV-2026-09-08-002 was not reproduced during this test.
 - Log scrolling now operates without generating new nested `VirtualizedList` warnings.
-- The attachment thumbnail error documented under DEV-2026-09-08-028 persists.
+- The attachment thumbnail error documented under DEV-2026-09-08-003 persists.
 - A new landscape-orientation issue was observed.
 - When the phone is rotated to landscape orientation, the UI does not generate an appropriate horizontal layout.
 - No landscape/horizontal HUD variant has yet been created for the current portrait/vertical HUD design.
@@ -2402,12 +2404,15 @@ useSelectEntity and attachmentDisplayUri remain future candidates outside this u
 
 #### Related Records
 
-- DEVNOTES: DEV-2026-09-08-027; DEV-2026-09-08-028; DEV-2026-09-08-029; DEV-2026-09-11-032
+- DEVNOTES: DEV-2026-09-08-002; DEV-2026-09-08-003; DEV-2026-09-08-004; DEV-2026-09-11-001
 - Tests: Visual/runtime test using `npx expo start --android` on a Motorola Edge Plus 5G UW (2022)
 - Source: HUD/layout implementation; `src/utilities/diagnostics.ts`; `src/adapters/filesystem/attachmentStorage.ts`
+
 ---
 
-### DEV-2026-09-11-034 - TASK-005 await attachment file copies
+---
+
+### DEV-2026-09-11-003 - TASK-005 await attachment file copies
 
 **Date:** 2026-09-11
 **Time:** 20:51 America/New_York
@@ -2421,7 +2426,7 @@ TASK-005: thumbnail generation can run before the original image exists, and att
 
 #### Context and Constraints
 
-Follow-up to DEV-2026-09-08-028 and DEV-2026-09-10-030. Reviewed project standards, specification, architecture, and versioned Expo SDK 57 documentation before implementation. Installed SDK 57 File.copy returns Promise<void>. The adapter ignored both copy promises. Native reproduction confirmed the original-copy race. The existing pre-fix original was accessible and decodable. Its %2540/%252F URI escapes are correct for Expo Go's literal encoded directory name; decoding them caused ENOENT.
+Follow-up to DEV-2026-09-08-003 and DEV-2026-09-10-001. Reviewed project standards, specification, architecture, and versioned Expo SDK 57 documentation before implementation. Installed SDK 57 File.copy returns Promise<void>. The adapter ignored both copy promises. Native reproduction confirmed the original-copy race. The existing pre-fix original was accessible and decodable. Its %2540/%252F URI escapes are correct for Expo Go's literal encoded directory name; decoding them caused ENOENT.
 
 #### Solutions Considered
 
@@ -2445,7 +2450,7 @@ T0 typecheck/lint; T1 controlled asynchronous copy ordering and rejection checks
 
 #### Related Records
 
-- DEVNOTES: DEV-2026-09-08-028; DEV-2026-09-10-030; DEV-2026-08-21-017
+- DEVNOTES: DEV-2026-09-08-003; DEV-2026-09-10-001; DEV-2026-08-21-017
 - Tests: TEST-2026-09-11-001; TEST-2026-09-11-002; TEST-2026-09-11-003
 - Source: src/adapters/filesystem/attachmentStorage.ts; scripts/attachment-smoke.mjs
 
@@ -2459,7 +2464,9 @@ Recovery of actually missing original files or unsupported image formats is outs
 
 ---
 
-### DEV-2026-09-11-035 - TASK-005 verification complete
+---
+
+### DEV-2026-09-11-004 - TASK-005 verification complete
 
 **Date:** 2026-09-11
 **Time:** 20:57 America/New_York
@@ -2469,7 +2476,7 @@ Recovery of actually missing original files or unsupported image formats is outs
 
 #### Problem
 
-Close the verification required by DEV-2026-09-11-034 before the independent TASK-005 commit.
+Close the verification required by DEV-2026-09-11-003 before the independent TASK-005 commit.
 
 #### Context and Constraints
 
@@ -2499,7 +2506,7 @@ Completed by the records below; no additional TASK-005 verification remains.
 
 #### Related Records
 
-- DEVNOTES: DEV-2026-09-11-034
+- DEVNOTES: DEV-2026-09-11-003
 - Tests: TEST-2026-09-11-001 through TEST-2026-09-11-005; passing gates are 003, 004, and 005
 - Source: src/adapters/filesystem/attachmentStorage.ts; scripts/attachment-smoke.mjs; package.json
 
@@ -2510,6 +2517,8 @@ Commit TASK-005 independently and stop.
 #### Deferred Decisions
 
 Recovery of genuinely missing originals and unsupported image formats remains outside scope.
+
+---
 
 ---
 
@@ -2530,7 +2539,7 @@ Compact HUD implementation was portrait-only. Landscape was an inferred flex/sca
 - Figma source of truth: file `dFwk8LAWauplWqrOKaQplU`, pages `Portrait_Viewport` (`0:1`) and `Landscape_Viewport` (`96:3`).
 - Portrait root frame `Mobile_Portrait / 390×844` (`2:20`). Landscape root frame `Mobile HUD Landscape / 844x390` (`96:4`).
 - Accepted portrait region values from TASK-006 are preserved; they are not recalculated from a rotated canvas.
-- Home (`/`) already renders `LogScreen` chronological history. `/log` re-exported the same screen. DEV-2026-09-10-031 observed HOME and LOG as redundant.
+- Home (`/`) already renders `LogScreen` chronological history. `/log` re-exported the same screen. DEV-2026-09-10-002 observed HOME and LOG as redundant.
 - Do not invent tablet dimensions, new Graph/Search/Home dock semantics, or animations not in the accepted design.
 - `app.json` already declares `orientation: default`.
 
@@ -2566,7 +2575,7 @@ T0 YAML/generation/typecheck/lint; T1 hud-smoke; T2 hud-browser portrait/landsca
 
 #### Related Records
 
-- DEVNOTES: DEV-2026-09-07-025; DEV-2026-09-10-031; DEV-2026-09-11-001; DEV-2026-09-11-032
+- DEVNOTES: DEV-2026-09-07-003; DEV-2026-09-10-002; DEV-2026-09-11-001; DEV-2026-09-11-001
 - Tests: TEST-2026-09-12-001 through TEST-2026-09-12-004
 - Source: `src/ui/ui.yaml`; `src/ui/layouts/`; `src/ui/layout/HudShell.tsx`; `src/ui/layout/HudArtwork.tsx`; `src/ui/layout/hudBehavior.ts`; `scripts/generate-ui.mjs`
 
@@ -2579,11 +2588,11 @@ User review, then one authorized TASK-006 commit. Native Android rotation/keyboa
 - Live Figma portrait scanner at `(315,28)` vs accepted YAML `(310,26)`: accepted YAML preserved.
 - Left-handed mirroring remains portrait-only; landscape handedness is not designed.
 - Tablet UI design and implementation.
-- Contextual dock actions outside Capture (DEV-2026-09-10-031).
+- Contextual dock actions outside Capture (DEV-2026-09-10-002).
 - Native Android IME/keyboard landscape space; browser harness has no IME.
 - Landscape viewport accent SVG reuse stretches portrait accent assets to Figma landscape bounds.
 
-
+---
 
 ---
 
@@ -2663,6 +2672,8 @@ browser verification is not evidence of native runtime correctness.
 
 Tablet-specific designs and landscape handedness remain undesigned. No dimensions
 or behaviors were invented for those specifications.
+
+---
 
 ---
 
@@ -2868,6 +2879,10 @@ The landscape dock transition and landscape handedness behavior should also be c
 * Tests: Native visual inspection using Motorola Edge Plus 5G UW (2022)
 * Source: HUD scaling, insets, Settings, landscape dock handle behavior, handedness behavior
 
+---
+
+---
+
 ### DEV-2026-09-14-003 — TASK-007 native corrective continuation
 
 **Date:** 2026-09-14  
@@ -2939,6 +2954,10 @@ remaining verification limits. Stop before commit and keep TASK-007 open.
 
 Exact Motorola centering cause remains unconfirmed until its runtime trace is available.
 Portrait scanner retains the explicit DEV-2026-09-12-001 exception pending user resolution.
+
+---
+
+---
 
 ### DEV-2026-09-14-004 — TASK-007 corrective implementation and open physical gate
 
@@ -3051,6 +3070,10 @@ from DEV-2026-09-12-001 pending a decision to supersede it. Floating Gboard was 
 a docked keyboard shrinking the native window has not been verified. These limits
 remain visible in the report and do not authorize closure.
 
+---
+
+---
+
 ### DEV-2026-09-14-005 — Supersede whole-artboard fit with full-window layout
 
 **Date:** 2026-09-14
@@ -3146,6 +3169,8 @@ Narrow portrait dock/header and insufficient-height rail policy; physical phone 
 
 ---
 
+---
+
 ### DEV-2026-09-18-001 — TASK-007 schema 3 resolver and full-window runtime
 
 **Date:** 2026-09-18  
@@ -3198,6 +3223,8 @@ Physical Motorola acceptance; tablet YAML; true 9-slice extension of flexible be
 
 ---
 
+---
+
 ### DEV-2026-09-18-002 — TASK-007 provider-local obstruction coordinates
 
 **Date:** 2026-09-18
@@ -3223,3 +3250,630 @@ the full HUD browser suite, typecheck, and authority gates pass.
 See [the source investigation](planning/TASK-007_COORDINATE_INVESTIGATION_2026-09-18.md)
 and TEST-2026-09-18-005. TASK-007 remains OPEN pending physical verification of the
 corrected bundle.
+
+---
+
+---
+
+### DEV-2026-09-20-001 — User Verification of TASK-007
+
+**Date:** 2026-09-20
+**Time:** 10:07 America/New_York
+**Engineer:** Michael Garcia
+**Type:** OBSERVATION
+**Environment:** Captain's Log React Native / Expo Android development build; compact HUD navigation; Motorola Edge Plus 5G UW (2022); Google Pixel 10 XL PRO
+
+#### Findings
+
+- Most Figma placements have been resolved
+- Figma updates are not propagating through to the client build during fetch
+
+#### Immediate Concerns
+
+- Labels removed in Figma are still present in the client-side app
+- Spacing updates for the doc and other objects are not updated in the client-side app
+
+#### Follow-up Candidates
+
+- Investigate workflow options to automate Figma releases that update to the application without manual adjustments to the app
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-08-001, DEV-2026-09-08-002
+- Tests: Native visual inspection using Motorola Edge Plus 5G UW (2022), Google Pixel 10 XL PRO
+- Source: HUD scaling, insets, Settings, landscape dock handle behavior, handedness behavior
+
+---
+
+---
+
+### DEV-2026-09-20-002 — Independent schema version audit
+
+**Date:** 2026-09-20  
+**Time:** 21:40 America/New_York  
+**Engineer:** Cursor Grok 4.6 agent  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+The account-authentication prompt required an independent check of SQLite, graph, UI, and related schema versions before recording an authoritative identity contract. Codex reported SQLite persistence version 2 and warned that a recent change may have introduced a version 3 somewhere in the project.
+
+#### Context and Constraints
+
+Do not use one ambiguous `schema_version` for unrelated systems. Repository evidence wins over the Markdown plan. SQLite migrations, HUD layout generation, backup snapshots, and product YAML are separate namespaces.
+
+#### Solutions Considered
+
+1. Treat any "schema 3" as a SQLite user_version 3 and plan a database migration.
+2. Inspect each version field and assign independent numbers, leaving SQLite at 2 if no migrateV3 exists.
+3. Invent a unified global schema version for identity work.
+
+Option 1 is contradicted by code. Option 3 collapses unrelated systems. Option 2 matches the prompt.
+
+#### Trade-offs
+
+Independent versions mean a UI generator bump does not imply a database migration, and an identity contract bump does not rewrite logs. Implementers must name the namespace they are changing.
+
+#### Final Outcome
+
+Recorded versions:
+
+- SQLite archive `DATABASE_VERSION` / `PRAGMA user_version`: **2**. `migrate()` only runs `migrateV1` then `migrateV2`. There is no `migrateV3` and no `user_version = 3`.
+- HUD layout generator: **schema_version 3** in `src/ui/yaml_layout/mobile/mobile.yaml` and generated `uiSpec.ts`. This is the project's "schema 3". See DEV-2026-09-18-001.
+- UI manifest `src/ui/ui.yaml`: **version 1**, distinct from the layout generator.
+- Graph entity/relationship contract: **version 1**, assigned to the current implicit `ENTITY_TYPES` / `RELATIONSHIP_TYPES`. No prior independent graph version field existed.
+- Drive backup snapshot manifest: **schemaVersion 1**.
+- Account identity, sync protocol, and sharing protocol contracts: **version 1**, newly specified.
+
+Codex's SQLite version 2 finding is still correct. The schema-3 concern is not a persistence change.
+
+#### Implementation Impact
+
+`docs/ACCOUNT_IDENTITY.yaml` `schemas` block; `docs/planning/ACCOUNT_AUTHENTICATION_PLAN_2026-09-20.md` section 7; identity phases must increment only the namespace they change.
+
+#### Verification Required
+
+T0/T1 parse of `docs/ACCOUNT_IDENTITY.yaml` against `DATABASE_VERSION`, `ui.yaml`, `mobile.yaml`, and the absence of SQLite v3.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-18-001
+- Tests: Pending TEST-2026-09-20-001
+- Source: `src/adapters/sqlite/schema.ts`; `src/adapters/sqlite/database.ts`; `src/adapters/sqlite/migrations.ts`; `src/ui/ui.yaml`; `src/ui/yaml_layout/mobile/mobile.yaml`; `src/adapters/googleDrive/googleDriveBackupProvider.ts`
+
+#### Next Steps
+
+Keep these namespaces independent during implementation. Do not bump SQLite because identity types were added.
+
+#### Deferred Decisions
+
+Whether a later graph-type change requires a SQLite migration remains case-by-case.
+
+---
+
+---
+
+### DEV-2026-09-20-003 — Authoritative account identity architecture
+
+**Date:** 2026-09-20  
+**Time:** 21:45 America/New_York  
+**Engineer:** Cursor Grok 4.6 agent  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+Codex produced `docs/planning/ACCOUNT_AUTHENTICATION_PLAN_2026-09-20.md` with unresolved D1–D12. Implementation cannot start from that draft: several recommendations conflict with later approved decisions, and some repository facts were incomplete (UI schema 3, SQLCipher availability, `expo-dev-client` missing, `usesNonExemptEncryption: false`, `secureKv` localStorage, AuthGate password gate, backup error strings in SQLite).
+
+#### Context and Constraints
+
+Approved prompt decisions D1–D12 supersede unresolved Codex recommendations. Local-first operation, no custom cryptography, no provider tokens in SQLite/YAML/UI/diagnostics/exports/backups, no authorization from UUID possession, and no remote disablement deleting local data are invariants. Google Universal Sign-In licensing is not authorized. Expo SDK 57 versioned docs apply.
+
+#### Solutions Considered
+
+1. Implement Codex's Google-plus-mandatory-2FA sequence directly.
+2. Treat the Markdown plan as authoritative and only fill gaps.
+3. Independently verify the repository, publish `docs/ACCOUNT_IDENTITY.yaml` as the contract, accept D1–D12, and record D13–D30 before code.
+
+Option 1 conflicts with risk-adaptive MFA, passkeys-as-factors, and the local-profile-first rule. Option 2 would preserve stale open questions. Option 3 is required by the prompt.
+
+#### Trade-offs
+
+A YAML contract delays native Google work until P08 and encryption until P04. That is intentional: Google native is license-gated, and claiming archive encryption from the current password gate would be false. An in-repo TypeScript authority keeps UUID ownership but does not choose a production host.
+
+#### Final Outcome
+
+`docs/ACCOUNT_IDENTITY.yaml` is the authoritative account, identity, authentication, MFA, device trust, grant, sync, sharing, backup, recovery, and migration contract.
+
+Material independent findings versus the Codex plan:
+
+- D4 is risk-adaptive MFA, not mechanical two-factor on every event.
+- D5 keeps the authority as a grant issuer, not a Drive proxy.
+- Passkeys are factors (D14); `created_with` may still be `passkey`.
+- Expo SDK 57 `expo-sqlite` documents SQLCipher via `useSQLCipher`; current plugin does not enable it (D15).
+- `account_required: true` is reconciled to local-first (D2, D26).
+- Universal Sign-In remains blocked on operator license/registry access (D25). Do not install the public/legacy package as a fallback, and do not keep implicit AuthSession as a security fallback.
+- First implementation phase after this document is P01 (TypeScript contracts), with rollback limited to new model files.
+
+#### Implementation Impact
+
+`docs/ACCOUNT_IDENTITY.yaml`; `docs/planning/ACCOUNT_AUTHENTICATION_PLAN_2026-09-20.md` decision register and phase-line; `docs/captains-log.yaml` authentication and authority; `docs/ARCHITECTURE.md` authentication; `scripts/account-identity-yaml-smoke.ts`; `package.json` `test:node` / `test:account-yaml`. No native modules, no encryption, no Google SDK, and no authority server were added in this phase.
+
+#### Verification Required
+
+T0/T1 YAML parse and schema-evidence assertions. Device tests are not required for P00.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-20-002; DEV-2026-08-21-007; DEV-2026-08-21-009
+- Tests: Pending TEST-2026-09-20-001
+- Source: `docs/ACCOUNT_IDENTITY.yaml`; `scripts/account-identity-yaml-smoke.ts`
+
+#### Next Steps
+
+Run the YAML smoke test. Then implement P01 identity TypeScript contracts only.
+
+#### Deferred Decisions
+
+D13 production hosting; D25 Universal Sign-In license; D9 Google Cloud projects; D20 iOS export compliance legal review; exact Universal package version pin after license access.
+
+---
+
+---
+
+### DEV-2026-09-21-001 — Reclassify independent architecture as proposed review
+
+**Date:** 2026-09-21  
+**Time:** 12:20 America/New_York  
+**Engineer:** Cursor Grok 4.6 agent  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+DEV-2026-09-20-003 recorded D13–D30 as ACCEPTED. Several of those items were new architectural choices, not restatements of approved D1–D12. Premature P01 TypeScript contracts were also started. Seven security-sensitive questions were still unspecified: device proof-of-possession, passkey RP/bootstrap, AEK recovery after total device loss, shared-object key distribution, CL session storage, grant rotation/device binding, and the email login mechanism. P29 also allowed a security/beta gate without first-delivery passkeys, email, TOTP, or recovery.
+
+#### Context and Constraints
+
+D1–D12 remain APPROVED. Implementation must not proceed on newly invented architecture until explicit review. First-delivery methods are passkey, Google, verified email, and TOTP, plus recovery.
+
+#### Solutions Considered
+
+1. Leave D13–D30 as self-accepted and continue P01.
+2. Reclassify only the seven new IDs and keep D13–D30 accepted.
+3. Reclassify materially new D13–D30 items as PROPOSED_REVIEW, add D31–D37, revert P01, and require first-delivery auth plus recovery before P29/P30.
+
+Option 1 repeats the overreach. Option 2 would still treat SQLCipher, JWS grants, optional first-launch password, and authority hosting as approved. Option 3 matches the review request.
+
+#### Trade-offs
+
+Holding P01 delays TypeScript contracts. That is cheaper than implementing a grant or passkey design that later fails review. Restatements (D18, D19, D21–D23, D25–D27) stay as facts or consequences so the register is not all noise.
+
+#### Final Outcome
+
+D13, D14, D15, D16, D17, D24, D28, D29, D30, and D31–D37 are PROPOSED_REVIEW. Premature P01 model files were deleted. `document.implementation_started` is false. P29 now requires P08, P10, P12, P13, and P14. No identity implementation proceeds until the proposed set is accepted, rejected, or revised.
+
+#### Implementation Impact
+
+`docs/ACCOUNT_IDENTITY.yaml` decision register, `beta_gate`, and P29 prerequisites; `docs/planning/ACCOUNT_AUTHENTICATION_PLAN_2026-09-20.md`; `scripts/account-identity-yaml-smoke.ts`; removal of P01 contract modules.
+
+#### Verification Required
+
+Re-run YAML smoke so D13/D14 are PROPOSED_REVIEW, D31–D37 exist, and P29 lists the first-delivery phases.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-20-003
+- Tests: Pending TEST-2026-09-21-001
+- Source: `docs/ACCOUNT_IDENTITY.yaml`
+
+#### Next Steps
+
+Present D13–D17, D24, D28–D37 for review. Do not start P01.
+
+#### Deferred Decisions
+
+All PROPOSED_REVIEW IDs in this entry.
+
+---
+
+---
+
+### DEV-2026-09-21-002 — Approve Signal-inspired cryptographic direction
+
+**Date:** 2026-09-21  
+**Time:** 21:40 America/New_York  
+**Engineer:** Cursor Grok 4.6 agent  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+D31, D33, D34, D35, and D36 were held as PROPOSED_REVIEW. The operator accepted a Signal-inspired direction: device proof-of-possession, user-held archive recovery, recipient-specific object encryption without a messaging ratchet, isolated Captain's Log session storage, and short-lived JWS grants with signing-key rotation.
+
+#### Context and Constraints
+
+D1–D12 remain APPROVED. Implementation still must not start P01 while remaining proposed-review items are open. Captain's Log stores persistent versioned objects, so Signal's Double/Triple Ratchet is not the storage protocol.
+
+#### Solutions Considered
+
+1. Keep all five IDs proposed until every remaining D13–D38 item is decided.
+2. Record the operator's explicit acceptances now, including APPROVED_DIRECTION where remaining specification is required before named phases.
+3. Start P01 and encryption implementation immediately on the accepted crypto direction.
+
+Option 1 would hide accepted security constraints. Option 3 would implement against still-open hosting, passkey RP, encryption mechanism, cardinality, and email-login questions. Option 2 records the accepted cryptographic compartmentalization without starting code.
+
+#### Trade-offs
+
+D34 and D35 are directions, not complete implementation specs. Shared-object recipient-key hierarchy, rekey, historical versions, and multi-device distribution remain D38 and still block P19/P20/P24. Exact session storage key names and refresh lifetime remain before P03/P06.
+
+#### Final Outcome
+
+D31, D33, and D36 are APPROVED. D17 is APPROVED as settled by D36. D34 and D35 are APPROVED_DIRECTION. D38 captures remaining shared-object specification. Invariants I25–I35, the recovery security statement, and credential-class compartmentalization are now contract. P01 remains blocked.
+
+#### Implementation Impact
+
+`docs/ACCOUNT_IDENTITY.yaml` devices, grants, sessions, encryption wraps, sharing object encryption, and phases P07/P14/P16/P19/P20/P24; decision register in the Markdown plan; YAML smoke assertions; review canvas.
+
+#### Verification Required
+
+YAML smoke must parse, show D31/D33/D36 APPROVED, D34/D35 APPROVED_DIRECTION, D38 PROPOSED_REVIEW, I25–I35 present, grant TTLs 300/3600/120, and recovery secret 256-bit / 64 hex.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-21-001
+- Tests: TEST-2026-09-21-002
+- Source: `docs/ACCOUNT_IDENTITY.yaml`
+
+#### Next Steps
+
+Present remaining proposed items (D13–D16, D24, D28–D30, D32, D37, D38). Do not start P01.
+
+#### Deferred Decisions
+
+D13, D14, D15, D16, D24, D28, D29, D30, D32, D37, D38; D35 remaining key names and refresh lifetime; D25 license.
+
+---
+
+---
+
+### DEV-2026-09-21-003 — Approve layered archive key hierarchy
+
+**Date:** 2026-09-21  
+**Time:** 21:55 America/New_York  
+**Engineer:** Cursor Grok 4.6 agent  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+D15 left archive encryption as a proposed AEK plus SQLCipher sketch. D33 wrapped AEK from a recovery secret without naming the Recovery KEK or domain-separated archive keys. D34 did not explicitly forbid using the archive AEK as a sharing key. Implementation of P04/P14/P19/P20/P24 could have used the Recovery Secret or raw AEK as a content key.
+
+#### Context and Constraints
+
+The operator required a layered hierarchy: Recovery Secret → Recovery KEK → wrapped AEK → domain-separated archive keys → per-object DEKs. Human passwords and PINs must be hardened with Argon2id or an approved password KDF, never fed to HKDF. AES-GCM nonce reuse is forbidden. Physical erasure of old plaintext blocks cannot be honestly guaranteed on flash storage.
+
+#### Solutions Considered
+
+1. Keep D15 proposed and implement P04 from the earlier sketch.
+2. Record the layered hierarchy as authoritative in YAML, approve D15 and D28, clarify D33/D34, and hold encryption/recovery/sharing implementation.
+3. Start P04 immediately after writing the hierarchy.
+
+Option 1 would let SQLCipher or files be keyed from the Recovery Secret or a password. Option 3 would start encryption before P01 and remaining reviews. Option 2 matches the instruction.
+
+#### Trade-offs
+
+D30 (whether first launch requires a user lock) remains proposed; the wrapping mechanism for an optional password/PIN is now specified. Shared-object recipient-key hierarchy remains D38. Exact HKDF salt and wrapping-algorithm library pins can still be chosen at P04 against established primitives.
+
+#### Final Outcome
+
+Approved hierarchy is **Recovery Secret → Recovery KEK → wrapped AEK → domain-separated archive keys → per-object DEKs.** D15 and D28 are APPROVED. D33 and D34 are clarified. Invariants I36–I46 are contract. P04, P14, P19, P20, and P24 are not started.
+
+#### Implementation Impact
+
+`docs/ACCOUNT_IDENTITY.yaml` encryption, decisions D15/D28/D33/D34/D38, phases P04/P14/P20; decision register; YAML smoke; review canvas; ARCHITECTURE.md.
+
+#### Verification Required
+
+YAML smoke must parse, show D15/D28 APPROVED, recovery secret 256-bit / 64 hex, Recovery KEK info `captains-log/recovery-kek/v1`, sqlite domain `captains-log/sqlite/v1`, AES-GCM nonce reuse forbidden, and plaintext migration `guaranteed_physical_erasure: false`.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-21-002
+- Tests: TEST-2026-09-21-003
+- Source: `docs/ACCOUNT_IDENTITY.yaml`
+
+#### Next Steps
+
+Present remaining proposed items (D13, D14, D16, D24, D29, D30, D32, D37, D38). Do not start P01, P04, P14, P19, P20, or P24.
+
+#### Deferred Decisions
+
+D13, D14, D16, D24, D29, D30, D32, D37, D38; D35 remaining key names and refresh lifetime; D25 license.
+
+---
+
+---
+
+### DEV-2026-09-22-001 — Correct D38 User ID, approve D32, require P04 for beta
+
+**Date:** 2026-09-22  
+**Time:** 21:45 America/New_York  
+**Engineer:** Cursor Grok 4.6 agent  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+D38 had been reused for shared-object remaining specification. The human-readable Captain's Log User ID needs its own ID, distinct from account_uuid. D32 still described local WebAuthn wrapping AEK. P29 could be reached without P04, even though D2/D15 require an encrypted local archive from first launch.
+
+#### Context and Constraints
+
+Local archive unlock and remote WebAuthn passkeys must stay distinct. The RP domain is not chosen here. Shared-object direction remains D34; protocol details are D34-A through D34-D. D13 and D37 stay proposed. D25 is an operator license blocker, not architecture.
+
+#### Solutions Considered
+
+1. Keep D38 as sharing leftovers and invent D39 for user_id.
+2. Restore D38 as user_id, park sharing leftovers under D34-A through D34-D, approve the corrected D32 model, and add P04 to the P29 prerequisite list.
+3. Approve D13 and D37 in the same pass.
+
+Option 1 would reuse D38 against the operator assignment. Option 3 would silently accept remaining architecture. Option 2 matches the correction request.
+
+#### Trade-offs
+
+P10 still waits on a permanent Captain's Log-controlled HTTPS RP ID. D14 remains independently proposed even though D32 is approved. D34-A through D34-D continue to block P19/P20/P24.
+
+#### Final Outcome
+
+D38 is the human-readable User ID and is APPROVED. D32 is APPROVED with platform UV local unlock versus WebAuthn account passkey, including passkey-first provisional registration. P04 is a mandatory P29/P30 prerequisite. D34 remains APPROVED_DIRECTION. Invariants I47–I52 are contract. P01, P04, P14, P19, P20, and P24 are not started.
+
+#### Implementation Impact
+
+`docs/ACCOUNT_IDENTITY.yaml` decisions, identifiers, wrapping, factors, beta_gate, P10/P19/P20/P24/P29; decision register; YAML smoke; review canvas; ARCHITECTURE.md.
+
+#### Verification Required
+
+YAML smoke must show D32 and D38 APPROVED, D34-A through D34-D PROPOSED_REVIEW, P29 requires P04, local unlock is not WebAuthn, and user_id is distinct from account_uuid.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-21-003
+- Tests: TEST-2026-09-22-001
+- Source: `docs/ACCOUNT_IDENTITY.yaml`
+
+#### Next Steps
+
+Present remaining proposed items (D13, D14, D16, D24, D29, D30, D37, D34-A through D34-D). Do not start P01, P04, P14, P19, P20, or P24.
+
+#### Deferred Decisions
+
+D13, D14, D16, D24, D29, D30, D37, D34-A, D34-B, D34-C, D34-D; account passkey RP domain; D35 remaining key names and refresh lifetime; D25 license.
+
+---
+
+---
+
+### DEV-2026-09-28-001 — Approve remaining identity architecture and release P01 hold
+
+**Date:** 2026-09-28  
+**Time:** 16:10 America/New_York  
+**Engineer:** Cursor Grok 4.6 agent  
+**Status:** ACCEPTED  
+**Type:** DECISION
+
+#### Problem
+
+D13, D14, D16, D24, D29, D30, D37, and D34-A through D34-D were still `PROPOSED_REVIEW`. D34 itself was only `APPROVED_DIRECTION`. That architecture review hold blocked P01. Repository-boundary, Docker/ECR/ECS/RDS, and GitHub OIDC contracts were also unspecified even after the operator approved them.
+
+#### Context and Constraints
+
+`docs/ACCOUNT_IDENTITY.yaml` is authoritative. D15/D31/D32/D33/D35/D36/D38 and the Recovery Secret → Recovery KEK → AEK hierarchy must not regress. P04 remains a mandatory beta prerequisite and is distinct from P14. Live AWS identifiers must not enter this public repository. New architecture discovered from repository evidence must be recorded as `PROPOSED_FOR_REVIEW`, not self-approved.
+
+#### Solutions Considered
+
+1. Keep P01 blocked until D35 SecureStore key names and the WebAuthn RP domain are also fully specified.
+2. Record the 2026-09-28 approvals, add public/private repository and AWS placeholder contracts, release the P01 hold, and leave operator tasks (D25, RP ID, live AWS) outside architecture.
+3. Start P01 TypeScript contracts and a Dockerfile in the same change.
+
+Option 1 would treat operator configuration and P03 remaining specification as architecture holds. Option 3 would start implementation in a documentation pass. Option 2 matches the instruction.
+
+#### Trade-offs
+
+P19/P20/P24 become architecture-unblocked, but they still wait on P01/P16 implementation. The account-sharing wrap primitive library is documented as remaining implementation selection, not a new decision ID. D35 remains `APPROVED_DIRECTION` and still needs key names before P03.
+
+#### Final Outcome
+
+D13, D14, D16, D24, D29, D30, D34, D34-A, D34-B, D34-C, D34-D, and D37 are APPROVED. The architecture review hold is released. P01 is unblocked. No new `PROPOSED_FOR_REVIEW` decision was required. Operator blockers are D25 Universal Google Sign-In licensing, the permanent WebAuthn RP domain, and live AWS resources in private `captains-log-infra`.
+
+#### Implementation Impact
+
+`docs/ACCOUNT_IDENTITY.yaml` decisions, authority/Docker/RDS, `repository_boundary`, phases P01/P05/P08/P10/P13/P19/P20/P24/P29; `docs/aws.example.yaml`; planning register; YAML smoke; ARCHITECTURE.md; review canvas.
+
+#### Verification Required
+
+YAML smoke must show the newly approved IDs as APPROVED, `p01_blocked_until_proposed_review` false, empty remaining sharing specification, ECS Fargate hosting, repository-boundary names, and placeholder-only AWS example. Combined node smoke must still pass. Do not claim P01 implementation.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-22-001
+- Tests: TEST-2026-09-28-001
+- Source: `docs/ACCOUNT_IDENTITY.yaml`, `docs/aws.example.yaml`, `scripts/account-identity-yaml-smoke.ts`
+
+#### Next Steps
+
+Implement P01 identity TypeScript contracts and repository-boundary scaffolding only when that implementation instruction is given. Do not start P04, P05, P08, P10, P13, P14, P19, P20, or P24 in this pass.
+
+#### Deferred Decisions
+
+D35 exact SecureStore key names and refresh lifetime; D34-A wrap-primitive library documented before sharing implementation; D25 license; permanent WebAuthn RP domain; live AWS inventory in `captains-log-infra`.
+
+---
+
+### DEV-2026-10-28-001 — Landscape dock follows the visible Figma bezel
+
+**Date:** 2026-10-28  
+**Time:** 15:21 America/New_York  
+**Engineer:** Cursor Grok 4.7 agent  
+**Status:** IMPLEMENTED  
+**Type:** DECISION
+
+#### Problem
+
+The live landscape frame in `dFwk8LAWauplWqrOKaQplU` no longer matches the YAML dock. Node `96:82` was a hidden 363.262×115.277 envelope. It is now a visible 350×96 bezel at (163, 276). The handle `97:149` is a child of that bezel at (299, 251), overlapping the top by 2.5. Button insets are 10, not the old parent-relative 7 / 26.262.
+
+#### Context and Constraints
+
+Figma owns appearance. YAML owns meaning. `reference_regions` are measurements. The resolver ignores them and uses anchors. Portrait regions were unchanged. Landscape must still start collapsed so the dock does not cover log, search, and graph hits. Do not stretch internal artwork.
+
+#### Solutions Considered
+
+1. Record the new bezel and handle measurements, keep collapsed parking, and apply the 2.5 overlap only while expanded.
+2. Make the open dock the resting state because the Figma layer is now visible.
+3. Leave the old envelope and only refresh reference numbers.
+
+Option 3 would keep generating a dock the file no longer draws. Option 2 was tried and blocked viewport pointer hits, so it was rejected.
+
+#### Trade-offs
+
+Collapsed handle placement remains a YAML pose at the viewport bottom. The artboard no longer draws that pose; it draws the expanded assembly. Expanded height is 121 instead of 123.5.
+
+#### Final Outcome
+
+The landscape dock region is the 350×96 bezel, centered on the viewport and flush with its bottom. Expanded assembly overlap is 2.5. Landscape still starts collapsed.
+
+#### Implementation Impact
+
+`src/ui/yaml_layout/mobile/landscape.yaml`; `components/landscape/action-dock.yaml`; generated `uiSpec.ts`; `HudDock.tsx`; `HudShell.tsx`; `hudBehavior.ts`; Figma fixture; HUD tests; `docs/ARCHITECTURE.md`.
+
+#### Verification Required
+
+T0 typecheck. T1 generator, authority, resolver, and HUD contract smoke. T2 browser harness, including expand, collapse, and viewport hits after collapse.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-09-14-003; DEV-2026-09-14-005; DEV-2026-09-18-001
+- Tests: TEST-2026-10-28-001
+- Source: Figma file `dFwk8LAWauplWqrOKaQplU`, landscape frame `96:4`
+
+#### Next Steps
+
+Physical landscape check on the Motorola remains part of open TASK-007. Do not commit without explicit authorization.
+
+#### Deferred Decisions
+
+Opening the landscape dock by default. That matches the current artboard visibility and blocks content underneath.
+
+---
+
+### DEV-2026-10-28-002 — Dock button captions are accessible names only
+
+**Date:** 2026-10-28  
+**Time:** 15:45 America/New_York  
+**Engineer:** Cursor Grok 4.7 agent  
+**Status:** IMPLEMENTED  
+**Type:** DECISION
+
+#### Problem
+
+DEV-2026-10-28-001 updated dock geometry and left the captions drawn. Both Figma docks, portrait `2:26` and landscape `96:82`, now contain no text layers. ADD, CAMERA, LOCATION, and EXPORT are gone from the art.
+
+#### Context and Constraints
+
+The strings still name the buttons for assistive technology and for the browser harness. Gallery in the add menu is a separate control and was not removed from Figma.
+
+#### Solutions Considered
+
+1. Keep the strings and stop painting them.
+2. Delete the strings and invent new accessible names.
+
+Option 2 would rename controls the design did not rename.
+
+#### Trade-offs
+
+The dock typography token remains in the spec and is unused while `label.visible` is false.
+
+#### Final Outcome
+
+Shared dock `label.visible` is false. `HudDock` does not render caption text. Each button keeps its existing accessible name.
+
+#### Implementation Impact
+
+`src/ui/yaml_layout/mobile/components/shared/action-dock.yaml`; generated `uiSpec.ts`; `src/ui/ts_layout/HudDock.tsx`; `scripts/hud-smoke.ts`.
+
+#### Verification Required
+
+T0 typecheck. T1 HUD contract smoke. T2 browser harness, which finds the buttons by accessible name.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-10-28-001
+- Tests: TEST-2026-10-28-002
+- Source: Figma file `dFwk8LAWauplWqrOKaQplU`, nodes `2:26` and `96:82`
+
+#### Next Steps
+
+None for captions. Landscape still starts collapsed, per DEV-2026-10-28-001.
+
+#### Deferred Decisions
+
+None.
+
+---
+
+### DEV-2026-10-28-003 — Dock icons sit on the centered plates
+
+**Date:** 2026-10-28  
+**Time:** 15:50 America/New_York  
+**Engineer:** Cursor Grok 4.7 agent  
+**Status:** IMPLEMENTED  
+**Type:** DECISION
+
+#### Problem
+
+After the captions were removed, both Figma docks place each 72×62 plate at y=17 in the 96-tall bezel and each 32×32 icon at (20, 15) inside that plate. The shared spec still used the caption-era plate y=8 and icon y=23, so the icons sat 9 units above the dock center.
+
+#### Context and Constraints
+
+The same plate and icon geometry is shared by portrait and landscape. Horizontal icon inset 20 already centers a 32-wide icon in a 72-wide plate.
+
+#### Solutions Considered
+
+1. Move the plate to y=17 and the icon to dock y=32, which is plate 17 plus the 15-unit center inset.
+2. Leave the old offset and center the icon inside the high plate only.
+
+Option 2 would keep the icons centered in the plate and still high in the dock.
+
+#### Trade-offs
+
+None beyond matching the measured frames. (96 − 62) / 2 = 17 and (62 − 32) / 2 = 15, so both centers land on the dock midline.
+
+#### Final Outcome
+
+Shared dock plate y is 17. Icon bounds are x=20, y=32, 32×32.
+
+#### Implementation Impact
+
+`src/ui/yaml_layout/mobile/components/shared/action-dock.yaml`; generated `uiSpec.ts`; `scripts/hud-smoke.ts`.
+
+#### Verification Required
+
+T1 HUD contract smoke asserting plate y=17 and icon y=32, x=20.
+
+#### Related Records
+
+- DEVNOTES: DEV-2026-10-28-002
+- Tests: TEST-2026-10-28-003
+- Source: Figma docks `2:26` and `96:82`
+
+#### Next Steps
+
+None.
+
+#### Deferred Decisions
+
+None.
+
+---
+
+

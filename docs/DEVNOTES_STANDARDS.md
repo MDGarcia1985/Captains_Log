@@ -6,7 +6,7 @@ It explains **why** the implementation took its present form. Current code-local
 
 ## Core Rule
 
-`DEVNOTES.md` is append-only. Existing entries must never be deleted, rewritten, reorganized, condensed, silently corrected, or replaced with updated information.
+`DEVNOTES.md` is append-only. Existing entries must never be deleted, rewritten, reorganized, condensed, silently corrected, or replaced with updated information. Formatting changes are allowed with authorization from a human author.
 
 If an entry is incomplete, incorrect, or superseded, add a new entry that:
 
@@ -68,6 +68,8 @@ Formal verification evidence continues to belong in `TEST_LOG.md`. DEVNOTES may 
 what was physically observed, but must not claim a formal PASS unless an executed TEST
 record supports that result.
 
+Observations may also be used as task close-out verification upon human review of test results and physical inspection.
+
 ## Decision Timing
 
 Record the entry when the decision is made or the material issue is discovered. Do not wait until the end of a milestone.
@@ -102,6 +104,12 @@ Every entry must use one status:
 
 Because entries are immutable, later status changes are recorded in a new entry that references the earlier ID.
 
+
+Entries must be separated by two horizontal divider lines, with one empty line between them, exactly as follows:
+
+---
+
+---
 
 ## Required Entry Format
 
@@ -156,6 +164,10 @@ List remaining implementation, validation, investigation, or documentation actio
 
 Record intentionally postponed decisions and the information or evidence needed to resolve them. Use `None` when not applicable.
 
+---
+
+---
+
 ```
 ## Short-Form Observation Format
 
@@ -190,6 +202,10 @@ Record intentionally postponed decisions and the information or evidence needed 
 - Source: relevant files/modules/components, or `Not applicable`
 
 Do not remove a section. Use `None`, `Not applicable`, or `Pending` when appropriate.
+
+---
+
+---
 
 ## Evidence and Verification Rules
 

@@ -1,7 +1,7 @@
 /* File: HudDock.tsx
  * Purpose: Keep the dock preassembled and move its handle and body as one native layer.
  * Author: Codex; Contact: michael@mandedesign.studio; SPDX-License-Identifier: MPL-2.0
- * Decision: DEV-2026-09-14-003. Visual rectangles remain Figma-derived; states are YAML-owned. */
+ * Decision: DEV-2026-09-14-003; DEV-2026-10-28-001. Visual rectangles remain Figma-derived; states are YAML-owned. */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, Text, View } from 'react-native';
 import { uiSpec } from '@/ui/generated/uiSpec';
@@ -20,7 +20,10 @@ export function HudDock({ expanded, busy, toggle, add, attachment, exportNotice 
   const handle = regions.action_dock_handle ?? null;
   const transition = 'transition' in dock.behavior ? dock.behavior.transition : null;
   const duration = transition?.duration_ms;
-  const geometry = handle && regions.action_dock ? dockAssemblyGeometry(regions.action_dock, handle) : null;
+  const overlap = 'expanded_assembly' in dock && dock.expanded_assembly && typeof dock.expanded_assembly === 'object'
+    ? dock.expanded_assembly.overlap_with_bezel ?? 0
+    : 0;
+  const geometry = handle && regions.action_dock ? dockAssemblyGeometry(regions.action_dock, handle, overlap) : null;
   const [progress] = useState(() => new Animated.Value(0));
   const previousOrientation = useRef(orientation);
   const [reduced, setReduced] = useState(true);
@@ -78,7 +81,7 @@ export function HudDock({ expanded, busy, toggle, add, attachment, exportNotice 
             <Art name={item.id === 'add' ? dock.addPlate : dock.plate.asset} onLoad={() => markLoaded(item.id === 'add' ? dock.addPlate : dock.plate.asset)}
               bounds={{ x: 0, y: dock.plate.y, width: dock.plate.width, height: dock.plate.height }} />
             <Art name={item.icon} bounds={dock.icon} onLoad={() => markLoaded(item.icon)} />
-            <Text style={[{ position: 'absolute' }, typeStyle('dock'), { top: dock.label.y, width: dock.label.width, textAlign: 'center', color: item.id === 'add' ? c.orange : c.textMuted }]}>{item.label}</Text>
+            {dock.label.visible === false ? null : <Text style={[{ position: 'absolute' }, typeStyle('dock'), { top: dock.label.y, width: dock.label.width, textAlign: 'center', color: item.id === 'add' ? c.orange : c.textMuted }]}>{item.label}</Text>}
           </View>}
         </Pressable>)}
       </View>

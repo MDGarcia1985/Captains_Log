@@ -1,0 +1,3645 @@
+# Captain's Log — Account, Identity, Authentication, Authorization,
+# Synchronization, and Sharing Contract
+#
+# Status: AUTHORITATIVE for this subsystem.
+# Product behavior in docs/captains-log.yaml must not contradict this file.
+# Implementation is tested against this file. Markdown planning is not the contract.
+#
+# Related: docs/planning/ACCOUNT_AUTHENTICATION_PLAN_2026-09-20.md
+# Related decisions: DEV-2026-09-20-002, DEV-2026-09-20-003, DEV-2026-09-21-001, DEV-2026-09-21-002, DEV-2026-09-21-003, DEV-2026-09-22-001, DEV-2026-09-28-001
+
+document:
+  id: captains_log_account_identity
+  title: Captain's Log Account Identity and Trust Architecture
+  status: authoritative
+  date: 2026-09-28
+  supersedes:
+    - docs/planning/ACCOUNT_AUTHENTICATION_PLAN_2026-09-20.md
+  markdown_plan_role: architectural_input_and_phase_history
+  independent_review_required: true
+  implementation_started: false
+  p01_blocked_until_proposed_review: false
+  architecture_review_hold: released
+  p01_unblocked: 2026-09-28
+  decision_status_values:
+    APPROVED: accepted_by_explicit_user_decision
+    APPROVED_DIRECTION: direction_accepted_remaining_specification_required_before_named_phases
+    PROPOSED_REVIEW: independent_architecture_awaiting_explicit_acceptance
+    PROPOSED_FOR_REVIEW: independent_architecture_awaiting_explicit_acceptance
+    ACCEPTED_CONSEQUENCE: follows_approved_D1_D12_or_stated_invariants
+    REPOSITORY_FACT: observed_in_the_codebase_not_chosen
+    BLOCKED_ON_OPERATOR: requires_license_purchase_or_credentials
+
+  change_control:
+    behavior_change_requires:
+      - this_file
+      - decision_register_update
+      - DEVNOTES_entry
+      - affected_tests
+    repository_evidence_wins_over_markdown_plan: true
+
+  decision_status_summary:
+    calculated: 2026-09-28
+    architecture_review_hold: released
+    p01_unblocked: true
+    proposed_review_blocking_p01: []
+    proposed_for_review: []
+    APPROVED:
+      - D1
+      - D2
+      - D3
+      - D4
+      - D5
+      - D6
+      - D7
+      - D8
+      - D9
+      - D10
+      - D11
+      - D12
+      - D13
+      - D14
+      - D15
+      - D16
+      - D17
+      - D24
+      - D28
+      - D29
+      - D30
+      - D31
+      - D32
+      - D33
+      - D34
+      - D34-A
+      - D34-B
+      - D34-C
+      - D34-D
+      - D36
+      - D37
+      - D38
+    APPROVED_DIRECTION:
+      - D35
+    ACCEPTED_CONSEQUENCE:
+      - D19
+      - D20
+      - D21
+      - D22
+      - D23
+      - D26
+      - D27
+    REPOSITORY_FACT:
+      - D18
+    BLOCKED_ON_OPERATOR:
+      - D25
+    operator_blockers_not_architecture:
+      - id: D25
+        item: universal_google_signin_license_or_private_registry_access
+        blocks: P08
+      - id: webauthn_rp_id
+        item: permanent_cl_controlled_https_rp_domain
+        blocks: P10_production_registration
+        note: P10 may prepare interface and configuration contract only
+      - id: aws_live_deployment
+        item: live_ecr_ecs_iam_network_resources
+        owner: private_captains_log_infra_repository
+    remaining_specification_not_blocking_p01:
+      - D35_exact_securestore_key_names
+      - D35_refresh_credential_lifetime
+      - D34-A_account_sharing_wrap_primitive_library_documented_before_implementation
+
+# ---------------------------------------------------------------------------
+# Schema namespaces. Do not reuse one schema_version across unrelated systems.
+# ---------------------------------------------------------------------------
+schemas:
+  database:
+    name: sqlite_archive
+    version: 2
+    field: PRAGMA user_version
+    constant: DATABASE_VERSION
+    evidence:
+      - src/adapters/sqlite/schema.ts DATABASE_VERSION = 2
+      - src/adapters/sqlite/database.ts migrate() advances only to user_version 2
+      - src/adapters/sqlite/migrations.ts migrateV1 then migrateV2; no migrateV3
+    schema_3_is_not_this: true
+    increment_when: additive or breaking SQLite table/column/index changes
+    does_not_increment:
+      - account_identity
+      - graph
+      - ui
+      - sync_protocol
+      - sharing_protocol
+
+  account_identity:
+    version: 1
+    increment_when: account, identity, factor, grant, device, or session contracts change
+
+  graph:
+    version: 1
+    status: implicit_current_contract
+    evidence:
+      - docs/captains-log.yaml knowledge_graph entity_types and relationships
+      - src/models/types.ts ENTITY_TYPES and RELATIONSHIP_TYPES
+      - no independent graph schema_version field exists in the repository
+    increment_when: entity types, relationship types, or provenance rules change
+    may_require_database_migration: true
+    does_not_follow_database_version_automatically: true
+
+  ui:
+    manifest:
+      version: 1
+      evidence:
+        - src/ui/ui.yaml ui.version: 1
+    layout_generator:
+      schema_version: 3
+      evidence:
+        - src/ui/yaml_layout/mobile/mobile.yaml family.schema_version: 3
+        - src/ui/generated/uiSpec.ts schema_version: 3
+        - docs/DEVNOTES.md DEV-2026-09-18-001 TASK-007 schema 3 resolver
+      note: >
+        The concern that "schema 3" might be SQLite version 3 is resolved.
+        Schema 3 is the HUD layout generator contract, not persistence.
+    credentials_forbidden: true
+
+  backup_snapshot:
+    version: 1
+    evidence:
+      - src/adapters/googleDrive/googleDriveBackupProvider.ts SnapshotManifest.schemaVersion: 1
+    increment_when: Drive snapshot manifest or snapshot payload layout changes
+    distinct_from: sync_protocol
+
+  sync_protocol:
+    version: 1
+    status: specified_not_implemented
+    increment_when: object sync message format, versioning, or conflict rules change
+
+  sharing_protocol:
+    version: 1
+    status: specified_not_implemented
+    increment_when: local or cloud sharing authorization or transfer format changes
+
+  secure_record:
+    version: 1
+    status: specified_not_implemented
+    store: expo-secure-store_native_only
+    increment_when: local secure metadata envelope format changes
+
+  authority_api:
+    version: 1
+    status: specified_not_implemented
+    increment_when: Captain's Log authority HTTP/JSON contracts change
+
+  authority_persistence:
+    version: 1
+    status: specified_not_implemented
+    distinct_from: sqlite_archive
+    note: Authority data never lives in captains-log.db.
+
+# ---------------------------------------------------------------------------
+# Security invariants. These remain true in every phase.
+# ---------------------------------------------------------------------------
+invariants:
+  - id: I1
+    rule: no_provider_token_in_sqlite
+  - id: I2
+    rule: no_provider_token_in_yaml
+  - id: I3
+    rule: no_provider_token_in_ui_state
+  - id: I4
+    rule: no_provider_token_in_diagnostics
+  - id: I5
+    rule: no_provider_token_in_captains_log_export_files
+  - id: I6
+    rule: no_provider_token_in_archive_backup_payloads
+  - id: I7
+    rule: no_totp_secret_in_archive_backup_payloads
+  - id: I8
+    rule: no_private_passkey_credential_exported_by_captains_log
+  - id: I9
+    rule: no_account_merge_from_email_equality
+  - id: I10
+    rule: no_authorization_from_uuid_possession_alone
+  - id: I11
+    rule: no_remote_disablement_deleting_local_data
+  - id: I12
+    rule: no_restored_metadata_treated_as_fresh_authentication
+  - id: I13
+    rule: no_legacy_implicit_google_token_treated_as_trusted_identity
+  - id: I14
+    rule: no_automatic_cloud_reactivation_after_archive_restore
+  - id: I15
+    rule: no_background_execution_required_for_correctness
+  - id: I16
+    rule: no_insecure_fallback_solely_to_unblock_development
+  - id: I17
+    rule: no_client_side_secret_pretending_to_be_server_security
+  - id: I18
+    rule: no_custom_cryptographic_primitive_when_established_primitives_exist
+  - id: I19
+    rule: external_provider_subject_never_replaces_account_uuid
+  - id: I20
+    rule: local_archive_usable_without_remote_account_or_network
+  - id: I21
+    rule: passkey_sync_does_not_imply_captains_log_device_trust
+  - id: I22
+    rule: production_credentials_never_use_web_localstorage
+  - id: I23
+    rule: authority_is_control_plane_not_content_data_plane
+  - id: I24
+    rule: restored_association_metadata_is_not_ownership_proof
+  - id: I25
+    rule: no_captains_log_session_token_in_sqlite
+  - id: I26
+    rule: no_captains_log_session_token_in_yaml
+  - id: I27
+    rule: no_captains_log_session_token_in_ui_state
+  - id: I28
+    rule: no_captains_log_session_token_in_diagnostics
+  - id: I29
+    rule: no_captains_log_session_token_in_exports
+  - id: I30
+    rule: no_captains_log_session_token_in_archive_backups
+  - id: I31
+    rule: no_plaintext_aek_or_recovery_secret_at_authority
+  - id: I32
+    rule: serialized_grant_without_device_pop_is_insufficient_where_pop_required
+  - id: I33
+    rule: compromise_of_one_credential_class_does_not_automatically_compromise_others
+  - id: I34
+    rule: account_recovery_does_not_automatically_decrypt_archive
+  - id: I35
+    rule: no_double_or_triple_ratchet_as_object_storage_protocol
+  - id: I36
+    rule: recovery_secret_never_stored_plaintext_by_authority
+  - id: I37
+    rule: recovery_kek_never_stored_plaintext_by_authority
+  - id: I38
+    rule: aek_never_stored_plaintext_by_authority
+  - id: I39
+    rule: raw_aek_not_used_as_general_content_key
+  - id: I40
+    rule: archive_domain_keys_use_domain_separated_derivation
+  - id: I41
+    rule: password_or_pin_never_directly_encrypts_archive
+  - id: I42
+    rule: password_or_pin_never_uses_plain_hkdf_as_password_kdf
+  - id: I43
+    rule: object_deks_are_independent_from_account_identity
+  - id: I44
+    rule: sharing_one_object_does_not_disclose_archive_aek
+  - id: I45
+    rule: aes_gcm_nonce_reuse_is_forbidden
+  - id: I46
+    rule: account_recovery_does_not_imply_archive_decryption
+  - id: I47
+    rule: no_authorization_from_user_id_possession_alone
+  - id: I48
+    rule: local_archive_unlock_is_not_account_authentication
+  - id: I49
+    rule: account_passkey_is_not_device_enrollment
+  - id: I50
+    rule: passkey_sync_is_not_device_trust
+  - id: I51
+    rule: archive_aek_is_never_the_recipient_sharing_key
+  - id: I52
+    rule: account_recovery_is_not_archive_decryption
+
+cryptographic_compartmentalization:
+  principle: each_component_is_a_distinct_credential_class
+  account_recovery_is_not_archive_decryption: true
+  distinct:
+    - captains_log_account_uuid
+    - human_readable_user_id
+    - device_private_key
+    - provider_identity
+    - passkey
+    - session_credential
+    - authorization_grant
+    - archive_encryption_key
+    - recovery_secret
+    - recovery_kek
+    - archive_domain_key
+    - object_dek
+  compromise_of_one_does_not_automatically_compromise_all: true
+  classes:
+    - class: account_uuid
+      proves: which_canonical_account_record
+      does_not_prove: authorization_or_key_possession
+    - class: human_readable_user_id
+      proves: which_account_a_human_intends_to_locate
+      does_not_prove: authentication_or_authorization
+    - class: device_private_key
+      proves: possession_of_enrolled_device_key
+      does_not_prove: account_login_or_aek_possession_by_itself
+    - class: provider_identity
+      proves: control_of_linked_google_apple_or_email_identity
+      does_not_prove: captains_log_session_or_grants
+    - class: passkey
+      proves: account_authentication_factor
+      does_not_prove: device_enrollment
+    - class: session_credential
+      proves: continuation_of_authority_session
+      does_not_prove: archive_unwrap_or_object_dek
+    - class: authorization_grant
+      proves: short_lived_scoped_capability
+      does_not_prove: device_possession_without_proof_of_possession
+    - class: archive_encryption_key
+      proves: archive_cryptographic_root_via_domain_keys
+      does_not_prove: account_authentication_or_unrelated_shared_objects
+    - class: recovery_secret
+      proves: derivation_of_recovery_kek_used_to_unwrap_aek
+      does_not_prove: account_recovery_or_authentication
+    - class: object_dek
+      proves: one_protected_object_or_file
+      does_not_prove: other_objects_or_archive_aek
+
+recovery_security_statement:
+  user_facing: >
+    Your recovery key protects access to your encrypted Captain's Log archive.
+    Captain's Log does not keep a copy that can decrypt your data for you.
+    Store it somewhere safe. If you lose both your recovery key and every
+    device capable of unlocking your archive, your encrypted data cannot be
+    recovered. Anyone who obtains your recovery key and the corresponding
+    encrypted archive may be able to access that data.
+  soften_to_imply_administrative_recovery: forbidden
+
+# ---------------------------------------------------------------------------
+# Identity layers remain distinct.
+# ---------------------------------------------------------------------------
+identity_layers:
+  order:
+    - local_profile
+    - archives
+    - captains_log_account
+    - linked_authentication_identities
+    - authentication_factors_and_provider_sessions
+    - authorization_capabilities
+
+  local_profile:
+    required_on_first_launch: true
+    requires_network: false
+    requires_google: false
+    requires_apple: false
+    requires_authority: false
+    uuid_authority: local_client
+    not_a_captains_log_account: true
+
+  archives:
+    created_on_first_launch: true
+    uuid_authority: originating_client
+    globally_unique: true
+    encrypted: required
+    remote_account_association: optional
+    association_is_not_authentication: true
+
+  captains_log_account:
+    uuid_authority: captains_log_authority
+    globally_unique: true
+    generated_by: captains_log_authority
+    required_for_local_use: false
+    required_for:
+      - cloud_sync
+      - cross_device_identity
+      - shared_files
+      - remote_device_enrollment
+      - authenticated_remote_services
+    never_replaced_by_external_provider_subject: true
+
+  linked_authentication_identities:
+    examples:
+      - google
+      - apple
+      - verified_email
+      - verified_phone
+    canonical_key: provider_specific
+    google_key: [issuer, subject]
+    email_is_not_an_account_id: true
+    email_is_not_a_google_subject: true
+
+  authentication_factors:
+    examples:
+      - passkey
+      - totp
+      - recovery_code
+    passkey_is_a_factor_not_a_linked_identity: true
+
+  authorization_capabilities:
+    issued_as: short_lived_captains_log_grants
+    possession_of_uuid_is_not_authorization: true
+
+identifiers:
+  local_profile_uuid:
+    authority: local_client
+    globally_unique: false
+    scope: this_installation
+    proves_authorization: false
+
+  archive_uuid:
+    authority: originating_client
+    globally_unique: true
+    immutable: true
+    proves_authorization: false
+
+  account_uuid:
+    authority: captains_log_authority
+    globally_unique: true
+    immutable: true
+    proves_authorization: false
+
+  user_id:
+    name: captains_log_user_id
+    decision: D38
+    authority: captains_log_authority
+    distinct_from: account_uuid
+    locator_or_address: true
+    immutable_once_issued: true
+    resolvable_to: account_uuid
+    authentication: false
+    authorization: false
+    proof_of_account_ownership: false
+    cryptographic_key: false
+    proves_authorization: false
+
+  device_uuid:
+    authority: captains_log_authority
+    globally_unique: true
+    enrolled_by: captains_log_authority
+    proves_authorization: false
+    local_installation_marker_is_not_this: true
+
+  object_uuid:
+    authority: originating_client
+    globally_unique: true
+    applies_to:
+      - log_entries
+      - attachments
+      - entities
+      - shared_objects
+    proves_authorization: false
+    current_repository_note: existing domain IDs already use Crypto.randomUUID via src/utilities/ids.ts
+
+  transfer_uuid:
+    purpose: transient_transfer_identity
+    proves_authorization: false
+
+  grant_id:
+    purpose: short_lived_authorization_grant
+    proves_authorization: false
+    note: a grant_id names a grant; the signed/verifiable grant plus unrevoked status authorizes
+
+  identity_uuid:
+    authority: captains_log_authority
+    purpose: linked_authentication_identity_row
+    proves_authorization: false
+
+  credential_id:
+    purpose: passkey_credential_identifier
+    proves_authorization: false
+
+# ---------------------------------------------------------------------------
+# Approved decision register. D1–D12 supersede unresolved Codex recommendations.
+# ---------------------------------------------------------------------------
+decisions:
+  D1:
+    title: Shared account authority
+    status: APPROVED
+    summary: Custom lightweight Captain's Log authority as a narrow control plane.
+    owns:
+      - canonical account UUID resolution
+      - verified identity to account mapping
+      - atomic identity uniqueness
+      - account linking
+      - device enrollment
+      - device trust
+      - MFA state
+      - authentication assurance state
+      - recovery state
+      - account lifecycle state
+      - sharing authorization
+      - short-lived authorization grants
+    does_not_own_by_default:
+      - logs
+      - graph_data
+      - attachments
+      - archive_contents
+    follow_on: D13
+
+  D2:
+    title: First-launch local profile and archive
+    status: APPROVED
+    summary: Local profile immediately; remote account optional.
+    first_launch_creates:
+      - local_profile_uuid
+      - archive_uuid
+      - encrypted_local_archive
+    first_launch_does_not_require:
+      - google
+      - apple
+      - internet
+      - captains_log_authority
+      - captains_log_password_or_pin
+    encryption_model: bitlocker_style_key_hierarchy
+    user_password_does_not_directly_encrypt_archive_bytes: true
+    follow_on:
+      - D15
+      - D16
+      - D26
+      - D28
+      - D30
+
+  D3:
+    title: Google native library
+    status: APPROVED
+    summary: Universal @react-native-google-signin/google-signin.
+    package: "@react-native-google-signin/google-signin"
+    edition: universal
+    public_npm_is_legacy_android_sdk: true
+    license_purchase_authorized: false
+    expo_go: unsupported
+    expo_dev_client: required
+    firebase_required: false
+    retain_implicit_authsession_as_security_fallback: false
+    documented_compatibility:
+      source: https://react-native-google-signin.github.io/docs/install
+      expo: 52.0.40-57
+      react_native: 0.76.0-0.87
+    repository_runtime:
+      expo: 57.0.15
+      react_native: 0.86.2
+      react: 19.2.3
+    exact_version: pending_license_and_compatibility_spike
+    currently_installed: false
+    expo_dev_client_currently_installed: false
+    eas_development_profile_requests_development_client: true
+    follow_on: D25
+
+  D4:
+    title: MFA policy
+    status: APPROVED
+    summary: Risk-adaptive MFA. Do not require two factors on every ordinary interaction.
+    mechanical_two_factor_on_every_interaction: false
+    assurance_considers:
+      - device_trust
+      - session_age
+      - operation_sensitivity
+      - credential_changes
+      - recovery_events
+      - account_status
+      - suspicious_conditions
+      - newly_enrolled_devices
+      - server_side_risk_policy
+    step_up_required_to_evaluate:
+      - adding_an_identity
+      - removing_an_identity
+      - adding_a_device
+      - revoking_a_device
+      - changing_mfa
+      - changing_recovery
+      - changing_sharing_permissions
+      - changing_sync_destination
+      - archive_restore_involving_remote_or_shared_data
+      - account_reconciliation
+      - account_merge_if_ever_supported
+      - account_deletion
+      - security_critical_export_or_sharing
+    supersedes_codex_mandatory_factors_required_2_on_every_event: true
+
+  D5:
+    title: Authorization enforcement
+    status: APPROVED
+    summary: Authority issues short-lived Captain's Log grants. Control plane stays separate from data plane.
+    grant_fields:
+      - account_uuid
+      - device_uuid
+      - operation
+      - resource_object_uuid
+      - assurance_level
+      - issued_at
+      - expires_at
+      - grant_id
+    authority_is_not_automatic_google_drive_proxy: true
+    prefer:
+      control_plane: captains_log_authority
+      data_plane: device_to_authorized_storage_or_service
+    follow_on: D17
+
+  D6:
+    title: Authentication methods and trusted window
+    status: APPROVED
+    methods_in_architecture:
+      preferred_strong_authenticator: passkey
+      first_delivery:
+        - passkey
+        - google
+        - verified_email
+        - totp
+      later_phase:
+        - apple
+        - phone
+    trusted_authentication:
+      maximum_age_days: 90
+      unconditional_bypass: false
+      revocable_before_expiration: true
+      high_risk_operations_may_require_step_up_during_valid_window: true
+      invalidate_on:
+        - explicit_sign_out
+        - account_disable
+        - device_revocation
+        - credential_compromise
+        - recovery_event
+        - primary_identity_change
+        - mfa_configuration_change
+        - significant_risk_event
+        - server_policy_change
+
+  D7:
+    title: Account and archive persistence
+    status: APPROVED
+    summary: Split persistence. Archive UUID is immutable. Authoritative ownership lives at the authority.
+    archive_stores_nonsecret_association_metadata: true
+    restored_metadata_is_not_proof: true
+    never_enter_archive_backups:
+      - provider_tokens
+      - passkey_private_material
+      - totp_secrets
+      - active_authorization_grants
+    follow_on: D23
+
+  D8:
+    title: Remote account disablement
+    status: APPROVED
+    account_disabled_stops:
+      - sync
+      - sharing
+      - new_device_enrollment
+      - identity_changes
+      - mfa_changes
+      - authorization_grant_issuance
+      - new_remote_account_operations
+    account_disabled_does_not:
+      - delete_locally_owned_data
+      - automatically_erase_local_archives
+      - automatically_lock_locally_owned_archives
+    archive_locking_is_separate_local_mechanism: true
+    offline_known_disablement_preserves_local_ownership: true
+
+  D9:
+    title: Development and production infrastructure
+    status: APPROVED
+    separate_environments:
+      - development_test
+      - production
+    includes_where_applicable:
+      - google_cloud_projects
+      - oauth_clients
+      - signing_fingerprints
+      - consent_configuration
+      - authority_deployment
+      - secrets
+      - databases
+      - test_accounts
+      - push_configuration
+    production_secrets_as_development_configuration: forbidden
+    no_google_cloud_resources_exist_in_this_repository: true
+
+  D10:
+    title: Existing installations
+    status: APPROVED
+    preserve:
+      - local_archive_contents
+      - legitimate_local_archive_locks
+      - local_nonsecret_data
+    deliberately_invalidate:
+      - google_implicit_flow_tokens
+      - drive_bearer_tokens
+      - email_strings_masquerading_as_verified_google_identity
+      - stale_provider_sessions
+    require_fresh_authentication: true
+    never_convert_old_email_only_record_to_verified_google_issuer_subject: true
+
+  D11:
+    title: iOS and wearables
+    status: APPROVED
+    ios_is_first_class_upcoming_target: true
+    dedicated_local_ios_development_environment: required
+    android_phone_only_assumptions: forbidden
+    later_clients:
+      - iphone
+      - ipad
+      - apple_watch
+      - garmin_class_devices
+      - galaxy_watches
+      - other_wearable_collectors
+      - desktop_clients
+      - tablet_clients
+    wearable_roles_possible:
+      - enrolled_device
+      - subordinate_trusted_device
+      - data_collector
+      - local_capture_endpoint
+    wearable_full_account_credentials_by_default: forbidden
+    follow_on: D22
+
+  D12:
+    title: Background synchronization
+    status: APPROVED
+    strategy: hybrid
+    includes:
+      - deterministic_foreground_synchronization
+      - durable_queued_work
+      - opportunistic_background_retry
+      - push_hints_for_remote_changes
+    correctness_depends_on_background_runtime: false
+    assume_mobile_os_may_delay_background_indefinitely: true
+    engine_must_support:
+      - durable_pending_operations
+      - idempotency_where_practical
+      - operation_identifiers
+      - retries
+      - stale_operation_rejection
+      - version_conflict_detection
+      - reconciliation_on_foreground_resume
+      - account_device_binding
+      - safe_account_switching
+      - eventual_consistency
+    push_indicates_work_may_exist: true
+    push_is_not_sync_completion: true
+
+  D13:
+    title: Authority runtime and hosting
+    status: APPROVED
+    classification: accepted_containerized_aws_authority
+    approved: 2026-09-28
+    issue: >
+      D1 approved a custom lightweight authority but did not choose runtime, persistence,
+      repository location, or host. No backend exists in this repository.
+    approval: >
+      TypeScript HTTPS authority, containerized, pushed to Amazon ECR, run on
+      Amazon ECS Fargate in private AWS networking, with Amazon RDS PostgreSQL.
+      Development RDS is in us-east-2, database captains_log. Live AWS resource
+      identifiers and secret references belong in the private captains-log-infra
+      repository, not this public product repository. Domain and business logic
+      sit behind repository interfaces; the PostgreSQL adapter must not leak
+      RDS-specific behavior into the domain. The same Docker artifact runs in
+      local Compose (authority plus local PostgreSQL) and in AWS (ECR to Fargate
+      to RDS). Multi-stage build, non-root runtime where practical, no secrets
+      in the image, graceful shutdown including PostgreSQL pool close, and
+      /health/live, /health/ready, and /version endpoints.
+    stack:
+      - typescript_https
+      - docker
+      - amazon_ecr
+      - amazon_ecs_fargate
+      - private_aws_networking
+      - amazon_rds_postgresql
+    development_database:
+      provider: aws
+      service: rds_postgresql
+      environment: dev
+      region: us-east-2
+      database: captains_log
+    provider_replaceable_at_domain_layer: true
+    implementation_impact: P05 introduces authority package, Dockerfile, and Compose; live AWS IDs stay out of this repository
+
+  D14:
+    title: Passkey classification
+    status: APPROVED
+    classification: accepted_factor_not_linked_identity
+    approved: 2026-09-28
+    issue: created_with includes passkey, but passkeys are WebAuthn credentials.
+    approval: >
+      Passkeys are authentication factors, not linked provider identities.
+      Google, Apple, verified email, and verified phone remain linked identities.
+      A passkey must not be modeled as an identity-provider subject. Passkey
+      semantics remain governed by approved D32. created_with may still be
+      passkey as historical metadata.
+    implementation_impact: separate factor tables/APIs from identity tables/APIs
+    follows:
+      - D32
+
+  D15:
+    title: Archive encryption mechanism
+    status: APPROVED
+    classification: accepted_layered_key_hierarchy
+    approved: 2026-09-21
+    issue: D2 requires BitLocker-style wrapping. Current local credential is only a UI gate.
+    current_repository:
+      sqlite_plaintext: true
+      attachments_plaintext: true
+      ios_uses_non_exempt_encryption_declared_false: true
+      expo_sqlite_sqlcipher_plugin_available: true
+      expo_sqlite_useSQLCipher_currently: false
+    approval: >
+      Captain's Log uses a layered key hierarchy. The user's Recovery Secret is
+      not the Archive Encryption Key and must not directly encrypt the archive or
+      individual files. Each archive has an independent random 256-bit AEK. The
+      Recovery Secret is 256 random bits encoded as 64 hexadecimal characters,
+      generated locally. HKDF with domain captains-log/recovery-kek/v1 derives a
+      Recovery KEK that wraps AEK. Device wrap uses platform-protected
+      cryptography. Optional password or PIN is hardened with Argon2id, or an
+      appropriately configured existing PBKDF2 implementation where platform or
+      repository constraints require it, then wraps AEK. Password or PIN must
+      never be fed directly to HKDF. Domain-separated HKDF from AEK produces
+      SQLCipher, file, thumbnail, export, and backup-staging keys. Persistent
+      files and objects use independent random DEKs wrapped by the File KEK.
+      AES-256-GCM nonce reuse under a given key is forbidden. Changing password,
+      recovery material, enrolled devices, or authentication providers rewraps
+      AEK and does not re-encrypt archive content. SQLCipher's PRAGMA key is the
+      sqlite domain key, never the password, PIN, Recovery Secret, Recovery KEK,
+      or raw AEK.
+    hierarchy: recovery_secret_to_recovery_kek_to_wrapped_aek_to_domain_keys_to_object_deks
+    implementation_impact: >
+      P04 implements this hierarchy after P01 contracts. Do not claim completion
+      until plaintext inspection on device. Update iOS export compliance before
+      shipping encryption.
+    follow_on:
+      - D20
+      - D27
+      - D28
+
+  D16:
+    title: Local profile and archive cardinality
+    status: APPROVED
+    classification: accepted_one_profile_many_archives_later
+    approved: 2026-09-28
+    issue: D2 creates a profile and an archive on first launch but does not define later cardinality.
+    approval: >
+      An installation has one local profile. First launch creates one archive.
+      A profile may later own multiple archives. Each archive has an immutable
+      archive_uuid and its own random AEK. One remote account may associate with
+      multiple archives. An archive associates with at most one remote account
+      at a time. Association never silently moves between accounts. Restored
+      association metadata is not ownership proof. The local archive remains
+      usable without a remote account or network. local_profile_uuid, archive_uuid,
+      account_uuid, and user_id remain distinct.
+    implementation_impact: archive_uuid and account_uuid remain distinct foreign references
+
+  D17:
+    title: Grant format
+    status: APPROVED
+    settled_by: D36
+    classification: settled_by_later_approval
+    issue: D5 requires short-lived verifiable grants but does not specify encoding, TTL, or PoP.
+    approval: >
+      D36 accepts JWS with Ed25519 authority signing keys, named grant_id/jti,
+      device confirmation, revocation state, and the 300/3600/120 second TTLs.
+    implementation_impact: grant verification adapter; never persist grants in archive backups
+
+  D18:
+    title: Development client prerequisite
+    status: REPOSITORY_FACT
+    classification: observed
+    issue: eas.json development profile sets developmentClient true but expo-dev-client is not installed.
+    recommendation: >
+      Install expo-dev-client in the native Google and SQLCipher phases, not earlier.
+      Native authentication and SQLCipher will not work in Expo Go.
+    implementation_impact: new binary required; JavaScript-only rollback cannot remove native modules
+
+  D19:
+    title: Backup versus synchronization
+    status: ACCEPTED_CONSEQUENCE
+    classification: restatement_of_approved_architecture
+    follows:
+      - D12
+    issue: Current Google Drive path snapshots the whole SQLite file plus attachments.
+    recommendation: >
+      Keep backup_snapshot version 1 as whole-archive disaster recovery.
+      Cloud sharing uses distinct sync_protocol and sharing_protocol.
+    implementation_impact: backup milestone rebinds authorization; sync is a later protocol
+
+  D20:
+    title: iOS encryption export compliance
+    status: ACCEPTED_CONSEQUENCE
+    classification: legal_operational_consequence
+    follows:
+      - D15
+    issue: app.json ios.config.usesNonExemptEncryption is currently false.
+    recommendation: >
+      If D15 is accepted, revisit the App Store export declaration before an iOS
+      build with encryption ships.
+    implementation_impact: gated on the encryption phase; legal/export review is operator-owned
+
+  D21:
+    title: Web credential storage
+    status: ACCEPTED_CONSEQUENCE
+    classification: restatement_of_invariants
+    follows:
+      - I16
+      - I22
+    issue: secureKv.ts uses ordinary localStorage on web.
+    recommendation: >
+      Production account, provider, grant, AEK, and session credentials are native
+      SecureStore only. Web auth is unsupported until a reviewed web store exists.
+    implementation_impact: split secret storage from prototype web bootstrap keys
+    depends_on_review_of:
+      - D35
+
+  D22:
+    title: Wearable and subordinate device credentials
+    status: ACCEPTED_CONSEQUENCE
+    classification: restatement_of_approved_architecture
+    follows:
+      - D11
+    recommendation: >
+      Wearables and collectors receive device_uuid plus narrow grants. They do not
+      receive account refresh credentials, recovery material, or AEK wrapping keys
+      unless a later reviewed enrollment ceremony creates a full device.
+    implementation_impact: device enrollment API must distinguish device_class
+    follows_also:
+      - D31
+
+  D23:
+    title: Authority persistence isolation
+    status: ACCEPTED_CONSEQUENCE
+    classification: restatement_of_approved_architecture
+    follows:
+      - D1
+      - D7
+    recommendation: >
+      Authority accounts, identities, factors, devices, grants, and audit events
+      persist in the authority database, not captains-log.db.
+    implementation_impact: no authoritative ownership tables in the SQLite archive
+
+  D24:
+    title: Capability binding to provider identity
+    status: APPROVED
+    classification: accepted_account_plus_issuer_subject
+    approved: 2026-09-28
+    issue: An account may later have multiple Google identities. Drive consent is per Google subject.
+    approval: >
+      Google Drive capability for backup or sync binds to Captain's Log
+      account_uuid plus the exact Google identity issuer and subject. Do not bind
+      Drive authorization to email alone, account UUID alone, or cached token
+      presence alone. Google uniqueness is (issuer, subject). Email equality
+      never substitutes for provider subject identity. Google sign-in and Drive
+      authorization remain separate capabilities and scopes.
+    implementation_impact: authorization service carries identity_uuid on capability records
+
+  D25:
+    title: Google Universal Sign-In license gate
+    status: BLOCKED_ON_OPERATOR
+    classification: consequence_of_D3
+    follows:
+      - D3
+    issue: Universal edition requires licensing/private registry. No purchase is authorized.
+    recommendation: >
+      Do not install the public/free package as a silent substitute. Do not retain
+      AuthSession implicit flow as fallback. P08 stops until license/registry access
+      exists or the operator chooses a reviewed alternative after a spike.
+    eas_customer_complimentary_access: unverified_operator_check_only
+    implementation_impact: P08 and therefore the beta gate are blocked until this is resolved
+
+  D26:
+    title: Product specification reconciliation
+    status: ACCEPTED_CONSEQUENCE
+    classification: restatement_of_approved_architecture
+    follows:
+      - D2
+    issue: docs/captains-log.yaml previously set account_required true.
+    recommendation: >
+      Remote Captain's Log account is optional for local use. The product spec was
+      updated to match D2 during P00. That spec edit stands as a D2 consequence.
+    implementation_impact: none remaining unless D2 is reversed
+
+  D27:
+    title: Encryption plaintext leakage inventory
+    status: ACCEPTED_CONSEQUENCE
+    classification: restatement_of_approved_architecture
+    follows:
+      - D2
+    must_encrypt_or_eliminate:
+      - sqlite_main_db
+      - sqlite_wal
+      - sqlite_shm
+      - fts_indexes_inside_sqlite
+      - attachment_originals
+      - thumbnails_and_previews
+      - export_staging_files
+      - restore_staging_files
+      - backup_staging_files
+    currently_plaintext:
+      - captains-log.db
+      - Paths.document/attachments/**
+      - lastBackupDetail in app_settings
+      - processing_jobs.detail
+    never_claim_complete_until_on_device_inspection: true
+
+  D28:
+    title: Existing plaintext archive encryption migration
+    status: APPROVED
+    classification: accepted_consequence_of_D15
+    approved: 2026-09-21
+    follows:
+      - D15
+    issue: SQLCipher cannot be applied in place to an existing plaintext Expo SQLite file.
+    approval: >
+      Create or generate AEK, create encrypted destination database and files,
+      copy and verify content, verify the encrypted archive opens, verify required
+      metadata and attachments, and only then delete the old plaintext working
+      copy. Logical delete and best-effort platform cleanup are required after
+      verification. Captain's Log does not guarantee physical secure erasure on
+      flash storage.
+    plaintext_migration:
+      original_retained_until_verification: true
+      after_verification:
+        logical_delete: required
+        best_effort_platform_cleanup: required
+      guaranteed_physical_erasure: false
+    implementation_impact: P04 includes upgrade and clean-install tests; keep plaintext original until verification
+
+  D29:
+    title: Auth service lifetime versus archive restore
+    status: APPROVED
+    classification: accepted_application_lifetime_auth_services
+    approved: 2026-09-28
+    issue: >
+      createAppServices currently constructs AuthService inside database-dependent
+      composition. Archive restore recomposes all services.
+    approval: >
+      AccountService, AuthService, DeviceService, AuthorizationService, session
+      management, provider authentication state, and authority connection or
+      session state are application-lifetime services. They must not be owned by
+      or reconstructed solely from the SQLite archive lifecycle. Restoring,
+      replacing, or recreating the local SQLite archive must not silently log
+      the user in or out, activate cloud sync, restore provider credentials,
+      recreate trust, alter device enrollment, or infer account ownership.
+    implementation_impact: AppServicesProvider composition split before restore-safe auth
+
+  D30:
+    title: Optional local lock versus required first-launch password
+    status: APPROVED
+    classification: accepted_optional_local_lock
+    approved: 2026-09-28
+    issue: AuthGate currently requires identifier and password before any use.
+    approval: >
+      First launch creates a protected archive without requiring a Captain's Log
+      password or PIN. A random AEK is wrapped by the device or platform-protected
+      mechanism so the local archive is available offline. A Captain's Log
+      password, PIN, or local lock is optional. If configured, password or PIN
+      is hardened with Argon2id or an approved password KDF to a Local Unlock KEK
+      that wraps AEK. Once configured, that lock must not be bypassed because
+      Google authentication succeeds, a remote Captain's Log session exists, or
+      account status is active. Changing local password or PIN rewraps the same
+      AEK rather than re-encrypting archive content.
+    implementation_impact: split ArchiveAccessService from remote AuthService; AuthGate changes
+    wrapping_mechanism_accepted_by: D15
+    recovery_wrap_accepted_by: D33
+
+  D31:
+    title: Cryptographic device identity and proof-of-possession
+    status: APPROVED
+    classification: accepted_signal_inspired_direction
+    approved: 2026-09-21
+    issue: >
+      device_uuid names an enrolled device. Invariant I10 says UUID possession is
+      not authorization. UUID alone never proves possession of that device.
+    approval: >
+      Every fully enrolled Captain's Log device receives its own cryptographic
+      identity in addition to its device_uuid. At enrollment the device generates
+      an asymmetric keypair locally using established platform cryptography.
+      Keep the private key non-exportable where the platform permits. Prefer
+      hardware-backed key storage when available. Register only the public key
+      with the Captain's Log authority. Sensitive sessions, grant requests,
+      enrollment operations, and other appropriate requests require fresh
+      cryptographic proof from the device private key. Attestation may later
+      contribute to risk scoring but is not the sole basis of device trust.
+      Wearables and subordinate collectors continue to receive narrower device
+      credentials under D11/D22 unless explicitly promoted through a reviewed
+      full-device enrollment ceremony.
+    recognized_device: device_uuid plus registered_public_key plus proof_from_device_private_key
+    implementation_impact: >
+      P07 enrollment registers the public key. P16 grants and session continuation
+      (D35/D36) require fresh PoP. device_uuid remains a record identifier only.
+
+  D32:
+    title: Passkey relying-party and local-versus-remote unlock
+    status: APPROVED
+    classification: accepted_local_versus_webauthn_split
+    approved: 2026-09-22
+    issue: >
+      Passkeys need an RP ID, origin, and an account to bind to. First launch is
+      offline and has no Captain's Log account. A custom scheme such as
+      captainslog:// is not a WebAuthn RP ID. Local archive unlock must not be
+      described as a WebAuthn passkey wrapping AEK.
+    approval: >
+      A remote WebAuthn passkey and local archive unlock are distinct cryptographic
+      mechanisms even if both may present similar biometric or device-authentication
+      UX. Local archive unlock uses platform user verification to authorize use of
+      a device-protected local key that unwraps AEK. It does not require a remote
+      account, the authority, or a WebAuthn relying party, and it is not a WebAuthn
+      passkey. The local protected key remains part of the D15 wrapping hierarchy.
+      The remote account passkey uses WebAuthn against a permanent Captain's Log-
+      controlled HTTPS RP ID. The authority verifies the assertion. The RP domain
+      is not selected in this decision. Passkey-first remote account creation is
+      approved: a provisional registration transaction issues a short-lived
+      challenge, the client creates a WebAuthn passkey, the authority verifies
+      registration, then atomically creates account_uuid, enrolls the first device
+      under D31, and issues a normal session. The provisional transaction is not a
+      normal account session and must not permit archive sync, sharing, normal
+      grants, identity management, MFA changes, or arbitrary account operations.
+      D31 device proof-of-possession remains independent of WebAuthn authentication.
+    local_archive_unlock:
+      remote_account_required: false
+      authority_required: false
+      webauthn_passkey: false
+      purpose: authorize_use_of_local_device_protected_aek_wrap
+    account_passkey:
+      mechanism: webauthn
+      rp_id: pending_permanent_cl_controlled_https_domain
+      authority_verifies_assertion: true
+    passkey_first_bootstrap:
+      provisional_registration_is_not_normal_session: true
+      forbidden_on_provisional_transaction:
+        - archive_sync
+        - sharing
+        - normal_authorization_grants
+        - identity_management
+        - mfa_changes
+        - arbitrary_account_operations
+    implementation_impact: >
+      P10 implements account WebAuthn against a later-chosen HTTPS RP ID. Do not
+      implement P10 against the app scheme. Local unlock is P04 wrapping, not P10.
+    rp_id_selection: operator_product_decision_not_made
+    follows:
+      - D15
+      - D31
+
+  D33:
+    title: Archive-key recovery after total device loss
+    status: APPROVED
+    classification: accepted_layered_key_hierarchy
+    approved: 2026-09-21
+    clarified: 2026-09-21
+    issue: >
+      If AEK is wrapped only to a device keystore key, destroying or losing every
+      enrolled device makes the archive and any AEK-encrypted backup unreadable.
+      Account recovery does not unwrap AEK. Authority custody of AEK plaintext
+      would make the authority a content-key escrow.
+    approval: >
+      The Recovery Secret is a locally generated 256-bit CSPRNG value encoded as
+      64 hexadecimal characters representing 32 random bytes. It is not a user
+      password and must not directly encrypt archive content. HKDF with domain
+      captains-log/recovery-kek/v1 derives a Recovery KEK that wraps the random
+      AEK using authenticated key wrapping. The authority may store the encrypted
+      AEK recovery envelope and must never possess plaintext Recovery Secret,
+      Recovery KEK, or AEK. Total-device-loss recovery authenticates the account,
+      obtains the envelope, accepts the 64-character secret, derives Recovery KEK,
+      unwraps AEK, derives domain keys, and decrypts. A recovered account without
+      the Recovery Secret must not decrypt the archive. Replacing recovery
+      material rewraps AEK and invalidates the old envelope without re-encrypting
+      content. Present recovery_security_statement without softening it.
+    recovery_secret:
+      entropy_bits: 256
+      generation: csprng
+      encoding:
+        type: hexadecimal
+        characters: 64
+      generated_locally: true
+      authority_receives_plaintext: false
+      recoverable_by_captains_log: false
+    recovery_kek:
+      derivation: hkdf
+      info: captains-log/recovery-kek/v1
+      wraps: aek
+      directly_encrypts_archive_content: false
+    account_recovery_does_not_decrypt_archive: true
+    implementation_impact: >
+      P14 implements this recovery unwrap after P04 has the hierarchy. Do not
+      describe Drive snapshots as disaster recovery of encrypted content without
+      the Recovery Secret or an enrolled device wrap.
+
+  D34:
+    title: Shared-object encryption and key distribution
+    status: APPROVED
+    classification: accepted_recipient_specific_object_dek
+    approved: 2026-09-21
+    clarified: 2026-09-28
+    issue: >
+      Grants authorize an operation on an object UUID. They do not encrypt the
+      object or distribute a content key. Without a DEK plan, sharing either
+      sends plaintext or makes the authority a content proxy.
+    approval: >
+      Shared objects follow the same compartmentalization as archive files.
+      Each protected shared object receives an independent random Object DEK.
+      The object is AEAD-encrypted once under that DEK. The Object DEK is then
+      wrapped independently for authorized recipients. Do not use the archive
+      AEK as the recipient-sharing key. Sharing one object must never disclose
+      the archive AEK. Do not duplicate the underlying object for every
+      recipient merely to achieve recipient-specific encryption. Account
+      authorization and cryptographic key possession remain separate
+      requirements. Do not implement Signal's Double or Triple Ratchet as the
+      Captain's Log storage protocol. Recipient key target, revocation, historical
+      versions, and newly enrolled devices are settled by D34-A through D34-D.
+    implementation_impact: P19/P20/P24 implement this protocol after P01/P16; they are no longer architecture-blocked
+    follows:
+      - "D34-A"
+      - "D34-B"
+      - "D34-C"
+      - "D34-D"
+
+  D35:
+    title: Captain's Log session-token storage invariants
+    status: APPROVED_DIRECTION
+    classification: accepted_signal_inspired_direction
+    approved: 2026-09-21
+    issue: >
+      Invariants forbid provider tokens in SQLite, YAML, UI, diagnostics, exports,
+      and backups. Captain's Log authority sessions must be treated as sensitive
+      credentials independently from Google or other provider tokens.
+    approval: >
+      Short-lived access or session credentials stay in memory. Longer-lived
+      refresh or session continuation credentials use SecureStore or platform
+      secure storage. Session continuation binds to the enrolled device
+      cryptographic key from D31. An installation marker detects reinstall and
+      lifecycle changes. The installation marker is not authentication and is
+      not a substitute for device proof-of-possession. Copying stored session
+      material without possession of the enrolled device private key is not
+      sufficient to impersonate the device. Invariants I25 through I30 apply.
+    remaining_specification_before_implementation:
+      - exact_securestore_key_names
+      - refresh_credential_lifetime
+    implementation_impact: P03 defines key names and the install-marker rule before P06
+    follows:
+      - D21
+      - D31
+
+  D36:
+    title: Grant signing-key rotation and device binding
+    status: APPROVED
+    classification: accepted_signal_inspired_direction
+    approved: 2026-09-21
+    issue: >
+      A compact JWS that lists device_uuid can be replayed from another process
+      unless the presenter proves possession of the enrolled device key. Authority
+      signing keys also need rotation without invalidating in-flight grants blindly
+      or trusting a single long-lived key forever.
+    approval: >
+      Captain's Log authorization grants are short-lived signed capabilities.
+      Use JWS with Ed25519 authority signing keys, explicit signing-key IDs and
+      rotation, device proof-of-possession binding, and authority-side revocation
+      state where online verification is available. Required grant semantics
+      include iss, aud, account_uuid, device_uuid, operation, resource or
+      object_uuid, assurance_level, iat, nbf, exp, grant_id or jti, kid, and
+      device-key confirmation or thumbprint. Default TTL 300 seconds, maximum
+      3600 seconds, local sharing 120 seconds. These durations may later be
+      tightened based on testing and usability evidence. The device-key
+      confirmation claim binds the grant to the enrolled key from D31 so that
+      possession of the serialized grant alone is insufficient where proof-of-
+      possession is required. Authority signing-key rotation permits a bounded
+      overlap: the old public key remains valid for outstanding unexpired grants,
+      new grants use the new signing key, the old signing key stops issuing
+      immediately, and the old verification key retires after the bounded expiry
+      window. Private authority signing keys must never be distributed to
+      clients. For offline local sharing, an offline recipient can verify
+      signature, expiration, audience, operation, object, and device binding,
+      but cannot know about a server-side revocation that occurred after its
+      last authority contact. The short local-sharing TTL bounds this exposure.
+    grant_ttl:
+      default_seconds: 300
+      maximum_seconds: 3600
+      local_sharing_seconds: 120
+    implementation_impact: P16 issues JWS Ed25519 grants bound to D31 keys; clients never receive authority signing private keys
+    follows:
+      - D5
+      - D17
+      - D31
+
+  D37:
+    title: Explicit email authentication mechanism
+    status: APPROVED
+    classification: accepted_short_lived_email_otp
+    approved: 2026-09-28
+    issue: >
+      Verified email is a first-delivery method, but the login mechanism was never
+      chosen. Email as an identity is not the same as email as an authenticator.
+      Email OTP plus "email identity" is one mailbox-possession factor, not two.
+    approval: >
+      Initial verified-email authentication is a short-lived single-use email OTP.
+      Do not create a Captain's Log email/password database. The OTP or challenge
+      is cryptographically random, short-lived, single-use, attempt-limited, and
+      rate-limited. A resend invalidates or supersedes the prior challenge.
+      Plaintext OTP is not logged. Account enumeration is minimized. A successful
+      challenge proves current mailbox control. Verified email identity plus OTP
+      sent to the same mailbox is one authentication channel, not two independent
+      factors, and does not count as independent MFA. Passkey or TOTP may provide
+      independent step-up where policy requires it. Magic-link support may be
+      added later as optional UX and is not first-delivery scope. DNS/MX discovery
+      stays a UX hint (P18) and is not this authenticator.
+    implementation_impact: P13 implements email OTP after P06/P11; do not treat mailbox OTP as a second factor
+
+  D38:
+    title: Human-readable Captain's Log User ID
+    status: APPROVED
+    classification: accepted_locator_distinct_from_account_uuid
+    approved: 2026-09-22
+    issue: >
+      Canonical account_uuid is not a human locator. A human-facing identifier
+      must not become authentication, authorization, or a cryptographic key.
+    approval: >
+      The human-facing user_id is a locator or address, immutable once issued,
+      and resolvable to account_uuid. It is not authentication, authorization,
+      proof of account ownership, or a cryptographic key. Possession of user_id
+      does not authorize. It remains separate from account_uuid. This ID is not
+      reused for shared-object encryption details.
+    user_id:
+      locator_or_address: true
+      immutable_once_issued: true
+      resolvable_to: account_uuid
+      authentication: false
+      authorization: false
+      proof_of_account_ownership: false
+      cryptographic_key: false
+    invariant: no_authorization_from_user_id_possession_alone
+    implementation_impact: display and resolution APIs; never treat user_id as a session or grant
+
+  D34-A:
+    title: Shared-object recipient key target
+    status: APPROVED
+    classification: accepted_account_level_sharing_keypair
+    approved: 2026-09-28
+    follows:
+      - D34
+    issue: >
+      D34 accepts recipient-specific Object DEK wraps. It does not decide which
+      public keys receive those wraps.
+    approval: >
+      Use an account-level asymmetric sharing-key hierarchy. Each remote Captain's
+      Log account may maintain an Account Sharing Public Key and Account Sharing
+      Private Key. Senders wrap recipient-specific Object DEKs to the account
+      sharing public key. The private sharing key must never be stored plaintext
+      by the authority. Instead it is wrapped independently for authorized
+      enrolled devices. A recipient device uses its D31 device-protected
+      capability to unwrap the account sharing private key, unwrap the Object DEK,
+      and decrypt the shared object. This avoids rewrapping every historical
+      Object DEK individually for every device. The exact cryptographic primitive
+      for account-sharing key wrapping must use a maintained, established library
+      and must be documented before implementation. Custom cryptography is
+      forbidden.
+    wrap_primitive:
+      custom_cryptography: forbidden
+      requirement: maintained_established_library
+      exact_algorithm: document_before_implementation
+      status: remaining_library_selection_not_a_new_architecture_decision
+    implementation_impact: P20 wraps Object DEKs to account sharing public keys; devices unwrap via D31
+
+  D34-B:
+    title: Shared-object revocation and re-key
+    status: APPROVED
+    classification: accepted_prospective_revocation
+    approved: 2026-09-28
+    follows:
+      - D34
+    issue: >
+      Revocation of a recipient or device must specify what stops immediately,
+      what prior legitimate access may retain, when a new Object DEK is required,
+      whether the object is re-encrypted after recipient removal, and how future
+      versions are protected from removed recipients.
+    approval: >
+      Revocation is prospective. Revoking a device must stop that device from
+      obtaining future access through currently valid account-sharing key epochs.
+      Where required by the threat model, rotate the account sharing-key epoch:
+      generate a new epoch, wrap the new private key only to surviving authorized
+      devices, and target future Object-DEK wraps at the new public key. Do not
+      claim that previously obtained plaintext or previously retained valid key
+      material can be remotely erased. When a recipient is removed from an object,
+      generate a new Object DEK, encrypt subsequent object version or state with
+      it, and wrap only for remaining authorized recipients. Future versions must
+      not continue using an Object DEK already disclosed to the removed recipient.
+      Do not distribute the archive AEK as part of re-key.
+    already_decrypted_plaintext_cannot_be_made_to_disappear: true
+    implementation_impact: device revoke rotates sharing-key epoch as required; recipient removal rekeys Object DEK for future versions
+
+  D34-C:
+    title: Shared-object historical-version access after revocation
+    status: APPROVED
+    classification: accepted_historical_ciphertext_limitation
+    approved: 2026-09-28
+    follows:
+      - D34
+    issue: >
+      Whether a recipient who previously had access may continue decrypting
+      historical object versions after access is revoked must be an explicit
+      policy, not an implementation artifact.
+    approval: >
+      Historical access is not retroactively revocable in the cryptographic sense
+      once the recipient legitimately possessed the required keys or plaintext.
+      Distinguish past ciphertext and past plaintext from future versions. The
+      authorization service may stop serving historical versions after revocation.
+      New versions after revocation use new Object DEKs. Captain's Log must not
+      claim to erase knowledge already disclosed. Retained historical ciphertext
+      plus retained historical key material may remain readable. Example: v1–v3
+      authorized; after revoke, v4 uses a new DEK for remaining recipients only;
+      v5 is the future authorized set only.
+    differentiate:
+      - past_ciphertext
+      - past_plaintext
+      - future_versions
+    implementation_impact: document this limitation in sharing UX and security statements; do not claim cryptographic erasure of prior access
+
+  D34-D:
+    title: Newly enrolled device access to existing shared Object DEKs
+    status: APPROVED
+    classification: accepted_wrap_sharing_private_key_to_new_device
+    approved: 2026-09-28
+    follows:
+      - D34
+      - D31
+    issue: >
+      A newly enrolled device belonging to an already-authorized account needs a
+      reviewed path to existing shared Object DEKs.
+    approval: >
+      A newly enrolled full device does not require every historical Object DEK
+      to be individually rewrapped. After successful D31 device enrollment and
+      required step-up, wrap the current Account Sharing Private Key specifically
+      to the new device key so the new device can unwrap existing recipient
+      Object-DEK envelopes. The device must be fully enrolled, the account must
+      be authenticated, required step-up must be satisfied, and the operation
+      must be explicit and auditable. Revoked devices must not receive new wraps.
+      Wearable or subordinate devices remain subject to D11/D22 narrower
+      credential rules and must not automatically receive full account sharing
+      keys. If future threat modeling shows account-level sharing key rotation
+      is required when adding devices, record that as a new reviewed protocol
+      revision rather than silently altering this contract.
+    implementation_impact: enrollment ceremony wraps current sharing private key to the new full device only
+
+
+# ---------------------------------------------------------------------------
+# Captain's Log authority
+# ---------------------------------------------------------------------------
+authority:
+  type: custom_lightweight_control_plane
+  uuid_issuer: true
+  content_data_plane: false
+  repository_location: authority/
+  runtime: typescript_https
+  persistence: postgresql
+  hosting: amazon_ecs_fargate
+  containerization: required
+  stack:
+    - typescript_https
+    - docker
+    - amazon_ecr
+    - amazon_ecs_fargate
+    - private_aws_networking
+    - amazon_rds_postgresql
+  development_database:
+    provider: aws
+    service: rds_postgresql
+    environment: dev
+    region: us-east-2
+    database: captains_log
+  live_aws_resource_identifiers: private_captains_log_infra_repository
+  provider_replaceable_at_domain_layer: true
+  domain_boundary:
+    - authority_domain_and_business_logic
+    - repository_interfaces
+    - postgresql_adapter
+  do_not_couple_domain_logic_to: aws_rds_specific_behavior
+  docker:
+    multi_stage_build: where_appropriate
+    deterministic_dependency_installation: true
+    production_image_excludes_development_dependencies: true
+    runtime_not_root_where_practical: true
+    secrets_baked_into_image: forbidden
+    graceful_shutdown: true
+    postgresql_pool_shutdown_on_termination: true
+    health_endpoints:
+      - /health/live
+      - /health/ready
+      - /version
+    same_artifact_local_and_aws: true
+  local_development:
+    compose:
+      - authority
+      - local_postgresql
+  aws_deployment:
+    path:
+      - docker_image
+      - ecr
+      - ecs_fargate
+      - rds_postgresql
+  public_repository_may_contain:
+    - authority_source
+    - dockerfile
+    - dockerignore
+    - local_docker_compose
+    - database_migrations
+    - generic_aws_deployment_templates
+    - configuration_schema
+    - placeholder_example_environment_manifests
+    - ci_checks
+    - architecture_documentation
+  public_repository_must_not_contain:
+    - live_aws_account_ids_where_unnecessary
+    - live_secrets_manager_secret_arns
+    - live_security_group_ids
+    - production_infrastructure_topology
+    - database_passwords
+    - aws_access_keys
+    - oauth_server_secrets
+    - authority_private_signing_keys
+  environments:
+    - development_test
+    - production
+  public_endpoints_never_return_secrets: true
+  verifies_every_proof_it_accepts: true
+  client_parsed_claims_are_not_authorization: true
+
+  stores:
+    - accounts
+    - linked_identities
+    - factors
+    - devices
+    - trust_and_assurance_state
+    - recovery_verifier_hashes
+    - grants
+    - linking_transactions
+    - sanitized_security_events
+    - wrapped_account_sharing_private_key_envelopes
+
+  never_stores:
+    - log_entries
+    - graph_records
+    - attachment_bytes
+    - archive_aek
+    - recovery_secret
+    - recovery_kek
+    - sqlcipher_keys
+    - object_deks
+    - provider_refresh_tokens_from_mobile
+    - plaintext_account_sharing_private_key
+
+# ---------------------------------------------------------------------------
+# Local profile, archive, and encryption
+# ---------------------------------------------------------------------------
+local_profile:
+  created: first_launch
+  uuid: local_profile_uuid
+  additional_profile_fields: optional_later
+  survives_account_sign_out: true
+  survives_remote_disablement: true
+  cardinality:
+    per_installation: one
+    independent_of_remote_account: true
+    future_archives_under_one_profile: allowed
+
+archive:
+  uuid: archive_uuid
+  created: first_launch
+  encryption: required
+  sqlite_file: captains-log.db
+  attachments_root: Paths.document/attachments
+  cardinality:
+    initial: one_archive_on_first_launch
+    future_multiple_under_one_local_profile: allowed
+    immutable_archive_uuid: true
+    own_random_aek_per_archive: true
+    remote_account_may_associate_with_multiple_archives: true
+    archive_associates_with_at_most_one_remote_account_at_a_time: true
+    association_never_silently_moves_between_accounts: true
+    restored_association_metadata_is_not_ownership_proof: true
+    usable_without_remote_account_or_network: true
+  do_not_conflate:
+    - local_profile_uuid
+    - archive_uuid
+    - account_uuid
+    - user_id
+  nonsecret_metadata_may_include:
+    - archive_uuid
+    - created_at
+    - originating_device_installation_id
+    - associated_account_uuid
+    - associated_account_display_cache
+    - schema_database_version
+  nonsecret_metadata_must_not_include:
+    - tokens
+    - passwords
+    - aek
+    - wrapping_keys
+    - totp_secrets
+    - grants
+    - passkey_private_keys
+  restored_associated_account_uuid:
+    may_display: true
+    may_authorize_remote_operations: false
+    may_unlock_archive: false
+
+encryption:
+  model: layered_key_hierarchy
+  approved: 2026-09-21
+  hierarchy_summary: recovery_secret_to_hkdf_to_recovery_kek_to_wrapped_aek_to_domain_separated_archive_keys_to_per_object_deks
+  human_secret_route: password_or_pin_to_argon2id_or_approved_password_kdf_to_local_unlock_kek_to_wrapped_aek
+  hkdf_not_a_password_kdf: true
+  recovery_secret_is_not_aek: true
+  recovery_secret_must_not_directly_encrypt_archive_or_files: true
+  authority_must_never_possess_plaintext:
+    - recovery_secret
+    - recovery_kek
+    - aek
+
+  recovery_secret:
+    entropy_bits: 256
+    generation: csprng
+    encoding:
+      type: hexadecimal
+      characters: 64
+    encodes: 32_random_bytes
+    is_user_generated_password: false
+    generated_locally: true
+    authority_receives_plaintext: false
+    recoverable_by_captains_log: false
+    present: recovery_security_statement
+    distinct_from_account_recovery_codes: true
+
+  recovery_kek:
+    derivation: hkdf
+    input: recovery_secret
+    hkdf:
+      construction: established_library_hkdf
+      domain_separated: true
+      info: captains-log/recovery-kek/v1
+      reuse_context_for_unrelated_keys: forbidden
+    wraps: aek
+    wrapping: authenticated_key_wrapping
+    directly_encrypts_archive_content: false
+    authority_receives_plaintext: false
+
+  aek:
+    name: AEK
+    entropy_bits: 256
+    size_bits: 256
+    generation: csprng
+    unique_per_archive: true
+    random_and_separate_from_recovery_secret: true
+    is_root_secret_for_archive: true
+    directly_encrypts_general_content: false
+    rewrap_on_password_or_factor_change: true
+    reencrypt_content_on_password_change: false
+    wraps_independently_for:
+      - device_kek
+      - optional_user_lock_kek
+      - recovery_kek
+    authority_receives_plaintext: false
+
+  wrapping:
+    device:
+      cryptography: platform_protected
+      prefer:
+        - android_keystore
+        - ios_secure_enclave_where_appropriate
+        - ios_keychain_for_protected_key_or_reference_material
+      private_key_or_kek_non_exportable_where_supported: true
+      required: true
+      first_launch:
+        creates_protected_archive: true
+        requires_captains_log_password_or_pin: false
+        aek: random
+        wrap: device_or_platform_protected
+        local_archive_available_offline: true
+      local_archive_unlock:
+        remote_account_required: false
+        authority_required: false
+        webauthn_passkey: false
+        purpose: authorize_use_of_local_device_protected_aek_wrap
+        platform_user_verification_may_include:
+          - face_id
+          - touch_id
+          - android_biometric
+          - device_credential
+        unwraps: aek
+        is_account_authentication: false
+    user_local_lock:
+      input:
+        - password
+        - pin
+      input_is_low_entropy_human_secret: true
+      feed_directly_to_hkdf: forbidden
+      password_hardening_kdf:
+        preferred: argon2id
+        allowed_if_platform_or_repository_requires: existing_appropriately_configured_pbkdf2
+      derives: local_unlock_kek
+      local_unlock_kek_wraps: aek
+      required: false
+      first_launch_does_not_require: true
+      not_bypassed_by:
+        - google_authentication_success
+        - remote_captains_log_account_authentication
+        - valid_remote_session
+        - account_status_active
+    recovery:
+      path: recovery_secret_hkdf_recovery_kek_wrapped_aek
+      may_store_encrypted_envelope_at_authority: true
+      created_only_after_remote_account_recovery_setup: true
+    device_transfer:
+      required: false
+      short_lived: true
+
+  rotation:
+    password_or_pin_change:
+      unwrap_aek: true
+      derive_new_local_lock_kek: true
+      rewrap_aek: true
+      reencrypt_content: false
+    recovery_key_replacement:
+      unwrap_aek_using_existing_authorized_mechanism: true
+      generate_new_256_bit_recovery_secret: true
+      derive_new_recovery_kek: true
+      create_new_recovery_envelope: true
+      invalidate_old_recovery_envelope: true
+      reencrypt_content: false
+    new_device_enrollment:
+      obtain_aek_via_authorized_existing_or_recovery_path: true
+      create_wrap_for_new_device: true
+      reencrypt_content: false
+    authentication_provider_change:
+      reencrypt_archive: false
+      remote_account_authentication_distinct_from_local_archive_ownership: true
+
+  domain_keys:
+    derivation: hkdf
+    parent: aek
+    contexts_must_be_explicit_versioned_unique: true
+    reuse_one_context_for_different_purposes: forbidden
+    keys:
+      - id: sqlite
+        info: captains-log/sqlite/v1
+        output: sqlcipher_key
+      - id: files
+        info: captains-log/files/v1
+        output: file_kek
+      - id: thumbnails
+        info: captains-log/thumbnails/v1
+        output: thumbnail_kek
+      - id: export
+        info: captains-log/export/v1
+        output: export_staging_kek
+      - id: backup_staging
+        info: captains-log/backup-staging/v1
+        output: backup_staging_kek
+
+  sqlite:
+    mechanism: sqlcipher
+    expo_plugin: useSQLCipher
+    pragma_key_source: hkdf_from_aek
+    pragma_key_info: captains-log/sqlite/v1
+    pragma_key_source_not:
+      - user_password
+      - user_pin
+      - recovery_secret
+      - recovery_kek
+      - raw_aek
+    expo_go: unsupported
+    documented_at: https://docs.expo.dev/versions/v57.0.0/sdk/sqlite/
+    provider_or_password_change_does_not_reencrypt_database: true
+
+  files:
+    mechanism: aes_256_gcm
+    per_object_dek: required_where_practical
+    file_kek_wraps_object_dek: true
+    file_kek_directly_encrypts_arbitrary_object_payloads: forbidden_where_per_object_deks_practical
+    covers:
+      - attachment_originals
+      - thumbnails
+      - export_staging
+      - restore_staging
+      - backup_staging
+
+  aes_256_gcm:
+    library: maintained_cryptographic_library
+    key_bits: 256
+    nonce:
+      generation: library_or_platform_provided_when_safe
+      invent_custom_scheme_if_library_provides_one: forbidden
+      uniqueness_under_a_given_key: mandatory
+      reuse_with_same_key: forbidden
+      stored_alongside_ciphertext: true
+      stored_as: non_secret_metadata
+    aad: authenticate_relevant_metadata_where_useful
+    authentication_or_tag_failure: reject_without_returning_partial_plaintext
+
+  recovery_flow_total_device_loss:
+    steps:
+      - recover_or_authenticate_captains_log_account
+      - obtain_encrypted_aek_recovery_envelope
+      - user_enters_64_character_recovery_secret
+      - hkdf_to_recovery_kek
+      - unwrap_aek
+      - derive_archive_domain_keys
+      - decrypt_archive
+    recovered_account_without_recovery_secret: must_not_decrypt_archive
+
+  plaintext_migration:
+    original_retained_until_verification: true
+    steps:
+      - create_or_generate_aek
+      - create_encrypted_destination_database_and_files
+      - copy_and_verify_content
+      - verify_encrypted_archive_opens
+      - verify_required_metadata_and_attachments
+      - only_then_delete_old_plaintext_working_copy
+    after_verification:
+      logical_delete: required
+      best_effort_platform_cleanup: required
+    guaranteed_physical_erasure: false
+    reason_physical_erasure_not_guaranteed: flash_wear_leveling_and_filesystem_behavior
+
+  independent_from:
+    - google_oauth
+    - apple_authentication
+    - remote_account_status
+    - cloud_availability
+  custom_primitives: forbidden
+
+archive_access:
+  distinct_from_remote_auth: true
+  local_archive_unlock:
+    remote_account_required: false
+    authority_required: false
+    webauthn_passkey: false
+    purpose: authorize_use_of_local_device_protected_aek_wrap
+    is_account_authentication: false
+  lock_states:
+    - unlocked
+    - locked
+    - unavailable_until_device_unlock
+  remote_disablement_does_not_set_locked: true
+  google_sign_in_does_not_bypass_lock: true
+
+# ---------------------------------------------------------------------------
+# Remote account model
+# ---------------------------------------------------------------------------
+account:
+  uuid: account_uuid
+  user_id:
+    distinct_from: account_uuid
+    decision: D38
+    locator_or_address: true
+    immutable_once_issued: true
+    resolvable_to: account_uuid
+    authentication: false
+    authorization: false
+  created_with:
+    enum:
+      - google
+      - apple
+      - email
+      - phone
+      - passkey
+    historical_only: true
+    does_not_constrain_later_methods: true
+  lifecycle:
+    values:
+      - active
+      - locked
+      - disabled
+    enforced_by: captains_log_authority
+    local_effect: separate_see_D8
+  profile_optional:
+    - display_name
+    - preferred_email
+    - preferred_phone
+  preferred_profile_not_overwritten_on_link: true
+  created_only_when_verified_identity_has_no_mapping: true
+
+linked_identities:
+  uniqueness: atomic_at_authority
+  google:
+    canonical_key: [issuer, subject]
+    email: optional_display_metadata
+    accepted_issuers_must_be_explicit: true
+  apple:
+    phase: later
+    requires_team_and_transfer_policy: true
+  email:
+    requires_ownership_verification: true
+    login_mechanism: short_lived_single_use_email_otp
+    email_password_database: forbidden
+    independent_mfa_when_combined_with_same_mailbox_otp: false
+    otp:
+      cryptographically_random: true
+      short_expiration: true
+      single_use: true
+      attempt_limited: true
+      rate_limited: true
+      resend_invalidates_or_supersedes_prior_challenge: true
+      plaintext_otp_logged: forbidden
+      account_enumeration_minimized: true
+      successful_challenge_proves_current_mailbox_control: true
+    magic_link:
+      first_delivery_scope: false
+      optional_later_ux: true
+    normalize:
+      preserve_local_part: true
+      trim_outer_whitespace: true
+      lowercase_domain: true
+      no_dot_plus_alias_inference: true
+  phone:
+    phase: later
+    requires_verification_and_recycling_policy: true
+  collision_on_link: reject_do_not_merge
+
+factors:
+  passkey:
+    primary_architectural_feature: true
+    classification: authentication_factor
+    settled_by: D14
+    is_linked_provider_identity: false
+    is_identity_provider_subject: false
+    local_archive_unlock_is_not_this: true
+    account_passkey:
+      mechanism: webauthn
+      rp_id: pending_permanent_cl_controlled_https_domain
+      authority_verifies_assertion: true
+      is_device_enrollment: false
+    passkey_first_bootstrap: approved_d32
+    design_for:
+      - device_bound_passkeys
+      - synced_passkeys_where_supported
+      - credential_registration
+      - credential_revocation
+      - device_account_association
+      - challenge_freshness
+      - replay_resistance
+      - credential_enumeration_resistance
+      - recovery_when_unavailable
+    synced_passkey_is_not_device_enrollment: true
+    synced_passkey_is_not_device_trust: true
+  totp:
+    classification: independent_mfa_or_recovery_compatible_factor
+    secrets_stored: authority_only
+    secrets_never_in_archive_backup: true
+    implement_with_maintained_library: true
+  email_otp:
+    classification: mailbox_possession_authentication_channel
+    settled_by: D37
+    independent_mfa_with_verified_email_identity: false
+  recovery_codes:
+    high_entropy: true
+    single_use: true
+    store: verifier_hashes_at_authority
+    display: explicit_security_ui_only
+    restored_archive_cannot_unconsume: true
+    distinct_from_archive_recovery_key: true
+    does_not_unwrap_aek: true
+
+created_with_versus_factors:
+  passkey_may_appear_in_created_with: true
+  passkey_is_still_not_a_linked_identity: true
+
+# ---------------------------------------------------------------------------
+# Authentication, assurance, sessions
+# ---------------------------------------------------------------------------
+authentication:
+  first_delivery_methods:
+    - passkey
+    - google
+    - verified_email
+    - totp
+  later_methods:
+    - apple
+    - phone
+  google:
+    adapter: native_universal_sign_in
+    implicit_authsession_fallback: forbidden
+    identity_proof: oidc_id_token_verified_by_authority
+    access_token_is_not_identity_proof: true
+    nonce_bound_transaction: true
+    audience_must_match_configured_web_client: true
+    raw_token_getter_in_ui: forbidden
+  email_signup:
+    may_recommend_federated_provider: true
+    discovery_is_ux_hint_only: true
+    dns_failure_never_blocks_signup: true
+    no_automatic_redirect: true
+    no_automatic_merge: true
+    inspect_domain_when_possible: true
+    mx_discovery_recommendation_only: true
+    mail_hosting_does_not_prove_idp_configuration: true
+
+account_linking:
+  requires:
+    - authenticated_existing_account
+    - recent_authentication_appropriate_to_risk
+    - mfa_or_step_up_where_required
+    - fresh_verification_of_new_identity
+    - explicit_user_confirmation
+    - short_lived_linking_transaction
+    - atomic_uniqueness_enforcement
+  if_identity_belongs_to_another_account:
+    action: stop
+    forbidden:
+      - silent_move
+      - silent_merge
+      - silent_detach
+      - overwrite_existing_link
+  merge: separate_high_risk_operation_not_in_first_delivery
+  never_merge_on_email_equality: true
+
+trusted_authentication:
+  maximum_age_days: 90
+  invalidate_on:
+    - explicit_sign_out
+    - account_disable
+    - device_revocation
+    - credential_compromise
+    - recovery_event
+    - primary_identity_change
+    - mfa_configuration_change
+    - significant_risk_event
+    - server_policy_change
+  step_up_may_still_be_required: true
+
+assurance:
+  levels:
+    - none
+    - local_unlocked
+    - remote_authenticated
+    - step_up_recent
+    - recovery_restricted
+  derived_offline_authenticated:
+    meaning: remembered_signed_in_plus_offline
+    not_a_claim_that_expired_server_credential_is_valid: true
+  full_session_requires:
+    - primary_proof
+    - required_assurance_for_requested_operation
+  enrollment_and_challenge_grants_are_not_full_sessions: true
+
+sessions:
+  captains_log_session: issued_by_authority
+  independent_from_provider_tokens: true
+  provider_session: separate
+  capability_authorization: separate
+  local_archive_unlock: separate
+  restored_metadata_cannot_authorize_linking_or_remote_requests: true
+  access_or_session_credential: in_memory_only
+  refresh_or_continuation_credential: platform_secure_storage
+  continuation_bound_to: d31_enrolled_device_private_key
+  install_marker_is_not_authentication: true
+  copied_session_material_without_device_private_key: insufficient_to_impersonate_device
+  never_store_captains_log_session_token_in:
+    - sqlite
+    - yaml
+    - ui_state
+    - diagnostics
+    - exports
+    - archive_backups
+
+# ---------------------------------------------------------------------------
+# Devices, grants, disablement
+# ---------------------------------------------------------------------------
+devices:
+  enrolled_by: captains_log_authority
+  device_uuid: identifies_device_record_never_proves_possession
+  cryptographic_identity: required_for_full_enrollment
+  enrollment:
+    generate_asymmetric_keypair: locally
+    cryptography: established_platform_primitives
+    private_key_non_exportable_where_supported: true
+    prefer_hardware_backed_storage: true
+    register_with_authority: public_key_only
+  proof_of_possession_required_for:
+    - sensitive_sessions
+    - grant_requests
+    - enrollment_operations
+    - other_appropriate_requests
+  attestation:
+    may_contribute_to_risk_scoring: true
+    sole_basis_of_device_trust: false
+  recognized_device: device_uuid plus registered_public_key plus proof_from_device_private_key
+  trust_revocable: true
+  classes:
+    - phone
+    - tablet
+    - desktop
+    - wearable
+    - collector
+  wearable_default: subordinate_narrow_grants
+  subordinate_promotion: reviewed_full_device_enrollment_ceremony
+  installation_marker:
+    purpose: detect_reinstall_and_invalidate_stale_keychain_metadata
+    secret: false
+    authentication: false
+    not_a_substitute_for_device_pop: true
+    excluded_from_archive_and_os_backup: true
+    missing_marker_invalidates_stale_account_metadata: true
+    archive_restore_does_not_change_marker: true
+
+grants:
+  type: short_lived_captains_log_authorization
+  format: jws
+  signing: ed25519_authority_keys
+  also_stored_at_authority_for_revocation: true
+  private_authority_signing_keys_distributed_to_clients: false
+  claims:
+    - iss
+    - aud
+    - account_uuid
+    - device_uuid
+    - operation
+    - resource_object_uuid
+    - assurance_level
+    - iat
+    - nbf
+    - exp
+    - grant_id
+    - jti
+    - kid
+    - device_key_confirmation_or_thumbprint
+  ttl_seconds:
+    default: 300
+    max: 3600
+    local_sharing: 120
+    may_tighten_after_usability_evidence: true
+  device_key_confirmation_binds_to: d31_enrolled_public_key
+  serialized_grant_without_pop: insufficient_where_pop_required
+  signing_key_rotation:
+    new_grants_use_new_signing_key: true
+    old_signing_key_stops_issuing_immediately: true
+    old_public_key_remains_valid_for_outstanding_unexpired_grants: true
+    old_verification_key_retires_after_bounded_expiry_window: true
+  offline_local_sharing_limitation: >
+    An offline recipient can verify signature, expiration, audience, operation,
+    object, and device binding, but cannot know about a server-side revocation
+    that occurred after its last authority contact. The short local-sharing TTL
+    bounds this exposure.
+  stale_grants: rejected
+  never_persisted_in_archive_backups: true
+
+disablement:
+  account_disabled:
+    stops_remote_functionality: true
+    preserves_local_data: true
+    does_not_auto_lock_local_archives: true
+  device_revoked:
+    stops_new_grants_for_that_device: true
+    invalidates_trusted_window: true
+    preserves_local_archive: true
+  sign_out:
+    blocks_account_and_cloud_use_locally: true
+    clears_mobile_credentials: true
+    preserves_local_records_and_local_lock: true
+    online_attempts_authority_session_revocation: true
+    offline_completes_locally_without_pretending_remote_revocation_succeeded: true
+
+# ---------------------------------------------------------------------------
+# Synchronization, sharing, backup
+# ---------------------------------------------------------------------------
+content_classes:
+  - private_local_content
+  - private_cloud_backed_content
+  - shared_content
+  - account_metadata
+  - identity_metadata
+  - credentials
+
+synchronization:
+  required_for_shared_files: true
+  correctness_without_background_runtime: true
+  verify_on_every_operation:
+    - account_uuid
+    - device_identity_where_applicable
+    - authorization_grant
+    - object_uuid
+    - requested_operation
+    - version_or_state
+    - integrity
+  plan_for:
+    - read
+    - write
+    - conflict
+    - delete
+    - revoke
+    - account_switch
+    - device_revoke
+    - interrupted_transfers
+    - stale_grants
+    - duplicate_operations
+    - offline_modifications
+  hybrid:
+    foreground: deterministic
+    queue: durable
+    background: opportunistic_retry
+    push: hint_only
+
+sharing:
+  cloud:
+    requires:
+      - captains_log_account
+      - object_uuid
+      - authorization_beyond_uuid_knowledge
+      - cryptographic_key_possession_where_object_is_protected
+  object_encryption:
+    status: approved_d34
+    remaining_specification: []
+    object_dek: random_per_protected_shared_object
+    independent_from_archive_aek: true
+    archive_aek_as_recipient_sharing_key: forbidden
+    archive_aek_is_never_the_recipient_sharing_key: true
+    distribute_archive_aek_to_share_one_object: forbidden
+    encrypt_object_once: aead
+    wrap_object_dek_independently_per_authorized_recipient: true
+    wrap_target: recipient_account_sharing_public_key
+    duplicate_object_per_recipient: forbidden
+    account_authorization_and_key_possession: separate_requirements
+    double_or_triple_ratchet_as_storage_protocol: forbidden
+    borrow: recipient_and_device_specific_cryptographic_trust
+    do_not_borrow: messaging_ratchet
+    account_sharing_keypair:
+      public_key: may_be_used_by_senders_to_wrap_object_deks
+      private_key_plaintext_at_authority: forbidden
+      private_key_wrapped_independently_per_authorized_enrolled_device: true
+    revocation:
+      prospective: true
+      device_revoke_rotates_sharing_key_epoch_where_required: true
+      recipient_removal_generates_new_object_dek_for_subsequent_versions: true
+      previously_obtained_plaintext_not_remotely_erasable: true
+    historical_versions:
+      cryptographically_retroactive_revoke: false
+      authorization_service_may_stop_serving_after_revocation: true
+      new_versions_use_new_object_deks: true
+    new_full_device:
+      wrap_current_account_sharing_private_key: true
+      rewrap_every_historical_object_dek: false
+      wearable_or_subordinate_automatic_full_sharing_key: forbidden
+  local:
+    allowed: true
+    transports_later:
+      - lan
+      - wifi_direct
+      - bluetooth
+      - nfc_assisted_pairing
+      - local_qr_mediated_pairing
+      - device_to_device_proximity
+    transport_does_not_determine_trust: true
+    verify_where_appropriate:
+      - sender_account_uuid
+      - sender_device_uuid
+      - receiver_account_uuid
+      - receiver_device_uuid
+      - object_uuid
+      - transfer_uuid
+      - authorization
+      - content_integrity
+    later_transports_reuse_same_trust_model: true
+
+backup:
+  current_implementation: whole_archive_google_drive_snapshot
+  snapshot_schema_version: 1
+  distinct_from_sync: true
+  must_not_contain:
+    - provider_tokens
+    - totp_secrets
+    - passkey_private_material
+    - active_grants
+    - aek
+    - wrapping_keys
+  lastBackupDetail_must_not_persist_raw_provider_errors: true
+  restore:
+    does_not_auto_activate_cloud: true
+    does_not_restore_credentials: true
+    does_not_rewrite_entry_uuids_to_account_uuids: true
+  launch_and_background_backup_must_not_prompt_sign_in: true
+  google_sign_in_grants_no_drive_access: true
+  drive_capability_binds_to:
+    - account_uuid
+    - google_identity_issuer_subject
+
+# ---------------------------------------------------------------------------
+# Legacy authentication currently in the repository
+# ---------------------------------------------------------------------------
+legacy:
+  inspect_and_retire:
+    keys:
+      - captains-log.session
+      - captains-log.google-account
+      - captains-log.google-id-token
+      - captains-log.google-drive-token
+      - captains-log.google-drive-root-folder
+    preserve:
+      - captains-log.local-archive-credential
+      - captains-log.email-account
+    notes:
+      google_id_token_key_actually_stores_access_token: true
+      google_account_json_is_email_only_not_issuer_subject: true
+      local_archive_credential_is_not_verified_email: true
+      local_archive_credential_is_not_archive_encryption: true
+      sign_out_currently_clears_only_session_flag: true
+      authsession_implicit_flow: prototype_only_must_be_removed
+      drive_authorization_inferred_from_token_presence: true
+  consumers:
+    - src/services/authService.ts
+    - src/adapters/auth/googleAuthProvider.ts
+    - src/adapters/auth/localArchiveCredentialProvider.ts
+    - src/adapters/googleDrive/googleDriveBackupProvider.ts
+    - src/ui/screens/AuthGate.tsx
+    - src/ui/screens/SettingsScreen.tsx
+    - src/services/createAppServices.ts
+    - src/services/AppServicesProvider.tsx
+    - src/utilities/secureKv.ts
+    - src/utilities/googleClientId.ts
+  tests_required_when_replacing:
+    - upgrades
+    - clean_installs
+    - logout
+    - reinstall
+    - account_switch
+    - old_credentials_cannot_silently_resurrect
+
+# ---------------------------------------------------------------------------
+# Platform and environments
+# ---------------------------------------------------------------------------
+platforms:
+  first_class_now:
+    - android_phone
+    - android_tablet
+  first_class_upcoming:
+    - ios_phone
+    - ios_tablet
+  later:
+    - wearables
+    - desktop
+    - web
+  web_auth: unsupported_until_D21
+  package_id: com.captainslog.app
+  scheme: captainslog
+
+environments:
+  development_test: separate
+  production: separate
+  never_mix_secrets: true
+
+# ---------------------------------------------------------------------------
+# Repository boundary. Public product repo, private infra repo, Secrets Manager.
+# ---------------------------------------------------------------------------
+repository_boundary:
+  public_product_repository:
+    name: captains-log
+    visibility: public
+    owns:
+      - react_native_expo_application_source
+      - typescript_authority_source
+      - dockerfile
+      - docker_compose_local_runtime_configuration
+      - database_migrations
+      - configuration_schemas
+      - generic_infrastructure_deployment_templates
+      - architecture_diagrams
+      - workflow_diagrams
+      - tests
+      - documentation
+    may_contain_generic_references:
+      aws:
+        region: ${AWS_REGION}
+        rds:
+          endpoint: ${RDS_ENDPOINT}
+          database: ${RDS_DATABASE}
+          credentials:
+            source: aws_secrets_manager
+            secret_arn: ${RDS_SECRET_ARN}
+    must_not_contain:
+      - actual_infrastructure_secret_values
+      - live_private_deployment_inventory
+    example_configuration_schema: docs/aws.example.yaml
+    builds_and_tests_without_reading_private_infra_repo: true
+  private_deployment_infrastructure_repository:
+    name: captains-log-infra
+    visibility: private
+    owns:
+      - environment_specific_aws_metadata
+      - real_rds_endpoint
+      - vpc_ids
+      - subnet_ids
+      - security_group_ids
+      - ecr_repository_metadata
+      - ecs_cluster_service_task_family_metadata
+      - iam_role_arns
+      - secrets_manager_secret_arns_or_names
+      - environment_specific_deployment_manifests
+      - infrastructure_as_code
+      - deployment_workflows
+    must_not_contain:
+      - secret_values
+    may_consume: public_product_repository
+  aws_secrets_manager:
+    owns:
+      - rds_credentials
+      - server_side_oauth_secrets
+      - authority_private_signing_material
+      - third_party_api_secrets
+    must_not_contain_user_controlled_cryptographic_secrets:
+      - recovery_secret
+      - plaintext_aek
+      - plaintext_object_dek
+      - device_private_key
+      - passkey_private_key
+    resolution: runtime
+    never_commit_secret_values: true
+    never_log_plaintext: true
+    agent_get_secret_value: forbidden
+    application_must_not_print_resolved_secret: true
+    preferred_injection:
+      - ecs_task_definition_secrets_valueFrom
+      - cloudformation_dynamic_reference
+      - aws_sdk_at_process_start_without_logging
+  local_developer_authentication:
+    profile: default
+    prefer:
+      - aws_cli
+      - aws_login
+      - aws_sso
+      - temporary_credential_flows
+    long_lived_aws_access_keys_in_dotenv: forbidden
+    authority_uses: aws_sdk_default_credential_provider_chain
+  github_aws_deployment_boundary:
+    public_repo_deploy_secrets_model: github_oidc_to_aws_sts_temporary_credentials
+    permanent_aws_access_keys_in_github_secrets: forbidden
+    preferred_trust_direction: private_infra_repo_may_consume_public_product_repo
+    public_repo_must_not_require_read_access_to_private_infra_to_build_or_test: true
+    later_private_infra_may:
+      - checkout_public_captains_log_as_build_source
+      - push_image_to_ecr
+      - deploy_ecs_fargate
+    path:
+      - github_actions
+      - github_oidc
+      - aws_sts_temporary_credentials
+      - ecr_push
+      - ecs_fargate_deployment
+
+# ---------------------------------------------------------------------------
+# Service boundaries
+# ---------------------------------------------------------------------------
+services:
+  AccountService:
+    lifetime: application
+    not_owned_by_sqlite_archive_lifecycle: true
+    responsibilities:
+      - resolve_or_create_account
+      - profile
+      - list_linked_identities
+      - request_link_or_unlink
+  AuthService:
+    lifetime: application
+    not_owned_by_sqlite_archive_lifecycle: true
+    responsibilities:
+      - initializeAuth
+      - signIn
+      - completeStepUp
+      - signOut
+      - getAuthState
+      - subscribeToAuthState
+  ArchiveAccessService:
+    lifetime: application
+    independent_of_external_identity: true
+    responsibilities:
+      - create_unlock_lock_local_archive
+  DeviceService:
+    lifetime: application
+    not_owned_by_sqlite_archive_lifecycle: true
+    responsibilities:
+      - enroll
+      - list
+      - revoke
+  AuthorizationService:
+    lifetime: application
+    not_owned_by_sqlite_archive_lifecycle: true
+    responsibilities:
+      - request_grant
+      - verify_grant
+      - authorize_capability
+      - revoke_capability
+  session_management:
+    lifetime: application
+    not_owned_by_sqlite_archive_lifecycle: true
+  provider_authentication_state:
+    lifetime: application
+    not_owned_by_sqlite_archive_lifecycle: true
+  authority_connection_or_session_state:
+    lifetime: application
+    not_owned_by_sqlite_archive_lifecycle: true
+  sqlite_archive_restore_must_not_silently:
+    - log_the_user_in
+    - log_the_user_out
+    - activate_cloud_sync
+    - restore_provider_credentials
+    - recreate_trust
+    - alter_device_enrollment
+    - infer_account_ownership
+  SyncService:
+    responsibilities:
+      - enqueue
+      - reconcile
+      - apply_remote
+  SharingService:
+    responsibilities:
+      - share_local
+      - share_cloud
+      - revoke
+  ui_must_not_receive:
+    - sdk_objects
+    - raw_tokens
+    - pragma_keys
+    - totp_secrets
+
+# ---------------------------------------------------------------------------
+# Beta gate. Encrypted local archive, first-delivery auth methods, and recovery
+# are required before security/beta. Apple, phone, iOS hardware, wearables, and
+# SDK 58 are not.
+# ---------------------------------------------------------------------------
+beta_gate:
+  security_phase: P29
+  android_beta_phase: P30
+  requires_archive_encryption: P04
+  requires_first_delivery_authentication:
+    google: P08
+    passkey: P10
+    totp: P12
+    verified_email: P13
+  requires_recovery: P14
+  also_required_before_security_pass:
+    - P15
+    - P16
+    - P17
+    - P27
+    - P28
+  not_required_for_android_beta:
+    - apple
+    - phone
+    - P18_provider_discovery_ux
+    - P31_ios
+    - P32_wearables
+    - P33_sdk_58
+  p04_is_not_evidence_of_p14: true
+  p14_is_not_evidence_of_p04: true
+  note: >
+    P04 implements encrypted local persistence required by D2 and D15.
+    P14 implements recovery of that encrypted archive. Authentication
+    completion without P04 is insufficient for beta. P29 and P30 are not
+    reachable unless P04 is complete and verified.
+
+# ---------------------------------------------------------------------------
+# Phase line. Prefer more verified breakpoints over giant commits.
+# ---------------------------------------------------------------------------
+phases:
+  - id: P00
+    name: Authoritative YAML and schema audit
+    objective: Create this contract, record schema evidence, accept D1–D30, rebuild the phase line.
+    prerequisites: []
+    architecture_introduced:
+      - this_document
+      - independent_schema_namespaces
+    files_expected_to_change:
+      - docs/ACCOUNT_IDENTITY.yaml
+      - docs/planning/ACCOUNT_AUTHENTICATION_PLAN_2026-09-20.md
+      - docs/DEVNOTES.md
+      - docs/TEST_LOG.md
+      - docs/captains-log.yaml
+      - docs/ARCHITECTURE.md
+      - scripts/account-identity-yaml-smoke.ts
+      - package.json
+    schemas_affected:
+      - account_identity
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - documentation_cannot_claim_sqlite_schema_3
+      - identity_layers_are_named_and_distinct
+    automated_tests:
+      - scripts/account-identity-yaml-smoke.ts
+    device_tests: []
+    success_criteria:
+      - yaml_parses
+      - schema_versions_match_repository_evidence
+      - d1_d12_are_approved
+    rollback_condition: delete_or_revert_this_documentation_set
+    explicit_non_goals:
+      - native_google
+      - encryption_implementation
+      - authority_deployment
+    commit_breakpoint: P00_yaml_contract
+
+  - id: P01
+    name: Identity TypeScript contracts
+    objective: Add token-free account, auth, grant, and error types that match this YAML.
+    prerequisites: [P00]
+    architecture_review_hold: released
+    blocked_until: null
+    architecture_introduced:
+      - src/models/account.ts
+      - src/models/auth.ts
+      - src/models/authorization.ts
+      - src/utilities/authErrors.ts
+    files_expected_to_change:
+      - src/models/account.ts
+      - src/models/auth.ts
+      - src/models/authorization.ts
+      - src/utilities/authErrors.ts
+      - src/models/types.ts
+      - src/models/contracts.ts
+      - scripts/account-identity-contract-smoke.ts
+    schemas_affected:
+      - account_identity
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - UI contracts contain no credentials
+      - UUID possession is typed as non-authorizing
+    automated_tests:
+      - npm run typecheck
+      - scripts/account-identity-contract-smoke.ts
+    device_tests: []
+    success_criteria:
+      - types_compile
+      - no_token_fields_on_ui_contracts
+    rollback_condition: remove_new_model_files_and_revert_type_imports
+    explicit_non_goals:
+      - service_rewrites
+      - native_modules
+      - dockerfile
+      - live_aws_resources
+    commit_breakpoint: P01_identity_contracts
+
+  - id: P02
+    name: Local profile and archive identity metadata
+    objective: Create local_profile_uuid and archive_uuid without requiring a remote account.
+    prerequisites: [P01]
+    architecture_introduced:
+      - local_profile
+      - archive_uuid_metadata
+    files_expected_to_change:
+      - src/services/archiveAccessService.ts
+      - src/adapters/auth/installIdentity.ts
+      - src/services/AppServicesProvider.tsx
+    schemas_affected:
+      - account_identity
+      - secure_record
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - first_launch_works_offline
+      - restored_metadata_is_not_auth_proof
+    automated_tests:
+      - node_smoke_for_uuid_creation_and_restore_nonproof
+    device_tests:
+      - offline_first_launch_android
+    success_criteria:
+      - clean_install_creates_profile_and_archive_uuids_without_network
+    rollback_condition: revert_metadata_writers_preserve_existing_sqlite
+    explicit_non_goals:
+      - sqlcipher
+      - google
+    commit_breakpoint: P02_local_identity
+
+  - id: P03
+    name: Secure storage isolation and legacy credential invalidation
+    objective: Native-only secret storage, install marker, reject legacy Google/Drive tokens.
+    prerequisites: [P02]
+    architecture_introduced:
+      - secure_record
+      - install_marker
+    files_expected_to_change:
+      - src/utilities/secureKv.ts
+      - src/adapters/auth/authStorage.ts
+      - src/adapters/auth/googleAuthProvider.ts
+      - src/adapters/googleDrive/googleDriveBackupProvider.ts
+      - src/services/authService.ts
+    schemas_affected:
+      - secure_record
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I13
+      - I22
+      - I6
+      - I25
+      - I26
+      - I27
+      - I28
+      - I29
+      - I30
+    automated_tests:
+      - migration_fixture_rejects_legacy_google_keys
+      - web_path_refuses_production_secrets
+    device_tests:
+      - android_reinstall_marker
+    success_criteria:
+      - legacy_google_and_drive_tokens_cannot_restore_a_session
+      - local_archive_credential_preserved
+    rollback_condition: restore_previous_secureKv_only_if_no_new_secret_format_written
+    explicit_non_goals:
+      - new_google_sdk
+    commit_breakpoint: P03_secure_storage
+
+  - id: P04
+    name: Archive encryption architecture implementation
+    objective: Layered AEK hierarchy, SQLCipher, AES-GCM per-object DEKs, plaintext migration.
+    prerequisites: [P03, D15, D28]
+    do_not_start_until_p01_unblocked: false
+    hierarchy_in_yaml: true
+    architecture_introduced:
+      - aek
+      - recovery_secret
+      - recovery_kek
+      - domain_keys
+      - object_deks
+      - sqlcipher
+    files_expected_to_change:
+      - app.json
+      - src/adapters/sqlite/database.ts
+      - src/adapters/filesystem/attachmentStorage.ts
+      - src/services/archiveAccessService.ts
+    schemas_affected:
+      - database
+      - secure_record
+    external_resources_required:
+      - development_build
+    secrets_required: []
+    security_properties:
+      - I18
+      - I36
+      - I37
+      - I38
+      - I39
+      - I40
+      - I41
+      - I42
+      - I45
+      - I48
+      - D15_key_hierarchy
+    automated_tests:
+      - cannot_open_db_without_key
+      - password_change_rewraps_not_reencrypts_rows
+      - recovery_secret_does_not_equal_aek
+      - sqlcipher_key_is_sqlite_domain_hkdf
+      - aes_gcm_nonce_reuse_rejected
+    device_tests:
+      - inspect_db_and_attachments_for_plaintext
+      - upgrade_from_plaintext_archive
+    success_criteria:
+      - on_device_plaintext_inspection_passes
+      - expo_go_not_used_as_evidence
+      - plaintext_original_retained_until_verification
+    rollback_condition: keep_plaintext_original_until_encrypted_copy_verifies
+    explicit_non_goals:
+      - remote_account
+      - guaranteed_physical_erasure
+    commit_breakpoint: P04_archive_encryption
+    split_if_too_large: true
+
+  - id: P05
+    name: Authority skeleton
+    objective: >
+      In-repo TypeScript HTTPS control-plane package, Dockerfile, local Docker
+      Compose with PostgreSQL, health endpoints, and generic AWS templates.
+      Live AWS identifiers stay in captains-log-infra.
+    prerequisites: [P01, D13]
+    architecture_introduced:
+      - authority_api
+      - authority_persistence
+      - authority_docker
+      - postgresql_adapter_behind_repository_interfaces
+    files_expected_to_change:
+      - authority/
+      - Dockerfile
+      - .dockerignore
+      - docker-compose.yml
+      - docs/aws.example.yaml
+    schemas_affected:
+      - authority_api
+      - authority_persistence
+    external_resources_required: []
+    secrets_required:
+      - local_dev_signing_keys_only
+    security_properties:
+      - I23
+      - I17
+    automated_tests:
+      - authority_health_and_unauthenticated_rejection
+    device_tests: []
+    success_criteria:
+      - authority_package_boots_locally
+      - compose_authority_and_local_postgres
+      - no_production_secrets
+      - no_live_aws_ids_in_public_repo
+    rollback_condition: remove_authority_package
+    explicit_non_goals:
+      - production_deploy
+      - google_verification_until_P06
+      - live_ecr_ecs_iam_in_this_repository
+    commit_breakpoint: P05_authority_skeleton
+
+  - id: P06
+    name: Canonical account resolution
+    objective: Verified identity maps atomically to one account_uuid.
+    prerequisites: [P05]
+    architecture_introduced:
+      - account_uuid_resolution
+    files_expected_to_change:
+      - authority/
+    schemas_affected:
+      - authority_persistence
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I9
+      - I19
+    automated_tests:
+      - concurrent_first_sign_in_converges
+      - unknown_proof_rejected
+    device_tests: []
+    success_criteria:
+      - same_verified_subject_resolves_same_account
+    rollback_condition: revert_authority_resolution_handlers
+    explicit_non_goals:
+      - mobile_ui
+    commit_breakpoint: P06_account_resolution
+
+  - id: P07
+    name: Device enrollment
+    objective: Authority issues device_uuid, registers the device public key, and records trust state.
+    prerequisites: [P06, D31]
+    architecture_introduced:
+      - device_uuid
+      - device_keypair
+    files_expected_to_change:
+      - authority/
+      - src/services/deviceService.ts
+    schemas_affected:
+      - authority_api
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - wearable_narrow_grants_D22
+      - I10
+      - D31_device_pop
+    automated_tests:
+      - enroll_revoke_reject_stale_device
+    device_tests: []
+    success_criteria:
+      - revoked_device_cannot_obtain_grant
+    rollback_condition: revert_enrollment_endpoints
+    explicit_non_goals:
+      - wearable_clients
+    commit_breakpoint: P07_device_enrollment
+
+  - id: P08
+    name: Google Universal Sign-In
+    objective: Replace implicit AuthSession with Universal native Google proof.
+    prerequisites: [P03, P06, D3, D25]
+    architecture_introduced:
+      - google_native_adapter
+    files_expected_to_change:
+      - package.json
+      - app.json
+      - src/adapters/auth/googleNativeClient.ts
+      - src/adapters/auth/googleAuthProvider.ts
+    schemas_affected: []
+    external_resources_required:
+      - universal_signin_license_or_registry
+      - google_cloud_dev_oauth_clients
+      - expo_dev_client
+      - android_sha1_fingerprints
+    secrets_required: []
+    security_properties:
+      - I13
+      - I16
+    automated_tests:
+      - adapter_does_not_expose_tokens
+    device_tests:
+      - android_hardware_sign_in_cancel_failure
+    success_criteria:
+      - id_token_with_nonce_reaches_authority
+      - implicit_flow_code_removed
+    rollback_condition: new_binary_required; do_not_restore_implicit_flow
+    explicit_non_goals:
+      - drive_scopes
+      - expo_go
+    commit_breakpoint: P08_google_native
+    blocked_until: D25_license_or_reviewed_alternative
+
+  - id: P09
+    name: Account association
+    objective: Explicitly associate a local archive with a resolved Captain's Log account.
+    prerequisites: [P02, P06, P08]
+    architecture_introduced:
+      - archive_account_association
+    files_expected_to_change:
+      - src/services/accountService.ts
+      - src/ui/screens/SettingsScreen.tsx
+    schemas_affected:
+      - account_identity
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I12
+      - I14
+      - I24
+    automated_tests:
+      - association_without_fresh_auth_fails
+    device_tests:
+      - associate_then_restore_does_not_reactivate_cloud
+    success_criteria:
+      - association_is_explicit
+      - switching_accounts_does_not_move_archive
+    rollback_condition: clear_association_metadata_only
+    explicit_non_goals:
+      - automatic_association_on_google_button
+    commit_breakpoint: P09_account_association
+
+  - id: P10
+    name: Passkey registration and authentication
+    objective: Register, authenticate, fail, revoke, and recover account WebAuthn passkeys as factors.
+    prerequisites: [P06, P07, D32]
+    blocked_until: permanent_cl_controlled_https_rp_id
+    may_prepare_before_rp_id:
+      - interface
+      - configuration_contract
+    cannot_finalize_until_rp_id_supplied: production_webauthn_registration
+    architecture_introduced:
+      - passkey_factor
+    files_expected_to_change:
+      - authority/
+      - src/adapters/auth/passkeyAdapter.ts
+    schemas_affected:
+      - authority_api
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I8
+      - I21
+      - I48
+      - I49
+      - I50
+    automated_tests:
+      - replay_challenge_rejected
+      - enumeration_resistant_unauthenticated_responses
+    device_tests:
+      - android_register_authenticate_fail_revoke
+    success_criteria:
+      - passkey_does_not_enroll_a_device_by_itself
+      - local_archive_unlock_is_not_webauthn
+    rollback_condition: disable_passkey_endpoints
+    explicit_non_goals:
+      - treating_passkey_as_google_identity
+    commit_breakpoint: P10_passkeys
+
+  - id: P11
+    name: Risk-adaptive assurance engine
+    objective: Server-enforced assurance and step-up policy from D4 and D6.
+    prerequisites: [P06, P07]
+    architecture_introduced:
+      - assurance_engine
+    files_expected_to_change:
+      - authority/
+    schemas_affected:
+      - authority_api
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - step_up_enforced_on_endpoints_not_only_screens
+    automated_tests:
+      - ordinary_read_without_second_factor_allowed_when_trusted
+      - identity_change_requires_step_up
+      - direct_endpoint_bypass_fails
+    device_tests: []
+    success_criteria:
+      - policy_table_matches_this_yaml
+    rollback_condition: revert_policy_module
+    explicit_non_goals:
+      - mechanical_two_factor_everywhere
+    commit_breakpoint: P11_assurance
+
+  - id: P12
+    name: TOTP
+    objective: Enroll, challenge, replay-reject, and store TOTP secrets only at the authority.
+    prerequisites: [P11]
+    architecture_introduced:
+      - totp_factor
+    files_expected_to_change:
+      - authority/
+      - src/ui/screens/AccountSecurityScreen.tsx
+    schemas_affected:
+      - authority_api
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I7
+    automated_tests:
+      - replay_and_rate_limit
+      - secret_not_in_mobile_archive_fixture
+    device_tests:
+      - enroll_and_challenge
+    success_criteria:
+      - totp_secret_never_enters_sqlite_or_backup
+    rollback_condition: disable_totp_enrollment
+    explicit_non_goals:
+      - custom_totp_crypto
+    commit_breakpoint: P12_totp
+
+  - id: P13
+    name: Verified email authentication
+    objective: Verified email identity plus short-lived single-use email OTP (D37).
+    prerequisites: [P06, P11, D37]
+    architecture_introduced:
+      - email_identity
+      - email_otp
+    files_expected_to_change:
+      - authority/
+    schemas_affected:
+      - authority_api
+    external_resources_required:
+      - transactional_email_in_dev_only
+    secrets_required:
+      - dev_mail_credentials_not_in_git
+    security_properties:
+      - I9
+      - no_email_password_database
+      - email_otp_not_independent_mfa_with_same_mailbox
+    automated_tests:
+      - unverified_email_cannot_sign_in
+      - local_archive_identifier_not_imported_as_verified_email
+      - used_otp_rejected
+      - expired_otp_rejected
+    device_tests: []
+    success_criteria:
+      - email_identity_requires_proof
+      - otp_is_single_use_and_short_lived
+    rollback_condition: disable_email_endpoints
+    explicit_non_goals:
+      - mx_auto_redirect
+      - magic_link_first_delivery
+    commit_breakpoint: P13_email
+
+  - id: P14
+    name: Recovery
+    objective: Account recovery codes remain distinct from archive Recovery Secret unwrap of AEK via Recovery KEK.
+    prerequisites: [P04, P11, P12, D33]
+    do_not_start_until_p01_unblocked: false
+    hierarchy_in_yaml: true
+    architecture_introduced:
+      - recovery_codes
+      - recovery_secret
+      - recovery_kek
+      - aek_recovery_envelope
+    files_expected_to_change:
+      - authority/
+      - src/services/archiveAccessService.ts
+    schemas_affected:
+      - authority_api
+      - secure_record
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I12
+      - I31
+      - I34
+      - I36
+      - I37
+      - I38
+      - I46
+    automated_tests:
+      - atomic_one_time_consumption
+      - restored_archive_cannot_reuse_code
+      - account_recovery_without_recovery_secret_cannot_unwrap_aek
+      - recovery_secret_hkdf_uses_recovery_kek_v1_info
+    device_tests:
+      - recovery_then_reenrollment
+      - total_device_loss_unwraps_aek_from_64_hex_secret
+    success_criteria:
+      - recovery_creates_restricted_session_not_full_session
+      - recovered_account_without_secret_cannot_decrypt_archive
+    rollback_condition: disable_recovery_endpoints
+    explicit_non_goals: []
+    commit_breakpoint: P14_recovery
+
+  - id: P15
+    name: Identity linking and unlinking
+    objective: Fresh proof, step-up, atomic uniqueness, last-method protection.
+    prerequisites: [P09, P11]
+    architecture_introduced:
+      - linking_transactions
+    files_expected_to_change:
+      - authority/
+      - src/services/accountService.ts
+    schemas_affected:
+      - authority_api
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I9
+    automated_tests:
+      - collision_rejects
+      - last_method_cannot_unlink
+    device_tests:
+      - explicit_link_consent
+    success_criteria:
+      - no_email_merge
+    rollback_condition: disable_link_endpoints
+    explicit_non_goals:
+      - account_merge
+    commit_breakpoint: P15_linking
+
+  - id: P16
+    name: Short-lived authorization grants
+    objective: Issue, verify, expire, and revoke JWS Ed25519 grants bound to D31 device keys.
+    prerequisites: [P07, P11, D17, D36]
+    architecture_introduced:
+      - grants
+    files_expected_to_change:
+      - authority/
+      - src/services/authorizationService.ts
+    schemas_affected:
+      - authority_api
+    external_resources_required: []
+    secrets_required:
+      - authority_signing_keys_dev
+    security_properties:
+      - I10
+      - I32
+      - D36_kid_rotation
+    automated_tests:
+      - expired_and_revoked_grants_rejected
+      - uuid_alone_rejected
+    device_tests: []
+    success_criteria:
+      - grant_fields_match_D36
+    rollback_condition: disable_grant_issuance
+    explicit_non_goals:
+      - drive_proxy
+    commit_breakpoint: P16_grants
+
+  - id: P17
+    name: Account and device revocation
+    objective: Disablement and revocation match D8 without deleting local data.
+    prerequisites: [P07, P16]
+    architecture_introduced:
+      - disablement
+    files_expected_to_change:
+      - authority/
+      - src/services/authService.ts
+    schemas_affected:
+      - authority_api
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I11
+    automated_tests:
+      - disabled_account_cannot_get_grant
+      - local_fixture_archive_remains
+    device_tests:
+      - offline_then_online_disablement_discovery
+    success_criteria:
+      - remote_status_separated_from_local_lock
+    rollback_condition: revert_disablement_handlers
+    explicit_non_goals:
+      - local_data_deletion
+    commit_breakpoint: P17_revocation
+
+  - id: P18
+    name: Provider-discovery UX
+    objective: Domain/MX hints during email signup without auto-merge or redirect.
+    prerequisites: [P13]
+    architecture_introduced:
+      - provider_discovery
+    files_expected_to_change:
+      - src/ui/screens/AuthGate.tsx
+      - authority/ or dedicated discovery helper
+    schemas_affected: []
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - discovery_is_not_identity_proof
+    automated_tests:
+      - dns_failure_allows_signup
+      - custom_domain_not_auto_merged
+    device_tests: []
+    success_criteria:
+      - gmail_recommends_google_only_as_hint
+    rollback_condition: hide_discovery_ui
+    explicit_non_goals:
+      - automatic_redirect
+    commit_breakpoint: P18_provider_discovery
+
+  - id: P19
+    name: Sync protocol
+    objective: Versioned object sync messages with idempotency and conflict detection.
+    prerequisites: [P16, "D34-A", "D34-B", "D34-C", "D34-D"]
+    architecture_introduced:
+      - sync_protocol
+    files_expected_to_change:
+      - src/services/syncService.ts
+      - authority/ or sync endpoint if required for coordination
+    schemas_affected:
+      - sync_protocol
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I15
+    automated_tests:
+      - duplicate_operation_id_is_idempotent
+      - stale_grant_rejected
+    device_tests: []
+    success_criteria:
+      - protocol_version_1_fixtures_pass
+    rollback_condition: disable_sync_flag
+    explicit_non_goals:
+      - replacing_drive_backup_snapshots
+    commit_breakpoint: P19_sync_protocol
+
+  - id: P20
+    name: Shared-object model
+    objective: Stable object UUID plus authorization and Object DEK wraps for shared content.
+    prerequisites: [P16, P19, "D34-A", "D34-B", "D34-C", "D34-D"]
+    architecture_introduced:
+      - shared_objects
+    files_expected_to_change:
+      - src/models/sharing.ts
+    schemas_affected:
+      - sharing_protocol
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I10
+      - I35
+      - I39
+      - I43
+      - I44
+    automated_tests:
+      - uuid_without_grant_denied
+    device_tests: []
+    success_criteria:
+      - shared_object_requires_grant
+    rollback_condition: disable_sharing_flag
+    explicit_non_goals: []
+    commit_breakpoint: P20_shared_objects
+
+  - id: P21
+    name: Foreground synchronization
+    objective: Deterministic foreground reconcile on launch and resume.
+    prerequisites: [P19, P20]
+    architecture_introduced:
+      - foreground_sync
+    files_expected_to_change:
+      - src/services/syncService.ts
+      - src/services/AppServicesProvider.tsx
+    schemas_affected:
+      - sync_protocol
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I15
+    automated_tests:
+      - resume_reconcile_fixture
+    device_tests:
+      - airplane_mode_then_foreground
+    success_criteria:
+      - correctness_without_background
+    rollback_condition: disable_sync_on_resume
+    explicit_non_goals: []
+    commit_breakpoint: P21_foreground_sync
+
+  - id: P22
+    name: Durable background queue
+    objective: Persist pending operations and retry opportunistically.
+    prerequisites: [P21]
+    architecture_introduced:
+      - durable_queue
+    files_expected_to_change:
+      - src/adapters/sqlite or dedicated queue store outside secrets
+    schemas_affected:
+      - database
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - queue_contains_no_tokens
+    automated_tests:
+      - killed_process_retries_pending_ops
+    device_tests:
+      - os_delays_background_then_foreground_drains_queue
+    success_criteria:
+      - background_delay_does_not_lose_operations
+    rollback_condition: drop_queue_table_after_disabling_feature
+    explicit_non_goals:
+      - depending_on_exact_background_timing
+    commit_breakpoint: P22_durable_queue
+
+  - id: P23
+    name: Push hints
+    objective: Push indicates work may exist; it is not sync completion.
+    prerequisites: [P22]
+    architecture_introduced:
+      - push_hints
+    files_expected_to_change:
+      - push adapter
+    schemas_affected: []
+    external_resources_required:
+      - separate_dev_and_prod_push_config
+    secrets_required:
+      - push_keys_not_in_git
+    security_properties:
+      - push_payload_contains_no_secrets
+    automated_tests:
+      - hint_without_grant_does_not_fetch_content
+    device_tests:
+      - notification_wakes_reconcile_attempt_only
+    success_criteria:
+      - push_is_not_treated_as_completion
+    rollback_condition: disable_push
+    explicit_non_goals: []
+    commit_breakpoint: P23_push_hints
+
+  - id: P24
+    name: Authenticated local sharing foundation
+    objective: Transport-agnostic local share authorization using grants and transfer_uuid.
+    prerequisites: [P16, P20, "D34-A", "D34-B", "D34-C", "D34-D"]
+    architecture_introduced:
+      - local_sharing
+    files_expected_to_change:
+      - src/services/sharingService.ts
+    schemas_affected:
+      - sharing_protocol
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I10
+      - transport_is_not_trust
+    automated_tests:
+      - wrong_device_uuid_rejected
+    device_tests: []
+    success_criteria:
+      - later_transports_can_reuse_the_same_model
+    rollback_condition: disable_local_share
+    explicit_non_goals:
+      - implementing_every_transport
+    commit_breakpoint: P24_local_sharing
+
+  - id: P25
+    name: Google Drive capability integration
+    objective: Explicit account-and-identity-bound Drive authorization; retire implicit consent.
+    prerequisites: [P08, P16, D24]
+    architecture_introduced:
+      - drive_capability
+    files_expected_to_change:
+      - src/adapters/googleDrive/googleDriveBackupProvider.ts
+      - src/services/authorizationService.ts
+      - src/services/backupService.ts
+    schemas_affected:
+      - backup_snapshot
+    external_resources_required:
+      - google_drive_api_dev_project
+    secrets_required: []
+    security_properties:
+      - sign_in_grants_no_drive
+      - I6
+    automated_tests:
+      - launch_backup_noop_without_capability
+      - sanitized_backup_errors
+    device_tests:
+      - android_drive_round_trip
+    success_criteria:
+      - capability_bound_to_issuer_subject
+    rollback_condition: disable_drive_capability_without_restoring_implicit_tokens
+    explicit_non_goals:
+      - authority_proxying_file_bytes
+    commit_breakpoint: P25_drive_capability
+
+  - id: P26
+    name: Backup and restore interaction
+    objective: Restored archives cannot revive credentials, grants, or cloud activation.
+    prerequisites: [P04, P09, P25]
+    architecture_introduced:
+      - restore_isolation
+    files_expected_to_change:
+      - src/adapters/sqlite/archiveRestore.ts
+      - src/services/AppServicesProvider.tsx
+    schemas_affected:
+      - backup_snapshot
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I12
+      - I14
+    automated_tests:
+      - restore_while_signed_in_does_not_swap_account
+      - snapshot_payload_inspection
+    device_tests:
+      - restore_on_android
+    success_criteria:
+      - no_cloud_autoactivation
+    rollback_condition: keep_restore_disabled_if_isolation_fails
+    explicit_non_goals: []
+    commit_breakpoint: P26_backup_restore
+
+  - id: P27
+    name: Legacy authentication migration
+    objective: Preserve local state; retire insecure external credential state.
+    prerequisites: [P03, P08, P26]
+    architecture_introduced:
+      - legacy_retirement
+    files_expected_to_change:
+      - src/adapters/auth/*
+      - src/utilities/googleClientId.ts
+    schemas_affected:
+      - secure_record
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - I13
+    automated_tests:
+      - upgrade_fixture
+      - clean_install
+      - logout
+      - reinstall
+      - switch
+    device_tests:
+      - upgrade_from_prototype_build
+    success_criteria:
+      - old_tokens_cannot_resurrect
+    rollback_condition: do_not_reenable_implicit_oauth
+    explicit_non_goals:
+      - migrating_email_strings_to_google_subjects
+    commit_breakpoint: P27_legacy_migration
+
+  - id: P28
+    name: Account switching
+    objective: Stop cloud work, invalidate generations, clear caches, require explicit backup activation.
+    prerequisites: [P09, P16, P25]
+    architecture_introduced:
+      - account_switch
+    files_expected_to_change:
+      - src/services/authService.ts
+      - src/services/backupService.ts
+    schemas_affected: []
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - late_async_results_cannot_restore_previous_account
+    automated_tests:
+      - account_a_backup_result_dropped_after_switch_to_b
+    device_tests:
+      - two_real_identities
+    success_criteria:
+      - no_silent_archive_upload_to_new_account
+    rollback_condition: disable_switch_ui
+    explicit_non_goals: []
+    commit_breakpoint: P28_account_switch
+
+  - id: P29
+    name: Security fuzz and red-team pass
+    objective: Attack grants, MFA, linking, restore, native auth, email, passkeys, TOTP, and recovery together.
+    prerequisites:
+      - P04
+      - P08
+      - P10
+      - P12
+      - P13
+      - P14
+      - P15
+      - P16
+      - P17
+      - P27
+      - P28
+    architecture_introduced: []
+    files_expected_to_change:
+      - tests/security/*
+      - docs/TEST_LOG.md
+    schemas_affected: []
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - all_invariants
+    automated_tests:
+      - fuzz_malformed_jws_and_callbacks
+    device_tests:
+      - android_lifecycle_and_reinstall
+    success_criteria:
+      - findings_fixed_or_dispositioned
+    rollback_condition: block_beta
+    explicit_non_goals: []
+    commit_breakpoint: P29_security_pass
+
+  - id: P30
+    name: Android beta readiness
+    objective: Production-equivalent Android signing, config, and recovery runbook.
+    prerequisites: [P29, D9]
+    architecture_introduced: []
+    files_expected_to_change:
+      - docs/ACCOUNT_AUTHENTICATION.md
+      - eas.json
+    schemas_affected: []
+    external_resources_required:
+      - production_google_project_separate_from_dev
+    secrets_required:
+      - production_secrets_in_secret_manager_not_git
+    security_properties:
+      - D9
+    automated_tests:
+      - regression_suite
+    device_tests:
+      - production_equivalent_signed_android
+    success_criteria:
+      - beta_criteria_met
+    rollback_condition: disable_remote_features_keep_local
+    explicit_non_goals:
+      - claiming_unimplemented_providers
+    commit_breakpoint: P30_android_beta
+
+  - id: P31
+    name: Dedicated iOS implementation and verification
+    objective: Native Google, passkeys, encryption, and lifecycle on physical iOS.
+    prerequisites: [P30, D11]
+    architecture_introduced: []
+    files_expected_to_change:
+      - ios native config via CNG
+    schemas_affected: []
+    external_resources_required:
+      - dedicated_local_ios_environment
+      - ios_oauth_client
+    secrets_required: []
+    security_properties:
+      - D20
+    automated_tests:
+      - typecheck
+    device_tests:
+      - physical_ios_sign_in_passkey_encryption_reinstall
+    success_criteria:
+      - ios_hardware_verification
+    rollback_condition: keep_ios_disabled_in_release_if_failed
+    explicit_non_goals:
+      - designing_only_for_android
+    commit_breakpoint: P31_ios
+
+  - id: P32
+    name: Wearable and device-extension groundwork
+    objective: Device class and narrow grants without full account credentials.
+    prerequisites: [P07, P16, D22]
+    architecture_introduced:
+      - subordinate_devices
+    files_expected_to_change:
+      - authority/ device class
+    schemas_affected:
+      - authority_api
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - D22
+    automated_tests:
+      - wearable_class_cannot_request_account_refresh
+    device_tests: []
+    success_criteria:
+      - contracts_exist_without_shipping_a_watch_app
+    rollback_condition: hide_wearable_class
+    explicit_non_goals:
+      - full_watch_client
+    commit_breakpoint: P32_wearable_groundwork
+
+  - id: P33
+    name: SDK 58 migration and regression
+    objective: If still pending, migrate Expo while preserving identity contracts.
+    prerequisites: [P30]
+    architecture_introduced: []
+    files_expected_to_change:
+      - package.json
+      - native plugins
+    schemas_affected: []
+    external_resources_required: []
+    secrets_required: []
+    security_properties:
+      - account_uuid_stable
+    automated_tests:
+      - native_offline_backup_regression
+    device_tests:
+      - android_and_ios_if_in_scope
+    success_criteria:
+      - no_account_rekey
+    rollback_condition: remain_on_sdk_57
+    explicit_non_goals:
+      - using_migration_to_change_identity_semantics
+    commit_breakpoint: P33_sdk_58
+    only_if_still_pending: true
+
+stop_and_surface:
+  - newly_discovered_issue_materially_changes_approved_architecture
+  - production_credentials_or_purchases_required
+  - destructive_migration_cannot_be_safely_reversed
+  - cryptographic_or_security_assumptions_cannot_be_verified
+  - implementation_would_weaken_an_invariant
+  - repository_evidence_contradicts_an_approved_requirement
+  - newly_proposed_review_from_repository_evidence
+
+first_implementation_phase_after_this_document: P01
+p01_blocked_until_proposed_review: false
+architecture_review_hold: released
+next_implementation_focus: p01_foundational_contracts_and_repository_boundaries
+do_not_start_in_this_documentation_pass:
+  - P04
+  - P05
+  - P08
+  - P10
+  - P13
+  - P14
+  - P19
+  - P20
+  - P24
+P01_rollback: remove_new_model_modules_without_touching_sqlite_or_native_config
+P01_test_boundary: typecheck_plus_contract_smoke_no_device_required
+

@@ -1,7 +1,7 @@
 {
   "fileKey": "dFwk8LAWauplWqrOKaQplU",
-  "captured": "2026-09-14",
-  "authority": "Live Figma read, independent of YAML and runtime",
+  "captured": "2026-10-28",
+  "authority": "Live Figma read, independent of YAML and runtime. 2026-10-28 remeasure covers landscape action_dock and action_dock_handle. Other nodes remain the 2026-09-14 capture.",
   "portrait": [
     {
       "id": "2:20",
@@ -735,20 +735,25 @@
       "id": "96:82",
       "name": "action_dock",
       "parent": "96:50",
-      "visible": false,
+      "visible": true,
       "b": [
-        156.88796997070312,
-        256.6378173828125,
-        363.2619323730469,
-        115.27710723876953
+        163,
+        276,
+        350,
+        96
       ],
       "local": [
-        133.88796997070312,
-        183.63780212402344,
-        363.2619323730469,
-        115.27710723876953
+        140,
+        203,
+        350,
+        96
       ],
-      "render": null,
+      "render": [
+        163,
+        276,
+        350,
+        96
+      ],
       "children": [
         "96:83",
         "96:85",
@@ -774,8 +779,8 @@
       "parent": "96:82",
       "visible": true,
       "b": [
-        156.88796997070312,
-        256.6378173828125,
+        163,
+        276,
         350,
         96
       ],
@@ -1484,23 +1489,23 @@
     {
       "id": "97:149",
       "name": "action_dock_handle",
-      "parent": "96:50",
+      "parent": "96:82",
       "visible": true,
       "b": [
         299,
-        340,
+        251,
         77.5,
         27.5
       ],
       "local": [
-        276,
-        267,
+        136,
+        -25,
         77.5,
         27.5
       ],
       "render": [
         299,
-        340,
+        251,
         77.5,
         27.5
       ],

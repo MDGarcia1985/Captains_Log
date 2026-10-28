@@ -68,7 +68,7 @@ assert.equal(portrait.handedness.canonical, 'right');
 assert.deepEqual(portrait.handedness.supported, ['right', 'left']);
 assert.equal(landscape.handedness.preference, 'preserve_portrait');
 assert.equal(overlays.landscape.action_dock.behavior.transition.type, 'assembled_slide');
-assert.equal(overlays.landscape.action_dock.expanded_assembly.height, 123.5);
+assert.equal(overlays.landscape.action_dock.expanded_assembly.height, 121);
 
 for (const [layout, overlay] of [[portrait, overlays.portrait], [landscape, overlays.landscape]]) {
   const viewport = deepMerge(shared.viewport, overlay.viewport);

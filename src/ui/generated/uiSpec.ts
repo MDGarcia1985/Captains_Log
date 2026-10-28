@@ -1048,7 +1048,7 @@ export const uiSpec = {
         },
         "reference_source": {
           "file_key": "dFwk8LAWauplWqrOKaQplU",
-          "captured": "2026-09-14",
+          "captured": "2026-10-28",
           "usage": "reference_only"
         },
         "reference_regions": {
@@ -1095,15 +1095,15 @@ export const uiSpec = {
             "figma_node": "96:61"
           },
           "action_dock": {
-            "x": 156.88796997070312,
-            "y": 256.6378173828125,
-            "width": 363.2619323730469,
-            "height": 115.27710723876953,
+            "x": 163,
+            "y": 276,
+            "width": 350,
+            "height": 96,
             "figma_node": "96:82"
           },
           "action_dock_handle": {
             "x": 299,
-            "y": 340,
+            "y": 251,
             "width": 77.5,
             "height": 27.5,
             "figma_node": "97:149"
@@ -1606,15 +1606,11 @@ export const uiSpec = {
               }
             },
             "safe_area": "dock",
-            "optical_offset": {
-              "x": 0.519,
-              "y": -0.085
-            },
-            "reference_note": "Figma parent center offset +0.5189 and bottom remainder 0.085 above viewport bottom; runtime uses quantized optical offset. Bezel remains a separate fixed 350x96 asset. Parent size is the collapsed envelope, not the expanded assembly. Canonical expanded height is 123.5.",
+            "reference_note": "Figma bezel is centered on the viewport and flush with the viewport bottom. The frame is the 350x96 bezel; the old 363.262x115.277 envelope is retired. The handle overlaps the bezel top by 2.5. Canonical expanded height is 121.",
             "constraints": {
               "contain_expanded_assembly_in": "viewport",
               "include_handle": true,
-              "expanded_height": 123.5,
+              "expanded_height": 121,
               "unsatisfied": "unsupported_size"
             }
           },
@@ -1644,9 +1640,9 @@ export const uiSpec = {
             },
             "safe_area": "dock",
             "optical_offset": {
-              "x": -0.769
+              "x": -0.25
             },
-            "reference_note": "Figma handle center 337.75 versus dock parent center 338.5189.",
+            "reference_note": "Visible Figma handle center 337.75 versus bezel center 338. Resolved anchors remain the collapsed parking pose. The expanded pose is the measured node, above the bezel with overlap 2.5.",
             "anchor_state": "collapsed",
             "expanded_placement": "component.action_dock.behavior.transition.handle_anchor"
           },
@@ -1694,17 +1690,19 @@ export const uiSpec = {
         },
         "reference_legacy_rounding": {
           "action_dock": {
-            "x": 156.888,
-            "y": 256.638,
-            "width": 363.262,
-            "height": 115.277
+            "x": 163,
+            "y": 276,
+            "width": 350,
+            "height": 96
           },
-          "action_dock_optical_offset": {
-            "x": 0.519,
-            "y": -0.085
+          "action_dock_handle": {
+            "x": 299,
+            "y": 251,
+            "width": 77.5,
+            "height": 27.5
           },
           "action_dock_handle_optical_offset": {
-            "x": -0.769
+            "x": -0.25
           }
         },
         "constraints": {
@@ -1716,7 +1714,7 @@ export const uiSpec = {
           "minimum_window_height": 206,
           "minimum_height_basis": "8 title top + 5 status/title + 82 scanner + 12 rail top gap + 27.5 menu + 8 menu/button gap + 55 one rail target + 8 rail bottom = 205.5, ceil 206",
           "minimum_height_kind": "declared_min_floor",
-          "vertical_feasibility": "Use declared mins, then rail overflow (gaps to 0, then local button scroll with menu pinned). Expanded dock height 123.5 must remain inside the viewport; that chain is not binding versus 206. Unsupported only when those mins cannot fit.",
+          "vertical_feasibility": "Use declared mins, then rail overflow (gaps to 0, then local button scroll with menu pinned). Expanded dock height 121 must remain inside the viewport; that chain is not binding versus 206. Unsupported only when those mins cannot fit.",
           "unsatisfied": "unsupported_size",
           "reference_reconstruction": "preferred_without_system_obstructions"
         }
@@ -1955,21 +1953,23 @@ export const uiSpec = {
         "asset": "dock-camera-button-plate",
         "width": 72,
         "height": 62,
-        "y": 8
+        "y": 17
       },
       "addPlate": "dock-add-button-plate",
       "icon": {
         "width": 32,
         "height": 32,
         "x": 20,
-        "y": 23
+        "y": 32
       },
       "label": {
+        "visible": false,
         "y": 74,
         "width": 72,
         "typography": "dock",
         "color": "textMuted",
-        "addColor": "orange"
+        "addColor": "orange",
+        "role": "accessible_name"
       },
       "items": [
         {
@@ -2811,9 +2811,9 @@ export const uiSpec = {
         "sizing": "fixed",
         "placement_owner": "orientation",
         "collapsed_parent": {
-          "role": "collapsed_envelope",
-          "width": 363.262,
-          "height": 115.277,
+          "role": "visible_bezel",
+          "width": 350,
+          "height": 96,
           "sizing": "fixed"
         },
         "bezel": {
@@ -2834,25 +2834,25 @@ export const uiSpec = {
           "contain_in": "viewport",
           "include_handle": true,
           "handle_anchor": "above_bezel_top",
-          "overlap_with_bezel": 0,
-          "height": 123.5,
+          "overlap_with_bezel": 2.5,
+          "height": 121,
           "height_canonical": true,
-          "height_basis": "handle 27.5 + bezel 96",
-          "width": 363.262,
-          "width_role": "collapsed_parent_width",
+          "height_basis": "handle 27.5 + bezel 96 - overlap 2.5",
+          "width": 350,
+          "width_role": "bezel_width",
           "scale_internal_artwork": false
         },
-        "size_role": "collapsed_parent_envelope",
+        "size_role": "visible_bezel",
         "size": {
-          "width": 363.262,
-          "height": 115.277
+          "width": 350,
+          "height": 96
         },
         "reference_geometry": {
           "parent_bounds": {
             "x": 0,
             "y": 0,
-            "width": 363.2619323730469,
-            "height": 115.27710723876953
+            "width": 350,
+            "height": 96
           },
           "bezel_bounds": {
             "x": 0,
@@ -2861,10 +2861,12 @@ export const uiSpec = {
             "height": 96
           },
           "handle_bounds": {
+            "x": 136,
+            "y": -25,
             "width": 77.5,
             "height": 27.5
           },
-          "expanded_assembly_height": 123.5
+          "expanded_assembly_height": 121
         },
         "bezel_layout": {
           "sizing": "fixed",
@@ -2884,14 +2886,14 @@ export const uiSpec = {
         "spacing": {
           "axis": "horizontal",
           "leading": {
-            "min": 7,
-            "preferred": 7,
-            "max": 7
+            "min": 10,
+            "preferred": 10,
+            "max": 10
           },
           "trailing": {
-            "min": 26.262,
-            "preferred": 26.262,
-            "max": 26.262
+            "min": 10,
+            "preferred": 10,
+            "max": 10
           },
           "gap": {
             "min": 14,

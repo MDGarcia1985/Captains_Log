@@ -3,7 +3,7 @@
  * Purpose: Testable route, backup-label, orientation and HUD spec-merge contracts.
  * Author: Codex; Contact: michael@mandedesign.studio
  * License: SPDX-License-Identifier: MPL-2.0
- * Decision: DEV-2026-09-07-025; DEV-2026-09-12-001
+ * Decision: DEV-2026-09-07-025; DEV-2026-09-12-001; DEV-2026-10-28-001
  */
 export const SCANNER_ROTATION_MS = 10_000;
 export type HudView = 'home' | 'capture' | 'search' | 'graph' | 'settings' | 'detail';
@@ -57,12 +57,12 @@ export function hudHostMatchesOrientation(host: Size | null, orientation: HudOri
     && host.height < nativeScreen.height;
 }
 
-// Figma gives expanded dock and collapsed handle rectangles; YAML attaches the handle above the bezel.
-export function dockAssemblyGeometry(dock: Rect, handle: Rect) {
-  const top = dock.y - handle.height;
+// Resolved handle is the collapsed parking pose. Overlap pulls the bezel up under the expanded handle.
+export function dockAssemblyGeometry(dock: Rect, handle: Rect, overlap = 0) {
+  const top = dock.y - handle.height + overlap;
   return {
     clip: { x: dock.x, y: top, width: dock.width, height: handle.y + handle.height - top },
-    dock: { x: 0, y: handle.height, width: dock.width, height: dock.height },
+    dock: { x: 0, y: handle.height - overlap, width: dock.width, height: dock.height },
     handle: { x: handle.x - dock.x, y: 0, width: handle.width, height: handle.height },
     travel: handle.y - top,
   };

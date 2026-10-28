@@ -198,10 +198,11 @@ export function validateYamlContract() {
   assert.equal(landscape.constraints.minimum_window_height, 206);
 
   const dock = deepMerge(shared.action_dock, overlays.landscape.action_dock);
-  assert.equal(dock.collapsed_parent.height, 115.277);
+  assert.equal(dock.collapsed_parent.height, 96);
   assert.equal(dock.bezel.height, 96);
   assert.equal(dock.handle.height, 27.5);
-  assert.equal(dock.expanded_assembly.height, 123.5);
+  assert.equal(dock.expanded_assembly.height, 121);
+  assert.equal(dock.expanded_assembly.overlap_with_bezel, 2.5);
   assert.equal(dock.expanded_assembly.scale_internal_artwork, false);
   assert.ok(overlays.portrait.navigation_rail.overflow);
   assert.ok(overlays.landscape.navigation_rail.overflow);

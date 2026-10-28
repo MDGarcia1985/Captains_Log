@@ -30,8 +30,16 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# local env files — never commit secret values
+.env
+.env.*
+!.env.example
+
+# Local AWS overlays (live ARNs, endpoints, secret names)
+docs/aws.local.yaml
+**/*.local.yaml
+secrets.local.*
+
 
 # typescript
 *.tsbuildinfo

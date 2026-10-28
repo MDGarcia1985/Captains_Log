@@ -105,9 +105,10 @@ and disabled in Settings.
 
 Landscape dock assets remain mounted and finish loading before expansion. One parent
 translation moves the dock and its attached handle together, using YAML's 240 ms
-cubic-out transition (immediate with reduced motion). The collapsed parent envelope
-is 363.262 × 115.277; the visible bezel stays 350 × 96; the handle stays 77.5 × 27.5;
-canonical expanded height is 123.5 without stretching internal artwork.
+cubic-out transition (immediate with reduced motion). The Figma frame is the visible
+bezel, 350 × 96. The handle is 77.5 × 27.5 and overlaps that bezel by 2.5. Canonical
+expanded height is 121 without stretching internal artwork. Landscape still starts
+collapsed, with the handle parked above the viewport bottom.
 
 Screen capabilities in `mobile.yaml` determine shell commands, entity navigation,
 autofocus, and return-home behavior after capture. Rotation keeps the same shell and
@@ -122,7 +123,18 @@ TASK-007 stays OPEN until physical Motorola verification.
 
 ## Authentication
 
-An account is required before use. Local archive credentials (`LocalArchiveCredential`) are stored on device and do not verify email ownership. Google authentication uses `expo-auth-session` with the client ID for the current platform only; that implicit token flow is prototype-only. Google Drive authorization is a separate `drive.file` scope and adapter concern.
+The implemented prototype still gates the archive behind `AuthGate` using a local identifier/password and an AuthSession Google implicit token. That is legacy and must not be treated as the production identity model.
+
+The authoritative contract is `docs/ACCOUNT_IDENTITY.yaml` (account identity schema version 1):
+
+- Local profile and encrypted archive are created on first launch without Google, Apple, internet, or the Captain's Log authority.
+- A remote Captain's Log account UUID is issued only by a narrow custom authority. Provider subjects never replace that UUID. The human-readable `user_id` (D38) is a locator resolvable to that UUID and is not authentication or authorization.
+- MFA is risk-adaptive. Remote account passkeys are WebAuthn factors against a pending Captain's Log HTTPS RP ID (D32). Local archive unlock is platform user verification of a device-protected AEK wrap, not a WebAuthn passkey.
+- Fully enrolled devices prove possession with a locally generated, preferably hardware-backed keypair (D31). Archive encryption is a layered hierarchy (D15/D33): Recovery Secret → Recovery KEK → wrapped AEK → domain-separated archive keys → per-object DEKs. Shared objects use independent Object DEKs wrapped to a recipient account sharing public key; the archive AEK is never a sharing key (D34, D34-A through D34-D). Captain's Log sessions stay out of SQLite, YAML, UI, diagnostics, exports, and backups (D35). Grants are short-lived JWS Ed25519 capabilities with device-key confirmation and signing-key rotation (D36).
+- The authority is a TypeScript HTTPS service, containerized, published to Amazon ECR, and run on Amazon ECS Fargate against Amazon RDS PostgreSQL (D13). Domain logic sits behind repository interfaces. Live AWS identifiers and secret ARNs belong in the private `captains-log-infra` repository. The public repository may ship Docker/Compose, migrations, generic templates, and `docs/aws.example.yaml` placeholders only. Local AWS uses the CLI `default` profile and short-lived `aws login` credentials. Server secrets resolve from Secrets Manager at runtime (ECS `valueFrom` or CloudFormation dynamic references). Do not commit secret values, long-lived access keys, or call `GetSecretValue` into agent or log context.
+- SQLite persistence remains schema version 2. HUD layout generator schema 3 is unrelated. Graph contract version is 1 (implicit current entity/relationship types).
+
+See DEV-2026-09-20-002 through DEV-2026-09-28-001. Do not implement identity behavior from the September 20 Markdown plan when it conflicts with the YAML. The architecture review hold on P01 is released. Next implementation focus is P01 TypeScript contracts and repository-boundary scaffolding. Do not start P04, P08, P10, P13, P14, P19, P20, or P24 in this documentation pass. P29 requires P04. Operator blockers remain the D25 Google license, the permanent WebAuthn RP domain, and live AWS resources in `captains-log-infra`.
 
 ## Backup and restore
 

@@ -36,6 +36,10 @@ assert.deepEqual(uiSpec.components.navigation_rail.contexts.home, ['graph', 'sea
 assert.ok(!uiSpec.components.navigation_rail.contexts.home.includes('log'));
 assert.deepEqual(uiSpec.components.navigation_rail.contexts.capture, ['commit', 'cancel']);
 assert.deepEqual(uiSpec.components.action_dock.items.map(x => x.id), ['add', 'camera', 'location', 'export']);
+assert.equal(uiSpec.components.action_dock.label.visible, false);
+assert.equal(uiSpec.components.action_dock.plate.y, 17);
+assert.equal(uiSpec.components.action_dock.icon.x, 20);
+assert.equal(uiSpec.components.action_dock.icon.y, 32);
 assert.equal(uiSpec.components.action_dock.addMenu[0].id, 'gallery');
 assert.equal(uiSpec.components.status_header.reserved.visible, false);
 assert.equal(backupIsSynced({ state: 'current', lastBackupAt: 20 }, 10), true);
@@ -76,9 +80,10 @@ const landscapeResolved = resolveHudLayout({
   components: landscapeComponents,
   handedness: 'right',
 });
-const assembly = dockAssemblyGeometry(landscapeResolved.regions.action_dock, landscapeResolved.regions.action_dock_handle);
-assert.equal(assembly.handle.y + assembly.handle.height, assembly.dock.y);
-assert.ok(landscapeResolved.expandedDock && Math.abs(landscapeResolved.expandedDock.height - 123.5) < 1e-6);
+const dockOverlap = uiSpec.orientationComponents.landscape.action_dock.expanded_assembly.overlap_with_bezel;
+const assembly = dockAssemblyGeometry(landscapeResolved.regions.action_dock, landscapeResolved.regions.action_dock_handle, dockOverlap);
+assert.equal(assembly.handle.y + assembly.handle.height - dockOverlap, assembly.dock.y);
+assert.ok(landscapeResolved.expandedDock && Math.abs(landscapeResolved.expandedDock.height - 121) < 1e-6);
 
 const exported = requestExport();
 assert.equal(exported.status, 'not_implemented');

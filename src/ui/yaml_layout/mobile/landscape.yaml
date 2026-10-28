@@ -8,7 +8,7 @@ layout:
     height: 390
   reference_source:
     file_key: dFwk8LAWauplWqrOKaQplU
-    captured: 2026-09-14
+    captured: 2026-10-28
     usage: reference_only
   reference_regions:
     status_header:
@@ -48,14 +48,14 @@ layout:
       height: 238
       figma_node: 96:61
     action_dock:
-      x: 156.88796997070312
-      y: 256.6378173828125
-      width: 363.2619323730469
-      height: 115.27710723876953
+      x: 163
+      y: 276
+      width: 350
+      height: 96
       figma_node: 96:82
     action_dock_handle:
       x: 299
-      y: 340
+      y: 251
       width: 77.5
       height: 27.5
       figma_node: 97:149
@@ -443,16 +443,13 @@ layout:
           edge: bottom
           relation: aligned
       safe_area: dock
-      optical_offset:
-        x: 0.519
-        y: -0.085
-      reference_note: Figma parent center offset +0.5189 and bottom remainder 0.085 above viewport bottom;
-        runtime uses quantized optical offset. Bezel remains a separate fixed 350x96 asset. Parent size is the
-        collapsed envelope, not the expanded assembly. Canonical expanded height is 123.5.
+      reference_note: Figma bezel is centered on the viewport and flush with the viewport bottom. The frame is
+        the 350x96 bezel; the old 363.262x115.277 envelope is retired. The handle overlaps the bezel top by 2.5.
+        Canonical expanded height is 121.
       constraints:
         contain_expanded_assembly_in: viewport
         include_handle: true
-        expanded_height: 123.5
+        expanded_height: 121
         unsatisfied: unsupported_size
     action_dock_handle:
       component: action_dock_handle
@@ -475,8 +472,9 @@ layout:
             max: 4.5
       safe_area: dock
       optical_offset:
-        x: -0.769
-      reference_note: Figma handle center 337.75 versus dock parent center 338.5189.
+        x: -0.25
+      reference_note: Visible Figma handle center 337.75 versus bezel center 338. Resolved anchors remain the
+        collapsed parking pose. The expanded pose is the measured node, above the bezel with overlap 2.5.
       anchor_state: collapsed
       expanded_placement: component.action_dock.behavior.transition.handle_anchor
     rail_guide:
@@ -512,15 +510,17 @@ layout:
     paintedWashAsset: atmosphere-background-grid
   reference_legacy_rounding:
     action_dock:
-      x: 156.888
-      y: 256.638
-      width: 363.262
-      height: 115.277
-    action_dock_optical_offset:
-      x: 0.519
-      y: -0.085
+      x: 163
+      y: 276
+      width: 350
+      height: 96
+    action_dock_handle:
+      x: 299
+      y: 251
+      width: 77.5
+      height: 27.5
     action_dock_handle_optical_offset:
-      x: -0.769
+      x: -0.25
   constraints:
     minimum_window_width: 775
     minimum_width_basis: 8 title-left + 365 title ornament + 3 title/status gap + 200 status + 20
@@ -534,7 +534,7 @@ layout:
       gap + 55 one rail target + 8 rail bottom = 205.5, ceil 206
     minimum_height_kind: declared_min_floor
     vertical_feasibility: Use declared mins, then rail overflow (gaps to 0, then local button scroll with menu
-      pinned). Expanded dock height 123.5 must remain inside the viewport; that chain is not binding versus 206.
+      pinned). Expanded dock height 121 must remain inside the viewport; that chain is not binding versus 206.
       Unsupported only when those mins cannot fit.
     unsatisfied: unsupported_size
     reference_reconstruction: preferred_without_system_obstructions

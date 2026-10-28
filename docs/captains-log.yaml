@@ -50,7 +50,8 @@ documentation:
 
   agent_instruction: >
     Before modifying or creating implementation files, read
-    docs/DEVNOTES_STANDARDS.md, docs/ANNOTATION_STANDARDS.md, and
+    docs/DEVNOTES_STANDARDS.md, docs/
+    ANNOTATION_STANDARDS.md, and
     docs/TEST_LOG_STANDARDS.md in full and follow their requirements.
     Do not begin implementation until they have been reviewed.
     Do not assume prior copies or remembered versions are current;
@@ -60,11 +61,13 @@ documentation:
     product_spec: docs/captains-log.yaml
     roadmap: docs/planning/ROADMAP.md
     architecture: docs/ARCHITECTURE.md
+    account_identity: docs/ACCOUNT_IDENTITY.yaml
     development_log: docs/DEVNOTES.md
     test_log: docs/TEST_LOG.md
 
   authority:
     captains-log.yaml: product_behavior
+    ACCOUNT_IDENTITY.yaml: account_identity_authentication_authorization_sync_sharing
     ARCHITECTURE.md: system_architecture
     DEVNOTES.md: implementation_decisions
 
@@ -188,26 +191,45 @@ offline:
     - view_graph
 
   requires_network:
-    - authentication_initial_setup
+    - remote_account_creation_or_sign_in
     - google_drive_backup
+    - cloud_sync_and_sharing
     - future_ai_cloud_services
     - future_external_integrations
 
 authentication:
-  account_required: true
+  # D2 / DEV-2026-09-20-003: local profile immediately; remote Captain's Log account optional.
+  # docs/ACCOUNT_IDENTITY.yaml is authoritative for identity, auth, MFA, grants, sync, and sharing.
+  remote_account_required_for_local_use: false
+  local_profile_created_on_first_launch: true
+  encrypted_local_archive_created_on_first_launch: true
+  local_archive_lock: optional
+  local_lock_cannot_be_bypassed_by_remote_sign_in: true
 
-  mvp_methods:
-    - email
+  account_required: false
+
+  first_delivery_methods:
+    - passkey
     - google
+    - verified_email
+    - totp
 
-  future_methods:
-    - microsoft_365
+  later_methods:
+    - apple
+    - phone
+
+  deprecated_mvp_methods_note: >
+    Prototype local identifier/password and AuthSession Google are not verified
+    identities and must not be migrated as trusted credentials.
 
   google:
     sign_in: true
+    native_universal_sign_in: true
+    implicit_authsession_fallback: false
     drive_authorization_separate: true
 
   offline_behavior:
+    allow_local_use_without_remote_account: true
     allow_authenticated_user_access: true
     do_not_require_periodic_online_validation_for_local_use: true
 
@@ -870,8 +892,9 @@ security:
     least_privilege_scopes: true
 
   future:
-    database_encryption: evaluate
-    app_lock: evaluate
+    database_encryption: required_sqlcipher_plus_file_aes_gcm
+    app_lock: optional_aek_wrap
+    authoritative_spec: docs/ACCOUNT_IDENTITY.yaml
 
 mvp_definition_of_done:
   required:

@@ -10,19 +10,21 @@ component:
     asset: dock-camera-button-plate
     width: 72
     height: 62
-    y: 8
+    y: 17
   addPlate: dock-add-button-plate
   icon:
     width: 32
     height: 32
     x: 20
-    y: 23
+    y: 32
   label:
+    visible: false
     y: 74
     width: 72
     typography: dock
     color: textMuted
     addColor: orange
+    role: accessible_name
   items:
     - id: add
       icon: dock-add-icon

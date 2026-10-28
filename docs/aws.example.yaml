@@ -1,0 +1,72 @@
+# Public placeholder AWS deployment schema for Captain's Log.
+# Copy this shape into the private captains-log-infra repository and substitute
+# live values there. Do not commit real account IDs, ARNs, passwords, or keys
+# to this public repository.
+#
+# Related: docs/ACCOUNT_IDENTITY.yaml repository_boundary and D13.
+
+environment: ${CL_ENVIRONMENT}
+
+aws:
+  region: ${AWS_REGION}
+
+  credentials:
+    profile: default
+    provider_chain: aws_sdk_default_credential_provider_chain
+    long_lived_access_keys: forbidden
+    dotenv_access_keys: forbidden
+    github_secrets_access_keys: forbidden
+    local_developer: aws_login_short_lived_session
+    ecs_task: task_role_temporary_credentials
+
+  rds:
+    endpoint: ${RDS_ENDPOINT}
+    port: ${RDS_PORT}
+    database: ${RDS_DATABASE}
+
+    credentials:
+      provider: aws_secrets_manager
+      secret_arn: ${RDS_SECRET_ARN}
+      resolution: runtime
+      never_commit_secret_value: true
+      never_log_plaintext: true
+      agent_get_secret_value: forbidden
+      cloudformation_dynamic_reference: "{{resolve:secretsmanager:${RDS_SECRET_NAME}:SecretString:password}}"
+      ecs_inject_via: task_definition_secrets_valueFrom
+
+  ecr:
+    repository: ${ECR_REPOSITORY}
+
+  ecs:
+    cluster: ${ECS_CLUSTER}
+    service: ${ECS_SERVICE}
+    task_definition: ${ECS_TASK_DEFINITION}
+
+  iam:
+    task_role_arn: ${ECS_TASK_ROLE_ARN}
+    execution_role_arn: ${ECS_EXECUTION_ROLE_ARN}
+
+secrets_manager:
+  owns:
+    - rds_credentials
+    - server_side_oauth_secrets
+    - authority_private_signing_material
+    - third_party_api_secrets
+  must_not_contain:
+    - recovery_secret
+    - plaintext_aek
+    - plaintext_object_dek
+    - device_private_key
+    - passkey_private_key
+  future_creation_requires:
+    - dedicated_kms_key
+    - least_privilege_iam
+    - cloudtrail
+    - rotation_where_applicable
+    - private_infra_repository_not_this_repo
+
+github_oidc:
+  # Private infra workflows may assume an AWS role via GitHub OIDC.
+  # Do not store long-lived AWS access keys in GitHub Secrets.
+  role_arn: ${AWS_DEPLOY_ROLE_ARN}
+  audience: sts.amazonaws.com

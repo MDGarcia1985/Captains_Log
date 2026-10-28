@@ -91,7 +91,8 @@ for (const o of ['portrait', 'landscape']) {
       close(rect(accent), [n.b[0] - panel.x, n.b[1] - panel.y, ...n.b.slice(2)], `visible accent ${id}`);
       pathMatches(accent.asset, n);
     });
-    assert.equal(c.action_dock.expanded_assembly.height, 123.5);
+    assert.equal(c.action_dock.expanded_assembly.height, 121);
+    assert.equal(c.action_dock.expanded_assembly.overlap_with_bezel, 2.5);
   }
 }
 close(rect(shared.scanner.core.visibleBounds), source.portrait.find(n => n.id === '3:18').local, 'core geometry');

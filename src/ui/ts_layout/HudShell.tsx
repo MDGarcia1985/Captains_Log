@@ -3,7 +3,7 @@
  * Purpose: YAML mobile HUD for the actual window using resolved regions, not global scale.
  * Author: Codex; Contact: michael@mandedesign.studio
  * License: SPDX-License-Identifier: MPL-2.0
- * Decisions: DEV-2026-09-07-025; DEV-2026-09-11-001; DEV-2026-09-12-001; DEV-2026-09-14-005
+ * Decisions: DEV-2026-09-07-025; DEV-2026-09-11-001; DEV-2026-09-12-001; DEV-2026-09-14-005; DEV-2026-10-28-001
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AppState, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -91,8 +91,12 @@ export function HudShell({ children }: { children: ReactNode }) {
   const [detail, setDetail] = useState('Backup status is being checked');
   const [menu, setMenu] = useState<'settings' | 'add' | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [dockUi, setDockUi] = useState({ orientation, expanded: false });
-  if (dockUi.orientation !== orientation) setDockUi({ orientation, expanded: false });
+  const dockStartsOpen = (next: typeof orientation) => {
+    const visibility = uiSpec.orientationComponents[next].action_dock.behavior.default_visibility;
+    return visibility === 'visible';
+  };
+  const [dockUi, setDockUi] = useState(() => ({ orientation, expanded: dockStartsOpen(orientation) }));
+  if (dockUi.orientation !== orientation) setDockUi({ orientation, expanded: dockStartsOpen(orientation) });
   const dockExpanded = dockUi.expanded;
   const activeView = hudView(pathname);
   const available = hud.current?.scope === activeView ? hud.current : null;
@@ -174,8 +178,16 @@ export function HudShell({ children }: { children: ReactNode }) {
     width: Math.max(0, viewportRect.width - contentInsets.left - contentInsets.right),
     height: Math.max(0, viewportRect.height - contentInsets.top - contentInsets.bottom),
   };
-  const contentHeight = handleRegion
-    ? Math.min(contentBox.height, Math.max(0, handleRegion.y - viewportRect.y - contentBox.y))
+  const dockOverlap = orientation === 'landscape'
+    ? uiSpec.orientationComponents.landscape.action_dock.expanded_assembly.overlap_with_bezel
+    : 0;
+  const contentStop = handleRegion
+    ? dockExpanded && regions.action_dock
+      ? regions.action_dock.y - handleRegion.height + dockOverlap
+      : handleRegion.y
+    : undefined;
+  const contentHeight = contentStop !== undefined
+    ? Math.min(contentBox.height, Math.max(0, contentStop - viewportRect.y - contentBox.y))
     : contentBox.height;
   const border = regions.border ?? { x: 8, y: 8, width: Math.max(0, canvas.width - 16), height: Math.max(0, canvas.height - 16) };
   const borderRadius = (layout.runtime_regions.border as { appearance?: { radius?: number } }).appearance?.radius ?? 40;

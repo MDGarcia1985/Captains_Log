@@ -103,8 +103,13 @@ const landscape = resolve('landscape', { width: 844, height: 390 });
 assert.equal(landscape.status, 'ok');
 close(landscape.regions.navigation_rail.width, 155, 'rail.w');
 close(landscape.regions.title_block.height, 68, 'title.h');
-close(landscape.regions.action_dock.height, 115.277, 'collapsed dock.h');
-assert.equal(landscape.expandedDock?.height, 123.5);
+close(landscape.regions.action_dock.x, 163, 'dock.x');
+close(landscape.regions.action_dock.y, 276, 'dock.y');
+close(landscape.regions.action_dock.height, 96, 'dock.h');
+close(landscape.regions.action_dock.width, 350, 'dock.w');
+close(landscape.regions.action_dock_handle.x, 299, 'handle.x');
+close(landscape.regions.action_dock_handle.y, 340, 'collapsed handle.y');
+assert.equal(landscape.expandedDock?.height, 121);
 close(landscape.regions.border.x, 8, 'land border.x');
 
 assert.equal(resolve('portrait', { width: 362, height: 844 }).status, 'ok');
